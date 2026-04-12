@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "gsd-workflow": {
+      "command": "/Users/briancortinovis/.nvm/versions/node/v22.22.2/bin/node",
+      "args": [
+        "/Users/briancortinovis/.nvm/versions/node/v22.22.2/lib/node_modules/gsd-pi/packages/mcp-server/dist/cli.js"
+      ],
+      "cwd": "/Users/briancortinovis/Documents/TouraCore",
+      "env": {
+        "GSD_CLI_PATH": "/Users/briancortinovis/.nvm/versions/node/v22.22.2/bin/gsd",
+        "GSD_WORKFLOW_EXECUTORS_MODULE": "/Users/briancortinovis/.gsd/agent/extensions/gsd/tools/workflow-tool-executors.js",
+        "GSD_WORKFLOW_WRITE_GATE_MODULE": "/Users/briancortinovis/.gsd/agent/extensions/gsd/bootstrap/write-gate.js",
+        "GSD_PERSIST_WRITE_GATE_STATE": "1",
+        "GSD_WORKFLOW_PROJECT_ROOT": "/Users/briancortinovis/Documents/TouraCore"
+      }
+    }
+  }
+}
