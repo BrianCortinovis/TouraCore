@@ -29,7 +29,9 @@ import {
   ToggleRight,
   CheckCircle,
   XCircle,
+  Clock,
 } from 'lucide-react'
+import { SlotManager } from './slot-manager'
 
 interface Offer {
   id: string
@@ -102,6 +104,7 @@ export default function ServicesPage() {
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState(emptyForm)
   const [error, setError] = useState<string | null>(null)
+  const [slotManagerOffer, setSlotManagerOffer] = useState<Offer | null>(null)
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -288,6 +291,15 @@ export default function ServicesPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        {offer.bookable_with_slots && (
+                          <button
+                            onClick={() => setSlotManagerOffer(offer)}
+                            className="rounded p-1.5 text-blue-500 hover:bg-blue-50 hover:text-blue-700"
+                            title="Gestisci slot orari"
+                          >
+                            <Clock className="h-4 w-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => handleToggle(offer.id, offer.is_active)}
                           className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
@@ -535,6 +547,22 @@ export default function ServicesPage() {
           </div>
         </div>
       </Modal>
+
+      {slotManagerOffer && (
+        <Modal
+          isOpen={true}
+          onClose={() => setSlotManagerOffer(null)}
+          title=""
+        >
+          <SlotManager
+            offerId={slotManagerOffer.id}
+            offerName={slotManagerOffer.name}
+            slotDurationMinutes={slotManagerOffer.slot_duration_minutes ?? 60}
+            maxConcurrent={slotManagerOffer.max_concurrent}
+            onClose={() => setSlotManagerOffer(null)}
+          />
+        </Modal>
+      )}
     </div>
   )
 }
