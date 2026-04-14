@@ -32,6 +32,10 @@ import {
   Smartphone,
   BarChart3,
   Gift,
+  ChevronsLeft,
+  ChevronsRight,
+  Menu,
+  X,
   type LucideIcon,
 } from 'lucide-react'
 import {
@@ -113,6 +117,28 @@ export function EntitySidebar({
   const [switcherOpen, setSwitcherOpen] = useState(false)
   const switcherRef = useRef<HTMLDivElement>(null)
 
+  // Stato collapsed (desktop): rail stretta (icone only) vs espansa (icone + label)
+  // Persist in localStorage per ricordare la preferenza utente
+  const [collapsed, setCollapsed] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    const stored = localStorage.getItem('touracore_sidebar_collapsed')
+    if (stored === '1') setCollapsed(true)
+    setMounted(true)
+  }, [])
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem('touracore_sidebar_collapsed', collapsed ? '1' : '0')
+    }
+  }, [collapsed, mounted])
+
+  // Drawer mobile (< lg)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  useEffect(() => {
+    // Chiudi drawer al cambio route
+    setMobileOpen(false)
+  }, [pathname])
+
   useEffect(() => {
     if (!switcherOpen) return
     function handleClickOutside(e: MouseEvent) {
@@ -124,157 +150,284 @@ export function EntitySidebar({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [switcherOpen])
 
+  // Disabilita scroll body quando drawer mobile è aperto
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [mobileOpen])
+
   const groups = getNavigation(
     (propertyType ?? 'hotel') as PropertyType,
     isImprenditoriale,
     country,
   )
 
-  return (
-    <aside className="w-24 shrink-0">
-      <div className="sticky top-20 space-y-2" style={{ paddingLeft: 2, paddingRight: 2 }}>
-        <Link
-          href={`/${tenantSlug}`}
-          className="flex flex-col items-center gap-1.5 rounded-md border border-gray-200 bg-white py-3 text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-900"
-          title="Torna all'account"
-        >
-          <ArrowLeft className="h-7 w-7" />
-          <span className="text-[11px] font-medium leading-none">Account</span>
-        </Link>
+  // Rendering della nav — estratta come funzione perché usata 3 volte
+  // (desktop collapsed, desktop expanded, mobile drawer)
+  const renderNav = (showLabels: boolean, onItemClick?: () => void) => (
+    <nav className="space-y-3">
+      {groups.map((group) => {
+        const items = group.sections.filter((section) => {
+          const meta = SECTION_META[section]
+          if (!meta) return false
+          if (isAgencyManaged && meta.agencyHidden) return false
+          return true
+        })
 
-        <div className="border-t border-gray-200 pt-2">
+        if (items.length === 0) return null
+
+        return (
+          <div key={group.key}>
+            {showLabels ? (
+              <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                {group.label}
+              </p>
+            ) : (
+              <p className="mb-1 text-center text-[9px] font-semibold uppercase tracking-wider text-gray-300">
+                {group.label.slice(0, 4)}
+              </p>
+            )}
+            <div className="space-y-0.5">
+              {items.map((section) => {
+                const meta = SECTION_META[section]
+                const href = sectionToHref(basePath, section)
+                const isActive =
+                  pathname === href ||
+                  (href !== basePath && pathname.startsWith(href))
+                const Icon = meta.icon
+
+                if (showLabels) {
+                  return (
+                    <Link
+                      key={section}
+                      href={href}
+                      onClick={onItemClick}
+                      className={`group relative flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
+                        isActive
+                          ? 'bg-blue-50 text-blue-700'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      }`}
+                    >
+                      <Icon className="h-5 w-5 shrink-0" />
+                      <span className="flex-1 truncate font-medium">{meta.label}</span>
+                      {meta.placeholder && (
+                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+                      )}
+                    </Link>
+                  )
+                }
+
+                return (
+                  <Link
+                    key={section}
+                    href={href}
+                    onClick={onItemClick}
+                    className={`group relative flex flex-col items-center gap-1 rounded-md py-2 transition-colors ${
+                      isActive
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                    title={meta.label}
+                  >
+                    <Icon className="h-6 w-6" />
+                    <span className="text-[10px] font-medium leading-none text-center">
+                      {meta.label}
+                    </span>
+                    {meta.placeholder && (
+                      <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-amber-400" />
+                    )}
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })}
+    </nav>
+  )
+
+  const renderHeader = (showLabels: boolean, onItemClick?: () => void) => (
+    <>
+      <Link
+        href={`/${tenantSlug}`}
+        onClick={onItemClick}
+        className={`flex items-center gap-2 rounded-md border border-gray-200 bg-white text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-900 ${
+          showLabels ? 'px-3 py-2' : 'flex-col gap-1.5 py-3'
+        }`}
+        title="Torna all'account"
+      >
+        <ArrowLeft className={showLabels ? 'h-4 w-4' : 'h-6 w-6'} />
+        <span className={showLabels ? 'text-sm font-medium' : 'text-[10px] font-medium leading-none'}>
+          Account
+        </span>
+      </Link>
+
+      <div className="border-t border-gray-200 pt-2">
+        {!showLabels && (
           <p className="text-center text-[10px] font-semibold uppercase tracking-wide text-gray-400">
             CMS
           </p>
+        )}
 
-          {/* Switcher strutture */}
-          <div ref={switcherRef} className="relative mt-1 mb-2">
-            <button
-              onClick={() => setSwitcherOpen(!switcherOpen)}
-              className="flex w-full items-center justify-center gap-1 rounded-md border border-gray-200 bg-white px-1 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-50"
-              title={entityName}
+        {/* Switcher strutture */}
+        <div ref={switcherRef} className="relative mt-1 mb-2">
+          <button
+            onClick={() => setSwitcherOpen(!switcherOpen)}
+            className={`flex w-full items-center gap-1 rounded-md border border-gray-200 bg-white text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-50 ${
+              showLabels ? 'justify-between px-3 py-2 text-sm' : 'justify-center px-1 py-1.5 text-xs'
+            }`}
+            title={entityName}
+          >
+            <span className="truncate font-medium">{entityName}</span>
+            <ChevronDown
+              className={`h-3 w-3 shrink-0 text-gray-400 transition-transform ${
+                switcherOpen ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
+
+          {switcherOpen && (
+            <div
+              className={`absolute z-50 w-64 rounded-lg border border-gray-200 bg-white py-1 shadow-xl ${
+                showLabels ? 'left-0 top-full mt-1' : 'left-full top-0 ml-2'
+              }`}
             >
-              <span className="truncate">{entityName}</span>
-              <ChevronDown
-                className={`h-3 w-3 shrink-0 text-gray-400 transition-transform ${
-                  switcherOpen ? 'rotate-180' : ''
-                }`}
-              />
-            </button>
-
-            {switcherOpen && (
-              <div className="absolute left-full top-0 z-50 ml-2 w-64 rounded-lg border border-gray-200 bg-white py-1 shadow-xl">
-                <div className="border-b border-gray-100 px-3 py-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-                    Strutture
-                  </p>
-                </div>
-                <div className="max-h-72 overflow-auto py-1">
-                  {allEntities.map((e) => {
-                    const isCurrent = e.slug === entitySlug
-                    return (
-                      <Link
-                        key={e.id}
-                        href={`/${tenantSlug}/stays/${e.slug}`}
-                        onClick={() => setSwitcherOpen(false)}
-                        className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
-                          isCurrent ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
-                        }`}
-                      >
-                        <span className="min-w-0 flex-1 truncate">{e.name}</span>
-                        {e.management_mode === 'agency_managed' && (
-                          <span className="shrink-0 rounded bg-amber-50 px-1.5 py-0.5 text-[9px] font-medium text-amber-700 border border-amber-200">
-                            Agenzia
-                          </span>
-                        )}
-                        {isCurrent && <Check className="h-4 w-4 shrink-0 text-blue-600" />}
-                      </Link>
-                    )
-                  })}
-                </div>
-                <div className="border-t border-gray-100 py-1">
-                  <Link
-                    href={`/${tenantSlug}/stays`}
-                    onClick={() => setSwitcherOpen(false)}
-                    className="flex items-center gap-2 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50"
-                  >
-                    <span>Vedi tutte le strutture</span>
-                  </Link>
-                  <Link
-                    href={`/${tenantSlug}/stays/new`}
-                    onClick={() => setSwitcherOpen(false)}
-                    className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-blue-600 hover:bg-blue-50"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    Nuova struttura
-                  </Link>
-                </div>
+              <div className="border-b border-gray-100 px-3 py-2">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                  Strutture
+                </p>
               </div>
-            )}
-          </div>
-
-          {isAgencyManaged && (
-            <div className="mb-2 text-center">
-              <span className="inline-block rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 border border-amber-200">
-                Agenzia
-              </span>
+              <div className="max-h-72 overflow-auto py-1">
+                {allEntities.map((e) => {
+                  const isCurrent = e.slug === entitySlug
+                  return (
+                    <Link
+                      key={e.id}
+                      href={`/${tenantSlug}/stays/${e.slug}`}
+                      onClick={() => {
+                        setSwitcherOpen(false)
+                        onItemClick?.()
+                      }}
+                      className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                        isCurrent ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className="min-w-0 flex-1 truncate">{e.name}</span>
+                      {e.management_mode === 'agency_managed' && (
+                        <span className="shrink-0 rounded bg-amber-50 px-1.5 py-0.5 text-[9px] font-medium text-amber-700 border border-amber-200">
+                          Agenzia
+                        </span>
+                      )}
+                      {isCurrent && <Check className="h-4 w-4 shrink-0 text-blue-600" />}
+                    </Link>
+                  )
+                })}
+              </div>
+              <div className="border-t border-gray-100 py-1">
+                <Link
+                  href={`/${tenantSlug}/stays`}
+                  onClick={() => { setSwitcherOpen(false); onItemClick?.() }}
+                  className="flex items-center gap-2 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50"
+                >
+                  <span>Vedi tutte le strutture</span>
+                </Link>
+                <Link
+                  href={`/${tenantSlug}/stays/new`}
+                  onClick={() => { setSwitcherOpen(false); onItemClick?.() }}
+                  className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-blue-600 hover:bg-blue-50"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Nuova struttura
+                </Link>
+              </div>
             </div>
           )}
-
-          <nav className="space-y-3">
-            {groups.map((group) => {
-              const items = group.sections
-                .filter((section) => {
-                  const meta = SECTION_META[section]
-                  if (!meta) return false
-                  if (isAgencyManaged && meta.agencyHidden) return false
-                  return true
-                })
-
-              if (items.length === 0) return null
-
-              return (
-                <div key={group.key}>
-                  <p className="mb-1 text-center text-[9px] font-semibold uppercase tracking-wider text-gray-300">
-                    {group.label}
-                  </p>
-                  <div className="space-y-0.5">
-                    {items.map((section) => {
-                      const meta = SECTION_META[section]
-                      const href = sectionToHref(basePath, section)
-                      const isActive =
-                        pathname === href ||
-                        (href !== basePath && pathname.startsWith(href))
-                      const Icon = meta.icon
-
-                      return (
-                        <Link
-                          key={section}
-                          href={href}
-                          className={`group relative flex flex-col items-center gap-1 rounded-md py-2 transition-colors ${
-                            isActive
-                              ? 'bg-blue-50 text-blue-700'
-                              : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
-                          }`}
-                          title={meta.label}
-                        >
-                          <Icon className="h-7 w-7" />
-                          <span className="text-[11px] font-medium leading-none text-center">
-                            {meta.label}
-                          </span>
-                          {meta.placeholder && (
-                            <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-amber-400" />
-                          )}
-                        </Link>
-                      )
-                    })}
-                  </div>
-                </div>
-              )
-            })}
-          </nav>
         </div>
+
+        {isAgencyManaged && (
+          <div className={`mb-2 ${showLabels ? 'px-3' : 'text-center'}`}>
+            <span className="inline-block rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 border border-amber-200">
+              Gestita da agenzia
+            </span>
+          </div>
+        )}
       </div>
-    </aside>
+    </>
+  )
+
+  return (
+    <>
+      {/* Bottone hamburger mobile — visibile solo < lg */}
+      <button
+        type="button"
+        onClick={() => setMobileOpen(true)}
+        className="fixed left-3 top-16 z-30 flex h-10 w-10 items-center justify-center rounded-md border border-gray-200 bg-white shadow-sm lg:hidden"
+        aria-label="Apri menu"
+      >
+        <Menu className="h-5 w-5 text-gray-700" />
+      </button>
+
+      {/* Sidebar desktop (≥ lg) */}
+      <aside
+        className={`hidden shrink-0 transition-[width] duration-200 lg:block ${
+          collapsed ? 'w-20' : 'w-56'
+        }`}
+      >
+        <div className="sticky top-16 space-y-2 px-1 pb-4">
+          {renderHeader(!collapsed)}
+          {renderNav(!collapsed)}
+
+          {/* Toggle collapse desktop */}
+          <button
+            type="button"
+            onClick={() => setCollapsed(!collapsed)}
+            className="mt-2 flex w-full items-center justify-center gap-1 rounded-md border border-gray-200 bg-white py-1.5 text-xs text-gray-500 hover:border-gray-300 hover:text-gray-900"
+            aria-label={collapsed ? 'Espandi menu' : 'Comprimi menu'}
+            title={collapsed ? 'Espandi menu' : 'Comprimi menu'}
+          >
+            {collapsed ? (
+              <ChevronsRight className="h-4 w-4" />
+            ) : (
+              <>
+                <ChevronsLeft className="h-4 w-4" />
+                <span>Comprimi</span>
+              </>
+            )}
+          </button>
+        </div>
+      </aside>
+
+      {/* Drawer mobile (< lg) */}
+      {mobileOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
+            onClick={() => setMobileOpen(false)}
+            aria-hidden
+          />
+          <aside className="fixed inset-y-0 left-0 z-50 w-72 overflow-y-auto border-r border-gray-200 bg-white px-3 pb-6 pt-4 shadow-xl lg:hidden">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-sm font-semibold text-gray-900">Menu</span>
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                className="rounded-md p-1 text-gray-500 hover:bg-gray-100"
+                aria-label="Chiudi menu"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              {renderHeader(true, () => setMobileOpen(false))}
+              {renderNav(true, () => setMobileOpen(false))}
+            </div>
+          </aside>
+        </>
+      )}
+    </>
   )
 }

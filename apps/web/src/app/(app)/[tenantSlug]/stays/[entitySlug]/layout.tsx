@@ -45,7 +45,7 @@ export default async function EntityLayout({ children, params }: EntityLayoutPro
   const country = (entity.country_override ?? tenant.country ?? 'IT') as string
 
   return (
-    <div className="flex gap-6">
+    <div className="flex w-full gap-3 lg:gap-6">
       <EntitySidebar
         tenantSlug={tenantSlug}
         entitySlug={entitySlug}
@@ -61,7 +61,7 @@ export default async function EntityLayout({ children, params }: EntityLayoutPro
           management_mode: e.management_mode as 'agency_managed' | 'self_service',
         }))}
       />
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1 pt-14 lg:pt-0">
         {children}
       </div>
     </div>

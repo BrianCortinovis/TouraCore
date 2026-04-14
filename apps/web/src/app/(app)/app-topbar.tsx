@@ -50,7 +50,7 @@ export function AppTopBar() {
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-gray-200 bg-white">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="flex h-14 w-full items-center justify-between px-3 sm:px-4 lg:px-6">
           <div className="flex items-center gap-4">
             <Link href="/" className="text-lg font-bold text-blue-600">
               TouraCore

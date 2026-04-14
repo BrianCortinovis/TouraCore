@@ -14,7 +14,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <AuthProvider initialData={bootstrap}>
       <div className="min-h-screen bg-gray-50">
         <AppTopBar />
-        <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <main className="w-full px-3 py-4 sm:px-4 sm:py-6 lg:px-6">
           {children}
         </main>
       </div>
