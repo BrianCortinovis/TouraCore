@@ -31,7 +31,8 @@ const EMPTY_BOOTSTRAP: AuthBootstrapData = {
   properties: [],
 }
 
-const getCurrentAuthUser = cache(async (): Promise<AuthUser | null> => {
+// Cached per request — evita round-trip ripetuti a Supabase Auth (ogni getUser ~250ms da IT)
+export const getCurrentAuthUser = cache(async (): Promise<AuthUser | null> => {
   const supabase = await createServerSupabaseClient()
   const {
     data: { user },
@@ -41,6 +42,9 @@ const getCurrentAuthUser = cache(async (): Promise<AuthUser | null> => {
 
   return { id: user.id, email: user.email ?? '' }
 })
+
+// Alias semantico per uso nelle server actions
+export const getCurrentUser = getCurrentAuthUser
 
 const getSelectedEntityId = cache(async () => {
   const cookieStore = await cookies()

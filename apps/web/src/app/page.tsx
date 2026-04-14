@@ -11,11 +11,11 @@ import {
   Users,
   Globe,
 } from 'lucide-react'
-import { createServerSupabaseClient, createServiceRoleClient } from '@touracore/db/server'
+import { createServiceRoleClient } from '@touracore/db/server'
+import { getCurrentUser } from '@touracore/auth'
 
 export default async function HomePage() {
-  const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   // Utente loggato: redirect intelligente in base al ruolo
   if (user) {

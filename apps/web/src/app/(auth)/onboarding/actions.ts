@@ -2,6 +2,7 @@
 
 import { z } from 'zod'
 import { createServerSupabaseClient, createServiceRoleClient } from '@touracore/db/server'
+import { getCurrentUser } from '@touracore/auth'
 
 // --- Step 2: Crea tenant con dati legali ---
 
@@ -29,7 +30,7 @@ interface ActionResult {
 
 export async function createTenantWithLegalAction(input: Step2Input): Promise<ActionResult> {
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) return { success: false, error: 'Sessione scaduta. Effettua nuovamente il login.' }
 
   const parsed = Step2Schema.safeParse(input)
@@ -165,7 +166,7 @@ export type Step3Input = z.infer<typeof Step3Schema>
 
 export async function createFirstPropertyAction(input: Step3Input): Promise<ActionResult & { entityId?: string; entitySlug?: string; tenantSlug?: string | null }> {
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) return { success: false, error: 'Sessione scaduta.' }
 
   const parsed = Step3Schema.safeParse(input)

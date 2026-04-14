@@ -1,17 +1,18 @@
 'use server'
 
 import { createServerSupabaseClient } from '@touracore/db/server'
+import { getCurrentUser } from '@touracore/auth'
 import {
   saveIntegrationAction,
   deleteIntegrationAction,
   testConnectionAction,
   loadIntegrationAction,
-} from '@touracore/integrations/actions'
-import type { IntegrationProvider } from '@touracore/integrations'
+  type IntegrationProvider,
+} from '@touracore/integrations'
 
 async function resolveAgencyId(): Promise<string> {
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) throw new Error('Non autenticato')
 
   const { data: membership } = await supabase

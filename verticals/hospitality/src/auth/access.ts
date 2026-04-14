@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@touracore/db'
+import { getCurrentUser } from '@touracore/auth'
 import { getCurrentOrg } from '../queries/auth'
 import type { Property, StaffMember, StaffRole } from '../types/database'
 
@@ -56,10 +56,7 @@ export function getSuperAdminEmails(): string[] {
 }
 
 export async function requireSuperAdmin() {
-  const supabase = await createServerSupabaseClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   const email = user?.email?.toLowerCase() || ''
   const allowedEmails = getSuperAdminEmails()

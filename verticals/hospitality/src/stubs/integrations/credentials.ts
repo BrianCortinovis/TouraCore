@@ -1,6 +1,8 @@
-import { resolveIntegration } from '@touracore/integrations/queries'
-import { decryptCredentials } from '@touracore/integrations/crypto'
-import type { IntegrationProvider, IntegrationCredentials } from '@touracore/integrations'
+import {
+  resolveIntegration,
+  decryptCredentials,
+  type IntegrationProvider,
+} from '@touracore/integrations'
 
 export type CredentialProvider = IntegrationProvider
 

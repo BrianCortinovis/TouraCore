@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from '@touracore/db/server'
+import { getCurrentUser } from '@touracore/auth'
 import { redirect } from 'next/navigation'
 import { AgencySidebar } from './agency-sidebar'
 
@@ -9,7 +10,7 @@ interface AgencyLayoutProps {
 export default async function AgencyLayout({ children }: AgencyLayoutProps) {
   const supabase = await createServerSupabaseClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) redirect('/login')
 
   const { data: membership } = await supabase

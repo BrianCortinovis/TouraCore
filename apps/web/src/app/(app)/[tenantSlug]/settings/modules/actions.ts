@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServerSupabaseClient } from '@touracore/db/server'
+import { getCurrentUser } from '@touracore/auth'
 import { logAudit, getAuditContext } from '@touracore/audit'
 import { z } from 'zod'
 
@@ -21,7 +22,7 @@ export async function saveModulesAction(
 
   const { tenantSlug, hospitality, experiences } = parsed.data
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) return { success: false, error: 'Sessione scaduta' }
 
   const { data: tenant } = await supabase

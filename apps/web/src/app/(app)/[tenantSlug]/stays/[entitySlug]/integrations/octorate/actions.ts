@@ -7,8 +7,8 @@ import {
   deleteIntegrationAction,
   testConnectionAction,
   loadIntegrationAction,
-} from '@touracore/integrations/actions'
-import type { IntegrationProvider } from '@touracore/integrations'
+  type IntegrationProvider,
+} from '@touracore/integrations'
 
 interface ActionResult {
   success: boolean

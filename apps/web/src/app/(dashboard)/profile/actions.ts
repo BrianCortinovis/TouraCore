@@ -28,11 +28,13 @@ export async function updateProfile(input: UpdateProfileInput): Promise<ActionRe
   }
 
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const bootstrap = await getAuthBootstrapData()
 
-  if (!user) {
+  if (!bootstrap.user) {
     return { success: false, error: 'Sessione scaduta. Effettua nuovamente il login.' }
   }
+
+  const user = bootstrap.user
 
   const { data: oldProfile } = await supabase
     .from('profiles')
@@ -54,7 +56,6 @@ export async function updateProfile(input: UpdateProfileInput): Promise<ActionRe
     return { success: false, error: 'Errore durante il salvataggio del profilo.' }
   }
 
-  const bootstrap = await getAuthBootstrapData()
   if (bootstrap.tenant) {
     const auditCtx = await getAuditContext(bootstrap.tenant.id, user.id)
     await logAudit({
@@ -78,11 +79,13 @@ export async function switchProperty(entityId: string): Promise<ActionResult> {
   }
 
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const bootstrap = await getAuthBootstrapData()
 
-  if (!user) {
+  if (!bootstrap.user) {
     return { success: false, error: 'Sessione scaduta.' }
   }
+
+  const user = bootstrap.user
 
   const { data: staffMember } = await supabase
     .from('staff_members')
@@ -104,7 +107,6 @@ export async function switchProperty(entityId: string): Promise<ActionResult> {
     maxAge: 60 * 60 * 24 * 365,
   })
 
-  const bootstrap = await getAuthBootstrapData()
   if (bootstrap.tenant) {
     const auditCtx = await getAuditContext(bootstrap.tenant.id, user.id)
     await logAudit({

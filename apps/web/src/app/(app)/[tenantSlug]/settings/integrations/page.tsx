@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import { Plug, ArrowLeft } from 'lucide-react'
 import { Card, CardContent, IntegrationForm } from '@touracore/ui'
-import { getProvidersForScope } from '@touracore/integrations/registry'
+import { getProvidersForScope } from '@touracore/integrations'
 import type { IntegrationProvider } from '@touracore/integrations'
 import {
   saveTenantIntegration,

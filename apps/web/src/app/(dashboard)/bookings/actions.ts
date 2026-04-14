@@ -43,11 +43,11 @@ export async function listBookingsAction(
 export async function createBookingAction(input: unknown): Promise<ActionResult> {
 
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'Sessione scaduta.' }
-
   const bootstrap = await getAuthBootstrapData()
+  if (!bootstrap.user) return { success: false, error: 'Sessione scaduta.' }
   if (!bootstrap.tenant) return { success: false, error: 'Nessun tenant attivo.' }
+
+  const user = bootstrap.user
 
   const parsed = CreateBookingSchema.safeParse({
     ...(input as Record<string, unknown>),
@@ -84,11 +84,11 @@ export async function transitionStatusAction(
 ): Promise<ActionResult> {
 
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'Sessione scaduta.' }
-
   const bootstrap = await getAuthBootstrapData()
+  if (!bootstrap.user) return { success: false, error: 'Sessione scaduta.' }
   if (!bootstrap.tenant) return { success: false, error: 'Nessun tenant attivo.' }
+
+  const user = bootstrap.user
 
   try {
     const booking = await transitionBookingStatus(

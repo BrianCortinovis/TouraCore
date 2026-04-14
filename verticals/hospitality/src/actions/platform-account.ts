@@ -81,15 +81,13 @@ async function requireTenantAccess(): Promise<{
   displayName: string
 }> {
   const supabase = await createServerSupabaseClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const authBootstrap = await getAuthBootstrapData()
+  const user = authBootstrap.user
 
   if (!user) {
     throw new Error('Sessione non valida')
   }
 
-  const authBootstrap = await getAuthBootstrapData()
   const tenant = authBootstrap.tenant ?? authBootstrap.tenants[0] ?? null
 
   if (!tenant) {
@@ -109,12 +107,10 @@ async function requireTenantAccess(): Promise<{
   }
 
   const primaryStaff = authBootstrap.staffMemberships[0]
-  const metadataName =
-    typeof user.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : ''
-  const fallbackName =
-    primaryStaff
-      ? `${primaryStaff.first_name} ${primaryStaff.last_name}`.trim()
-      : user.email?.split('@')[0] ?? ''
+  const metadataName = primaryStaff
+    ? `${primaryStaff.first_name ?? ''} ${primaryStaff.last_name ?? ''}`.trim()
+    : ''
+  const fallbackName = user.email?.split('@')[0] ?? ''
 
   return {
     userId: user.id,

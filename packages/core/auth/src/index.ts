@@ -1,4 +1,5 @@
 export { updateSession } from './middleware'
+export { getCurrentUser, getCurrentAuthUser, getAuthBootstrapData, getCurrentOrg } from './bootstrap'
 export { validatePasswordPolicy, MIN_PASSWORD_LENGTH } from './password-policy'
 export { sanitizeNextPath } from './redirect'
 export {

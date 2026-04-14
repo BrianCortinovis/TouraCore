@@ -24,8 +24,10 @@ export async function updateProfileAction(input: unknown): Promise<ActionResult>
   }
 
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'Sessione scaduta.' }
+  const bootstrap = await getAuthBootstrapData()
+  if (!bootstrap.user) return { success: false, error: 'Sessione scaduta.' }
+
+  const user = bootstrap.user
 
   const { error } = await supabase
     .from('profiles')
@@ -38,7 +40,6 @@ export async function updateProfileAction(input: unknown): Promise<ActionResult>
 
   if (error) return { success: false, error: 'Errore durante il salvataggio.' }
 
-  const bootstrap = await getAuthBootstrapData()
   if (bootstrap.tenant) {
     const auditCtx = await getAuditContext(bootstrap.tenant.id, user.id)
     await logAudit({

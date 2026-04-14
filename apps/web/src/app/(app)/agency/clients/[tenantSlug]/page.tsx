@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from '@touracore/db/server'
+import { getCurrentUser } from '@touracore/auth'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle, Badge } from '@touracore/ui'
@@ -12,7 +13,7 @@ export default async function AgencyClientDetail({ params }: ClientDetailProps) 
   const { tenantSlug } = await params
   const supabase = await createServerSupabaseClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) redirect('/login')
 
   const { data: membership } = await supabase

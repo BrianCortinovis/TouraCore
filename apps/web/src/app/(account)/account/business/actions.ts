@@ -47,12 +47,11 @@ export async function updateBusinessDetailsAction(input: unknown): Promise<Actio
     return { success: false, error: parsed.error.issues[0]?.message ?? 'Dati non validi' }
   }
 
-  const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'Sessione scaduta.' }
-
   const bootstrap = await getAuthBootstrapData()
+  if (!bootstrap.user) return { success: false, error: 'Sessione scaduta.' }
   if (!bootstrap.tenant) return { success: false, error: 'Nessuna attività attiva.' }
+
+  const user = bootstrap.user
 
   const admin = await createServiceRoleClient()
   const { error } = await admin

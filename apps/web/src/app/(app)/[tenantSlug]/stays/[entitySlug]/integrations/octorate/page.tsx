@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Globe, RefreshCw } from 'lucide-react'
 import { Button, Badge, Card, CardContent, IntegrationForm } from '@touracore/ui'
-import { getProviderDef } from '@touracore/integrations/registry'
+import { getProviderDef } from '@touracore/integrations'
 import {
   saveEntityIntegration,
   loadEntityIntegration,

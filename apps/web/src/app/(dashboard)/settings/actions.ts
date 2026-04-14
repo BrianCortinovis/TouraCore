@@ -46,11 +46,11 @@ export async function setTenantSettingAction(
   }
 
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'Sessione scaduta.' }
-
   const bootstrap = await getAuthBootstrapData()
+  if (!bootstrap.user) return { success: false, error: 'Sessione scaduta.' }
   if (!bootstrap.tenant) return { success: false, error: 'Nessuna attività attiva.' }
+
+  const user = bootstrap.user
 
   try {
     await setTenantSetting(supabase, bootstrap.tenant.id, parsed.data.key, parsed.data.value)
@@ -77,11 +77,11 @@ export async function saveTenantSettingsBatchAction(
   settings: Record<string, unknown>
 ): Promise<ActionResult> {
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'Sessione scaduta.' }
-
   const bootstrap = await getAuthBootstrapData()
+  if (!bootstrap.user) return { success: false, error: 'Sessione scaduta.' }
   if (!bootstrap.tenant) return { success: false, error: 'Nessuna attività attiva.' }
+
+  const user = bootstrap.user
 
   try {
     const entries = Object.entries(settings)
@@ -113,11 +113,11 @@ export async function updateBusinessInfoAction(input: {
   settings: Record<string, unknown>
 }): Promise<ActionResult> {
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'Sessione scaduta.' }
-
   const bootstrap = await getAuthBootstrapData()
+  if (!bootstrap.user) return { success: false, error: 'Sessione scaduta.' }
   if (!bootstrap.tenant) return { success: false, error: 'Nessuna attività attiva.' }
+
+  const user = bootstrap.user
 
   const tenantId = bootstrap.tenant.id
 
@@ -176,11 +176,11 @@ export async function updateBusinessInfoAction(input: {
 
 export async function deleteTenantSettingAction(key: string): Promise<ActionResult> {
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'Sessione scaduta.' }
-
   const bootstrap = await getAuthBootstrapData()
+  if (!bootstrap.user) return { success: false, error: 'Sessione scaduta.' }
   if (!bootstrap.tenant) return { success: false, error: 'Nessuna attività attiva.' }
+
+  const user = bootstrap.user
 
   try {
     await deleteTenantSetting(supabase, bootstrap.tenant.id, key)
@@ -220,10 +220,8 @@ export async function setModuleSettingAction(
   value: unknown
 ): Promise<ActionResult> {
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'Sessione scaduta.' }
-
   const bootstrap = await getAuthBootstrapData()
+  if (!bootstrap.user) return { success: false, error: 'Sessione scaduta.' }
   if (!bootstrap.tenant) return { success: false, error: 'Nessuna attività attiva.' }
 
   try {
@@ -255,10 +253,8 @@ export async function setEntitySettingAction(
   value: unknown
 ): Promise<ActionResult> {
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'Sessione scaduta.' }
-
   const bootstrap = await getAuthBootstrapData()
+  if (!bootstrap.user) return { success: false, error: 'Sessione scaduta.' }
   if (!bootstrap.tenant) return { success: false, error: 'Nessuna attività attiva.' }
 
   try {

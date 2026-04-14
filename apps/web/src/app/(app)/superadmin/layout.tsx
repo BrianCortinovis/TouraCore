@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
-import { createServerSupabaseClient, createServiceRoleClient } from '@touracore/db/server'
+import { createServiceRoleClient } from '@touracore/db/server'
+import { getCurrentUser } from '@touracore/auth'
 import { SuperadminSidebar } from './superadmin-sidebar'
 
 interface SuperadminLayoutProps {
@@ -7,9 +8,7 @@ interface SuperadminLayoutProps {
 }
 
 export default async function SuperadminLayout({ children }: SuperadminLayoutProps) {
-  const supabase = await createServerSupabaseClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) redirect('/superadmin-login')
 
   // Verifica platform_admin usando service_role per bypassare RLS

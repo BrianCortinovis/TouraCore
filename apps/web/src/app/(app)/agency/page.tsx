@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from '@touracore/db/server'
+import { getCurrentUser } from '@touracore/auth'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@touracore/ui'
 import { Building2, Users, BarChart3 } from 'lucide-react'
@@ -6,7 +7,7 @@ import { Building2, Users, BarChart3 } from 'lucide-react'
 export default async function AgencyDashboard() {
   const supabase = await createServerSupabaseClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) redirect('/login')
 
   const { data: membership } = await supabase

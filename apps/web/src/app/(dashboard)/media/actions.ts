@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServerSupabaseClient } from '@touracore/db/server'
+import { getCurrentUser } from '@touracore/auth'
 import { logAudit, getAuditContext } from '@touracore/audit'
 import { getAuthBootstrapData } from '@touracore/auth/bootstrap'
 import {
@@ -46,15 +47,15 @@ export async function uploadMediaAction(formData: FormData): Promise<ActionResul
   })
 
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  const bootstrap = await getAuthBootstrapData()
+  if (!bootstrap.user) {
     return { success: false, error: 'Sessione scaduta.' }
   }
-
-  const bootstrap = await getAuthBootstrapData()
   if (!bootstrap.tenant) {
     return { success: false, error: 'Nessun tenant attivo.' }
   }
+
+  const user = bootstrap.user
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer())
@@ -96,15 +97,15 @@ export async function deleteMediaAction(mediaId: string): Promise<ActionResult> 
   }
 
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  const bootstrap = await getAuthBootstrapData()
+  if (!bootstrap.user) {
     return { success: false, error: 'Sessione scaduta.' }
   }
-
-  const bootstrap = await getAuthBootstrapData()
   if (!bootstrap.tenant) {
     return { success: false, error: 'Nessun tenant attivo.' }
   }
+
+  const user = bootstrap.user
 
   try {
     await deleteFile(supabase, mediaId)
@@ -134,7 +135,7 @@ export async function updateAltTextAction(
   }
 
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) {
     return { success: false, error: 'Sessione scaduta.' }
   }
@@ -155,13 +156,11 @@ export async function listMediaAction(
   search?: string
 ) {
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  const bootstrap = await getAuthBootstrapData()
+  if (!bootstrap.user) {
     console.warn('[listMediaAction] Utente non autenticato')
     throw new Error('TENANT_REQUIRED')
   }
-
-  const bootstrap = await getAuthBootstrapData()
   if (!bootstrap.tenant) {
     console.warn('[listMediaAction] TENANT_REQUIRED — utente senza organizzazione')
     throw new Error('TENANT_REQUIRED')

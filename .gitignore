@@ -9,6 +9,7 @@ Thumbs.db
 *.swo
 *~
 .idea/
+.turbo/
 .vscode/
 *.code-workspace
 .env

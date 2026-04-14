@@ -1,10 +1,11 @@
 import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@touracore/db/server'
+import { getCurrentUser } from '@touracore/auth'
 import Link from 'next/link'
 
 export default async function OnboardingStep1() {
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect('/login')
