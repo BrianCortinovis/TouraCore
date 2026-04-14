@@ -9,7 +9,6 @@ import {
   ChevronDown,
   Check,
   ArrowLeft,
-  Settings,
   User,
   Shield,
 } from 'lucide-react'
@@ -132,15 +131,6 @@ export function AppTopBar() {
           </div>
 
           <div className="flex items-center gap-3">
-            {currentTenant && (
-              <Link
-                href={`/${currentTenant.slug}/settings`}
-                className="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-                title="Impostazioni account"
-              >
-                <Settings className="h-4 w-4" />
-              </Link>
-            )}
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <User className="h-4 w-4" />
               <span>{user?.email}</span>
