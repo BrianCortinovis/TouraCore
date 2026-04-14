@@ -56,6 +56,7 @@ const SECTION_META: Record<SidebarSection, { label: string; icon: LucideIcon; ag
   'media': { label: 'Media', icon: Image },
   'financials': { label: 'Finanze', icon: TrendingUp },
   'invoices': { label: 'Fatture', icon: FileText, agencyHidden: true },
+  'reports': { label: 'Report', icon: BarChart3, agencyHidden: true },
   'compliance-alloggiati': { label: 'Alloggiati', icon: Shield },
   'compliance-tourist-tax': { label: 'Tassa sogg.', icon: Coins },
   'compliance-istat': { label: 'ISTAT', icon: BarChart3 },

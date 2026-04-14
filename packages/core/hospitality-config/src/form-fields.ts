@@ -30,6 +30,7 @@ export type SidebarSection =
   | 'self-checkin'
   | 'services'
   | 'channels'
+  | 'reports'
 
 // ---------------------------------------------------------------------------
 // Gruppi navigazione (stile Gest)
@@ -87,6 +88,7 @@ export function getNavigation(
       sections: [
         'financials',
         'invoices',
+        'reports',
       ],
     },
   ]

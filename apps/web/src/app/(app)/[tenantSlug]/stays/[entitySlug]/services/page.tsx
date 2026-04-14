@@ -43,6 +43,9 @@ interface Offer {
   online_bookable: boolean
   requires_request: boolean
   sort_order: number
+  bookable_with_slots: boolean
+  slot_duration_minutes: number | null
+  max_concurrent: number
 }
 
 interface Order {
@@ -76,6 +79,9 @@ const emptyForm = {
   online_bookable: true,
   requires_request: false,
   sort_order: '0',
+  bookable_with_slots: false,
+  slot_duration_minutes: '60',
+  max_concurrent: '1',
 }
 
 const STATUS_COLORS: Record<string, 'success' | 'warning' | 'destructive' | 'secondary'> = {
@@ -128,6 +134,9 @@ export default function ServicesPage() {
       online_bookable: offer.online_bookable,
       requires_request: offer.requires_request,
       sort_order: offer.sort_order.toString(),
+      bookable_with_slots: offer.bookable_with_slots,
+      slot_duration_minutes: (offer.slot_duration_minutes ?? 60).toString(),
+      max_concurrent: offer.max_concurrent.toString(),
     })
     setError(null)
     setModalOpen(true)
@@ -148,6 +157,11 @@ export default function ServicesPage() {
       online_bookable: form.online_bookable,
       requires_request: form.requires_request,
       sort_order: parseInt(form.sort_order) || 0,
+      bookable_with_slots: form.bookable_with_slots,
+      slot_duration_minutes: form.bookable_with_slots
+        ? parseInt(form.slot_duration_minutes) || 60
+        : null,
+      max_concurrent: parseInt(form.max_concurrent) || 1,
     }
 
     const result = editingId
@@ -468,6 +482,48 @@ export default function ServicesPage() {
             value={form.sort_order}
             onChange={(e) => setForm({ ...form, sort_order: e.target.value })}
           />
+
+          <div className="border-t border-gray-200 pt-4">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={form.bookable_with_slots}
+                onChange={(e) => setForm({ ...form, bookable_with_slots: e.target.checked })}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600"
+              />
+              <span className="text-sm font-medium text-gray-700">
+                Prenotazione con slot orari (spa, piscina, corsi, tour)
+              </span>
+            </label>
+            <p className="mt-1 text-xs text-gray-500">
+              Attiva per permettere agli ospiti di prenotare uno slot orario specifico
+              con controllo disponibilità e anti-overbooking.
+            </p>
+
+            {form.bookable_with_slots && (
+              <div className="mt-3 grid grid-cols-2 gap-4 rounded-lg bg-gray-50 p-3">
+                <Input
+                  label="Durata slot (minuti)"
+                  type="number"
+                  min="15"
+                  step="15"
+                  value={form.slot_duration_minutes}
+                  onChange={(e) => setForm({ ...form, slot_duration_minutes: e.target.value })}
+                />
+                <Input
+                  label="Max ospiti contemporanei"
+                  type="number"
+                  min="1"
+                  value={form.max_concurrent}
+                  onChange={(e) => setForm({ ...form, max_concurrent: e.target.value })}
+                />
+                <p className="col-span-2 text-xs text-gray-500">
+                  Gli orari di disponibilità (giorni e fasce) si gestiscono dalla
+                  scheda offerta dopo averla creata.
+                </p>
+              </div>
+            )}
+          </div>
 
           <div className="flex justify-end gap-3 border-t border-gray-200 pt-4">
             <Button variant="outline" onClick={() => setModalOpen(false)}>

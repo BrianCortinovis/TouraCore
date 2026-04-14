@@ -3,8 +3,9 @@ import { notFound } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle, Badge } from '@touracore/ui'
 import {
   CalendarCheck, Users, BarChart3, Building2, Shield,
-  TrendingUp, Banknote, BedDouble, LogIn, LogOut,
+  TrendingUp, Banknote, BedDouble, LogIn, LogOut, Home,
 } from 'lucide-react'
+import { getPropertyTypeConfig, type PropertyType } from '@touracore/hospitality-config'
 
 interface EntityDashboardProps {
   params: Promise<{ tenantSlug: string; entitySlug: string }>
@@ -97,6 +98,12 @@ export default async function EntityDashboard({ params }: EntityDashboardProps) 
 
   const isAgencyManaged = entity.management_mode === 'agency_managed'
 
+  // Config property-type condiziona quali KPI mostrare
+  const propertyType = (accommodation?.property_type ?? 'hotel') as PropertyType
+  const typeConfig = getPropertyTypeConfig(propertyType)
+  const showHotelKpis = typeConfig.hasRooms && typeConfig.hasRatePlans
+  const unitLabel = typeConfig.unitLabelPlural ?? 'camere'
+
   return (
     <div className="space-y-6">
       {isAgencyManaged && (
@@ -162,8 +169,12 @@ export default async function EntityDashboard({ params }: EntityDashboardProps) 
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm font-medium text-gray-500">
-                <Building2 className="h-4 w-4 text-blue-500" />
-                Camere
+                {showHotelKpis ? (
+                  <Building2 className="h-4 w-4 text-blue-500" />
+                ) : (
+                  <Home className="h-4 w-4 text-blue-500" />
+                )}
+                <span className="capitalize">{unitLabel}</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -214,30 +225,61 @@ export default async function EntityDashboard({ params }: EntityDashboardProps) 
               <p className="mt-1 text-xs text-gray-500">{monthData.length} prenotazioni</p>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium text-gray-500">
-                <TrendingUp className="h-4 w-4 text-cyan-500" />
-                ADR
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-gray-900">{fmtCurrency(adr)}</p>
-              <p className="mt-1 text-xs text-gray-500">Tariffa media giornaliera</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium text-gray-500">
-                <BedDouble className="h-4 w-4 text-amber-500" />
-                RevPAR
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-gray-900">{fmtCurrency(revpar)}</p>
-              <p className="mt-1 text-xs text-gray-500">Ricavo per camera disponibile</p>
-            </CardContent>
-          </Card>
+          {showHotelKpis ? (
+            <>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-sm font-medium text-gray-500">
+                    <TrendingUp className="h-4 w-4 text-cyan-500" />
+                    ADR
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold text-gray-900">{fmtCurrency(adr)}</p>
+                  <p className="mt-1 text-xs text-gray-500">Tariffa media giornaliera</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-sm font-medium text-gray-500">
+                    <BedDouble className="h-4 w-4 text-amber-500" />
+                    RevPAR
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold text-gray-900">{fmtCurrency(revpar)}</p>
+                  <p className="mt-1 text-xs text-gray-500">Ricavo per {typeConfig.unitLabel} disponibile</p>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-sm font-medium text-gray-500">
+                    <TrendingUp className="h-4 w-4 text-cyan-500" />
+                    Notti vendute
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold text-gray-900">{totalNightsSold}</p>
+                  <p className="mt-1 text-xs text-gray-500">Nel mese corrente</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-sm font-medium text-gray-500">
+                    <BedDouble className="h-4 w-4 text-amber-500" />
+                    Ricavo medio / notte
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold text-gray-900">{fmtCurrency(adr)}</p>
+                  <p className="mt-1 text-xs text-gray-500">Media incasso per notte</p>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
       </div>
 

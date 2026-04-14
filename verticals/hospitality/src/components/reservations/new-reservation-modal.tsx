@@ -188,16 +188,6 @@ export function NewReservationModal({ isOpen, onClose }: NewReservationModalProp
         internal_notes: form.internal_notes || null,
       })
 
-      // Reminder: contratto di locazione per soggiorni >30 notti (apartment)
-      if (config.features.rentalContracts && form.check_in && form.check_out) {
-        const nights = Math.round((new Date(form.check_out).getTime() - new Date(form.check_in).getTime()) / 86400000)
-        if (nights > 30) {
-          setTimeout(() => {
-            alert('Attenzione: per soggiorni superiori a 30 notti e\' obbligatorio stipulare un contratto di locazione turistica. Vai alla sezione Contratti per crearlo.')
-          }, 300)
-        }
-      }
-
       onClose()
       router.refresh()
     } catch (err) {

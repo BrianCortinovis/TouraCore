@@ -1,6 +1,13 @@
 import { createServerSupabaseClient } from '@touracore/db'
 import { getCurrentOrg } from './auth'
-import type { UpsellOffer, UpsellOrder, Reservation, Guest } from '../types/database'
+import type {
+  UpsellOffer,
+  UpsellOrder,
+  Reservation,
+  Guest,
+  ServiceAvailabilityRule,
+  ServiceSlotBooking,
+} from '../types/database'
 
 // ---------------------------------------------------------------------------
 // Offers
@@ -181,4 +188,144 @@ export const UPSELL_ORDER_STATUS_LABELS: Record<string, string> = {
   confirmed: 'Confermato',
   cancelled: 'Annullato',
   completed: 'Completato',
+}
+
+// ---------------------------------------------------------------------------
+// Slot prenotabili — regole disponibilità + booking
+// ---------------------------------------------------------------------------
+
+interface AvailableSlot {
+  start: string  // "HH:mm"
+  end: string    // "HH:mm"
+  capacity: number
+  booked: number
+  available: number
+}
+
+// Somma minuti a un orario "HH:mm"
+function addMinutes(time: string, minutes: number): string {
+  const parts = time.split(':').map(Number)
+  const h = parts[0] ?? 0
+  const m = parts[1] ?? 0
+  const total = h * 60 + m + minutes
+  const nh = Math.floor(total / 60) % 24
+  const nm = total % 60
+  return `${String(nh).padStart(2, '0')}:${String(nm).padStart(2, '0')}`
+}
+
+export async function getAvailabilityRules(offerId: string): Promise<ServiceAvailabilityRule[]> {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from('service_availability_rules')
+    .select('*')
+    .eq('offer_id', offerId)
+    .eq('is_active', true)
+    .order('day_of_week')
+    .order('start_time')
+
+  if (error) {
+    console.error('[Upselling] Errore caricamento regole disponibilità:', error)
+    return []
+  }
+  return (data ?? []) as ServiceAvailabilityRule[]
+}
+
+// Calcola gli slot disponibili per una data specifica di una offerta bookable_with_slots
+export async function getAvailableSlots(offerId: string, date: string): Promise<AvailableSlot[]> {
+  const supabase = await createServerSupabaseClient()
+
+  // Carica l'offerta per sapere durata slot e max concorrenti
+  const { data: offer, error: offerErr } = await supabase
+    .from('upsell_offers')
+    .select('bookable_with_slots, slot_duration_minutes, max_concurrent')
+    .eq('id', offerId)
+    .single()
+
+  if (offerErr || !offer || !offer.bookable_with_slots || !offer.slot_duration_minutes) {
+    return []
+  }
+
+  const duration = offer.slot_duration_minutes as number
+  const capacity = (offer.max_concurrent as number) ?? 1
+
+  // Regole per il weekday della data richiesta
+  const dayOfWeek = new Date(date + 'T00:00:00').getDay()
+  const { data: rules } = await supabase
+    .from('service_availability_rules')
+    .select('start_time, end_time')
+    .eq('offer_id', offerId)
+    .eq('day_of_week', dayOfWeek)
+    .eq('is_active', true)
+
+  if (!rules || rules.length === 0) return []
+
+  // Prenotazioni esistenti in quella data (solo confirmed/completed)
+  const { data: bookings } = await supabase
+    .from('service_slot_bookings')
+    .select('slot_start, slot_end, participants')
+    .eq('offer_id', offerId)
+    .eq('slot_date', date)
+    .in('status', ['confirmed', 'completed'])
+
+  const slots: AvailableSlot[] = []
+
+  for (const rule of rules) {
+    let current = rule.start_time.slice(0, 5) // "HH:mm"
+    const end = rule.end_time.slice(0, 5)
+
+    while (current < end) {
+      const next = addMinutes(current, duration)
+      if (next > end) break
+
+      const overlapping = (bookings ?? []).filter((b) => {
+        const bs = b.slot_start.slice(0, 5)
+        const be = b.slot_end.slice(0, 5)
+        return bs < next && be > current
+      })
+      const booked = overlapping.reduce((sum, b) => sum + (b.participants ?? 1), 0)
+
+      slots.push({
+        start: current,
+        end: next,
+        capacity,
+        booked,
+        available: Math.max(0, capacity - booked),
+      })
+
+      current = next
+    }
+  }
+
+  return slots
+}
+
+export async function getServiceBookings(filters: {
+  entityId: string
+  dateFrom?: string
+  dateTo?: string
+  offerId?: string
+  status?: string
+}): Promise<(ServiceSlotBooking & { offer: UpsellOffer | null; guest: Guest | null })[]> {
+  const supabase = await createServerSupabaseClient()
+
+  let query = supabase
+    .from('service_slot_bookings')
+    .select('*, offer:upsell_offers!inner(*), guest:guests(*)')
+    .eq('offer.entity_id', filters.entityId)
+    .order('slot_date', { ascending: false })
+    .order('slot_start', { ascending: false })
+
+  if (filters.dateFrom) query = query.gte('slot_date', filters.dateFrom)
+  if (filters.dateTo) query = query.lte('slot_date', filters.dateTo)
+  if (filters.offerId) query = query.eq('offer_id', filters.offerId)
+  if (filters.status) query = query.eq('status', filters.status)
+
+  const { data, error } = await query
+
+  if (error) {
+    console.error('[Upselling] Errore caricamento prenotazioni slot:', error)
+    return []
+  }
+
+  return (data ?? []) as (ServiceSlotBooking & { offer: UpsellOffer | null; guest: Guest | null })[]
 }

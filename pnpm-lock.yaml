@@ -394,6 +394,9 @@ importers:
       '@touracore/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@touracore/hospitality-config':
+        specifier: workspace:*
+        version: link:../../packages/core/hospitality-config
       '@touracore/integrations':
         specifier: workspace:*
         version: link:../../packages/core/integrations

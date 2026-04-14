@@ -27,6 +27,10 @@ export interface CreateOfferData {
   online_bookable?: boolean
   advance_notice_hours?: number
   sort_order?: number
+  // Slot prenotabili
+  bookable_with_slots?: boolean
+  slot_duration_minutes?: number | null
+  max_concurrent?: number
 }
 
 export interface UpdateOfferData {
@@ -46,6 +50,10 @@ export interface UpdateOfferData {
   online_bookable?: boolean
   advance_notice_hours?: number
   sort_order?: number
+  // Slot prenotabili
+  bookable_with_slots?: boolean
+  slot_duration_minutes?: number | null
+  max_concurrent?: number
 }
 
 export interface PlaceOrderData {
@@ -297,4 +305,179 @@ export async function completeOrder(id: string) {
   }
 
   revalidatePath('/upselling')
+}
+
+// ---------------------------------------------------------------------------
+// Slot orari: regole disponibilità
+// ---------------------------------------------------------------------------
+
+export async function addAvailabilityRule(
+  offerId: string,
+  dayOfWeek: number,
+  startTime: string,
+  endTime: string,
+) {
+  if (dayOfWeek < 0 || dayOfWeek > 6) throw new Error('Giorno non valido')
+  if (startTime >= endTime) throw new Error('Ora inizio deve precedere ora fine')
+
+  const supabase = await createServerSupabaseClient()
+  const { property } = await getCurrentOrg()
+  if (!property?.id) throw new Error('Organizzazione non trovata')
+
+  // Verifica che l'offerta appartenga all'entity corrente
+  const { data: offer } = await supabase
+    .from('upsell_offers')
+    .select('id')
+    .eq('id', offerId)
+    .eq('entity_id', property.id)
+    .single()
+  if (!offer) throw new Error('Offerta non trovata')
+
+  const { error } = await supabase
+    .from('service_availability_rules')
+    .insert({
+      offer_id: offerId,
+      day_of_week: dayOfWeek,
+      start_time: startTime,
+      end_time: endTime,
+      is_active: true,
+    })
+
+  if (error) {
+    console.error('[Upselling] Errore creazione regola disponibilità:', error)
+    throw new Error('Impossibile creare la regola')
+  }
+
+  revalidatePath('/services')
+}
+
+export async function removeAvailabilityRule(ruleId: string) {
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase
+    .from('service_availability_rules')
+    .delete()
+    .eq('id', ruleId)
+
+  if (error) {
+    console.error('[Upselling] Errore rimozione regola:', error)
+    throw new Error('Impossibile rimuovere la regola')
+  }
+
+  revalidatePath('/services')
+}
+
+// ---------------------------------------------------------------------------
+// Slot orari: prenotazioni
+// ---------------------------------------------------------------------------
+
+export async function bookSlot(input: {
+  offerId: string
+  slotDate: string
+  slotStart: string
+  participants?: number
+  guestId?: string | null
+  reservationId?: string | null
+  notes?: string
+}) {
+  const supabase = await createServerSupabaseClient()
+  const { property } = await getCurrentOrg()
+  if (!property?.id) throw new Error('Organizzazione non trovata')
+
+  // Carica offerta per durata + max concorrenti + verifica entity
+  const { data: offer } = await supabase
+    .from('upsell_offers')
+    .select('id, bookable_with_slots, slot_duration_minutes, max_concurrent')
+    .eq('id', input.offerId)
+    .eq('entity_id', property.id)
+    .single()
+
+  if (!offer || !offer.bookable_with_slots || !offer.slot_duration_minutes) {
+    throw new Error('Offerta non prenotabile con slot')
+  }
+
+  const duration = offer.slot_duration_minutes as number
+  const capacity = (offer.max_concurrent as number) ?? 1
+  const participants = Math.max(1, input.participants ?? 1)
+
+  // Calcola slot_end
+  const [h, m] = input.slotStart.split(':').map(Number)
+  const startMin = (h ?? 0) * 60 + (m ?? 0)
+  const endMin = startMin + duration
+  const nh = Math.floor(endMin / 60) % 24
+  const nm = endMin % 60
+  const slotEnd = `${String(nh).padStart(2, '0')}:${String(nm).padStart(2, '0')}`
+
+  // Anti-overbooking: conta partecipanti già prenotati in slot sovrapposti
+  const { data: overlapping } = await supabase
+    .from('service_slot_bookings')
+    .select('participants, slot_start, slot_end')
+    .eq('offer_id', input.offerId)
+    .eq('slot_date', input.slotDate)
+    .in('status', ['confirmed', 'completed'])
+
+  const booked = (overlapping ?? [])
+    .filter((b) => {
+      const bs = b.slot_start.slice(0, 5)
+      const be = b.slot_end.slice(0, 5)
+      return bs < slotEnd && be > input.slotStart
+    })
+    .reduce((sum, b) => sum + (b.participants ?? 1), 0)
+
+  if (booked + participants > capacity) {
+    throw new Error(`Slot pieno: ${booked}/${capacity} posti già occupati`)
+  }
+
+  const { data: newBooking, error } = await supabase
+    .from('service_slot_bookings')
+    .insert({
+      offer_id: input.offerId,
+      reservation_id: input.reservationId ?? null,
+      guest_id: input.guestId ?? null,
+      slot_date: input.slotDate,
+      slot_start: input.slotStart,
+      slot_end: slotEnd,
+      participants,
+      status: 'confirmed',
+      notes: input.notes ?? null,
+    })
+    .select('id')
+    .single()
+
+  if (error || !newBooking) {
+    console.error('[Upselling] Errore prenotazione slot:', error)
+    throw new Error('Impossibile prenotare lo slot')
+  }
+
+  revalidatePath('/services')
+  return newBooking.id
+}
+
+export async function cancelSlotBooking(bookingId: string) {
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase
+    .from('service_slot_bookings')
+    .update({ status: 'cancelled' })
+    .eq('id', bookingId)
+
+  if (error) {
+    console.error('[Upselling] Errore cancellazione slot booking:', error)
+    throw new Error('Impossibile cancellare la prenotazione')
+  }
+
+  revalidatePath('/services')
+}
+
+export async function completeSlotBooking(bookingId: string) {
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase
+    .from('service_slot_bookings')
+    .update({ status: 'completed' })
+    .eq('id', bookingId)
+
+  if (error) {
+    console.error('[Upselling] Errore completamento slot booking:', error)
+    throw new Error('Impossibile completare la prenotazione')
+  }
+
+  revalidatePath('/services')
 }

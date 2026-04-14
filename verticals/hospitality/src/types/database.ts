@@ -1506,10 +1506,17 @@ export interface WhatsAppMessage {
 }
 
 // --- Upselling ---
-
-export type UpsellCategory = 'room_upgrade' | 'experience' | 'transfer' | 'food_beverage' | 'spa_wellness' | 'early_checkin' | 'late_checkout' | 'parking' | 'linen' | 'laundry' | 'kitchen' | 'bike' | 'baby_kit' | 'pet_kit' | 'other'
-export type ChargeMode = 'free' | 'paid'
-export type PricingMode = 'per_stay' | 'per_night' | 'per_guest' | 'per_item' | 'per_hour' | 'per_day'
+// UpsellCategory è la fonte canonica in @touracore/hospitality-config.
+// Importata qui per evitare drift tra i due file e rispettare le nuove categorie
+// (pool_access, gym_access, cooking_class, guided_tour, water_sports).
+import type {
+  UpsellCategory as _UpsellCategory,
+  ChargeMode as _ChargeMode,
+  PricingMode as _PricingMode,
+} from '@touracore/hospitality-config'
+export type UpsellCategory = _UpsellCategory
+export type ChargeMode = _ChargeMode
+export type PricingMode = _PricingMode
 export type UpsellOrderStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed'
 
 export interface UpsellOffer {
@@ -1531,6 +1538,39 @@ export interface UpsellOffer {
   online_bookable: boolean
   advance_notice_hours: number
   sort_order: number
+  // Slot orari prenotabili (migration 00048)
+  bookable_with_slots: boolean
+  slot_duration_minutes: number | null
+  max_concurrent: number
+  created_at: string
+  updated_at: string
+}
+
+// --- Slot orari servizi ---
+
+export type ServiceSlotBookingStatus = 'confirmed' | 'cancelled' | 'completed' | 'no_show'
+
+export interface ServiceAvailabilityRule {
+  id: string
+  offer_id: string
+  day_of_week: number // 0=domenica, 1=lunedi, ..., 6=sabato
+  start_time: string // formato HH:MM o HH:MM:SS
+  end_time: string
+  is_active: boolean
+  created_at: string
+}
+
+export interface ServiceSlotBooking {
+  id: string
+  offer_id: string
+  reservation_id: string | null
+  guest_id: string | null
+  slot_date: string // YYYY-MM-DD
+  slot_start: string // HH:MM:SS
+  slot_end: string // HH:MM:SS
+  participants: number
+  status: ServiceSlotBookingStatus
+  notes: string | null
   created_at: string
   updated_at: string
 }

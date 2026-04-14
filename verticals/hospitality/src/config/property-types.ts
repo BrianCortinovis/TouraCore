@@ -20,8 +20,6 @@ export interface PropertyFeatures {
   folioCharges: boolean            // full folio (minibar, bar, room service)
   mealPlans: boolean               // half board, full board, all inclusive
   selfCheckin: boolean             // access codes, smart locks, instructions
-  rentalContracts: boolean         // contratto di locazione turistica
-  utilityCosts: boolean            // electricity, gas, water tracking
   securityDeposits: boolean        // cauzione
   guestGuidebook: boolean          // house rules, area guide
   farmConnection: boolean          // agriturismo: farm activity link
@@ -122,8 +120,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       folioCharges: true,
       mealPlans: true,
       selfCheckin: false,
-      rentalContracts: false,
-      utilityCosts: false,
       securityDeposits: false,
       guestGuidebook: false,
       farmConnection: false,
@@ -181,8 +177,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       folioCharges: true,
       mealPlans: true,
       selfCheckin: true,
-      rentalContracts: false,
-      utilityCosts: false,
       securityDeposits: true,
       guestGuidebook: true,
       farmConnection: false,
@@ -240,8 +234,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       folioCharges: true,
       mealPlans: true,
       selfCheckin: true,
-      rentalContracts: false,
-      utilityCosts: false,
       securityDeposits: true,
       guestGuidebook: true,
       farmConnection: false,
@@ -299,8 +291,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       folioCharges: false,
       mealPlans: false, // only breakfast, handled by type
       selfCheckin: true,
-      rentalContracts: false,
-      utilityCosts: false,
       securityDeposits: false,
       guestGuidebook: true,
       farmConnection: false,
@@ -361,8 +351,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       folioCharges: false,
       mealPlans: false,
       selfCheckin: true,
-      rentalContracts: true,
-      utilityCosts: true,
       securityDeposits: true,
       guestGuidebook: true,
       farmConnection: false,
@@ -420,8 +408,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       folioCharges: false,
       mealPlans: false,
       selfCheckin: true,
-      rentalContracts: false,
-      utilityCosts: false,
       securityDeposits: false,
       guestGuidebook: true,
       farmConnection: false,
@@ -479,8 +465,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       folioCharges: true,
       mealPlans: true,
       selfCheckin: false,
-      rentalContracts: false,
-      utilityCosts: false,
       securityDeposits: false,
       guestGuidebook: true,
       farmConnection: true,

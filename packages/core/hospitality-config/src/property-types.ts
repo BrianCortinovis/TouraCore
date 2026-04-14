@@ -25,8 +25,6 @@ export interface PropertyFeatures {
   folioCharges: boolean
   mealPlans: boolean
   selfCheckin: boolean
-  rentalContracts: boolean
-  utilityCosts: boolean
   securityDeposits: boolean
   guestGuidebook: boolean
   farmConnection: boolean
@@ -144,8 +142,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       folioCharges: true,
       mealPlans: true,
       selfCheckin: false,
-      rentalContracts: false,
-      utilityCosts: false,
       securityDeposits: false,
       guestGuidebook: false,
       farmConnection: false,
@@ -205,8 +201,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       folioCharges: true,
       mealPlans: true,
       selfCheckin: true,
-      rentalContracts: false,
-      utilityCosts: false,
       securityDeposits: true,
       guestGuidebook: true,
       farmConnection: false,
@@ -266,8 +260,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       folioCharges: true,
       mealPlans: true,
       selfCheckin: true,
-      rentalContracts: false,
-      utilityCosts: false,
       securityDeposits: true,
       guestGuidebook: true,
       farmConnection: false,
@@ -327,8 +319,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       folioCharges: false,
       mealPlans: false,
       selfCheckin: true,
-      rentalContracts: false,
-      utilityCosts: false,
       securityDeposits: false,
       guestGuidebook: true,
       farmConnection: false,
@@ -388,8 +378,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       folioCharges: false,
       mealPlans: false,
       selfCheckin: true,
-      rentalContracts: true,
-      utilityCosts: true,
       securityDeposits: true,
       guestGuidebook: true,
       farmConnection: false,
@@ -449,8 +437,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       folioCharges: false,
       mealPlans: false,
       selfCheckin: true,
-      rentalContracts: false,
-      utilityCosts: false,
       securityDeposits: false,
       guestGuidebook: true,
       farmConnection: false,
@@ -510,8 +496,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       folioCharges: true,
       mealPlans: true,
       selfCheckin: false,
-      rentalContracts: false,
-      utilityCosts: false,
       securityDeposits: false,
       guestGuidebook: true,
       farmConnection: true,
