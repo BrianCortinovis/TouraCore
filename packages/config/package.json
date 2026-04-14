@@ -1,0 +1,20 @@
+{
+  "name": "@touracore/config",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    "./tsconfig/base": "./tsconfig/base.json",
+    "./tsconfig/nextjs": "./tsconfig/nextjs.json",
+    "./tsconfig/library": "./tsconfig/library.json",
+    "./eslint": "./eslint/index.mjs",
+    "./eslint/next": "./eslint/next.mjs",
+    "./tailwind/globals.css": "./tailwind/globals.css",
+    "./tailwind/tokens.css": "./tailwind/tokens.css"
+  },
+  "scripts": {
+    "build": "true",
+    "lint": "true"
+  }
+}

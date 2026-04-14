@@ -1,0 +1,35 @@
+{
+  "name": "@touracore/auth",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./middleware": "./src/middleware.ts",
+    "./password-policy": "./src/password-policy.ts",
+    "./redirect": "./src/redirect.ts",
+    "./permissions": "./src/permissions.ts",
+    "./bootstrap": "./src/bootstrap.ts",
+    "./store": "./src/store.ts",
+    "./provider": "./src/provider.tsx",
+    "./types": "./src/types.ts"
+  },
+  "scripts": {
+    "build": "true"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.49.1",
+    "@touracore/db": "workspace:*",
+    "@touracore/security": "workspace:*",
+    "zustand": "^5.0.0"
+  },
+  "peerDependencies": {
+    "next": ">=14",
+    "react": ">=18"
+  },
+  "devDependencies": {
+    "@types/react": "^19"
+  }
+}

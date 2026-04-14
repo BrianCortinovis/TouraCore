@@ -1,0 +1,20 @@
+{
+  "name": "@touracore/hospitality-config",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./property-types": "./src/property-types.ts",
+    "./amenities": "./src/amenities.ts",
+    "./form-fields": "./src/form-fields.ts"
+  },
+  "scripts": {
+    "build": "true",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.23.0"
+  }
+}

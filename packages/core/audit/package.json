@@ -1,0 +1,16 @@
+{
+  "name": "@touracore/audit",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "true"
+  },
+  "dependencies": {
+    "@touracore/db": "workspace:*"
+  },
+  "peerDependencies": {
+    "next": ">=14"
+  }
+}

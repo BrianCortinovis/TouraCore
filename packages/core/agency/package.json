@@ -1,0 +1,23 @@
+{
+  "name": "@touracore/agency",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts",
+    "./helpers": "./src/helpers.ts",
+    "./schemas": "./src/schemas.ts",
+    "./audit": "./src/audit.ts"
+  },
+  "scripts": {
+    "build": "true",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "@touracore/db": "workspace:*",
+    "zod": "^3.23.0"
+  }
+}

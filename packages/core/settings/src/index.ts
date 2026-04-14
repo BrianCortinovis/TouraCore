@@ -1,0 +1,30 @@
+export { resolveSetting, resolveSettings, getSettingOrDefault, type ResolutionContext } from './service';
+export {
+  getPlatformSetting,
+  setPlatformSetting,
+  listPlatformSettings,
+  getTenantSetting,
+  setTenantSetting,
+  listTenantSettings,
+  deleteTenantSetting,
+  listModuleActivations,
+  toggleModule,
+  getModuleSetting,
+  setModuleSetting,
+  listModuleSettings,
+  getEntitySetting,
+  setEntitySetting,
+  listEntitySettings,
+} from './queries';
+export {
+  type SettingsScope,
+  type TenantSetting,
+  type ModuleActivation,
+  type ModuleSetting,
+  type EntitySetting,
+  type ConfigEntry,
+  type ResolvedSetting,
+  SetSettingSchema,
+  ModuleToggleSchema,
+  EntitySettingSchema,
+} from './types';
