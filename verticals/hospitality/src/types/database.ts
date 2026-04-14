@@ -293,16 +293,6 @@ export interface Database {
         Insert: Omit<SelfCheckinConfig, 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Omit<SelfCheckinConfig, 'id'>>
       }
-      rental_contracts: {
-        Row: RentalContract
-        Insert: Omit<RentalContract, 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Omit<RentalContract, 'id'>>
-      }
-      utility_costs: {
-        Row: UtilityCost
-        Insert: Omit<UtilityCost, 'id' | 'created_at'>
-        Update: Partial<Omit<UtilityCost, 'id'>>
-      }
       security_deposits: {
         Row: SecurityDeposit
         Insert: Omit<SecurityDeposit, 'id' | 'created_at' | 'updated_at'>
@@ -1341,54 +1331,6 @@ export interface SelfCheckinConfig {
   updated_at: string
   // Joined
   room?: Room
-}
-
-// --- Rental Contracts ---
-
-export type ContractStatus = 'draft' | 'sent' | 'signed' | 'active' | 'completed' | 'cancelled'
-
-export interface RentalContract {
-  id: string
-  entity_id: string
-  reservation_id: string | null
-  guest_id: string | null
-  contract_number: string
-  contract_date: string
-  start_date: string
-  end_date: string
-  rental_amount: number
-  security_deposit_amount: number
-  terms_and_conditions: string | null
-  special_conditions: string | null
-  signed_at: string | null
-  signed_by_guest: string | null
-  pdf_url: string | null
-  ade_registration_number: string | null
-  ade_registered_at: string | null
-  status: ContractStatus
-  created_at: string
-  updated_at: string
-  // Joined
-  guest?: Guest
-  reservation?: Reservation
-}
-
-// --- Utility Costs ---
-
-export type UtilityType = 'electricity' | 'gas' | 'water' | 'internet' | 'heating' | 'condominium' | 'waste' | 'other'
-
-export interface UtilityCost {
-  id: string
-  entity_id: string
-  utility_type: UtilityType
-  period_from: string
-  period_to: string
-  amount: number
-  provider: string | null
-  invoice_number: string | null
-  notes: string | null
-  created_at: string
-  updated_at: string
 }
 
 // --- Security Deposits ---

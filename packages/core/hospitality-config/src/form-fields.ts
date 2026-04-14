@@ -30,8 +30,6 @@ export type SidebarSection =
   | 'housekeeping'
   | 'self-checkin'
   | 'services'
-  | 'contracts'
-  | 'utilities'
 
 // ---------------------------------------------------------------------------
 // Gruppi navigazione (stile Gest)
@@ -89,8 +87,6 @@ export function getNavigation(
       sections: [
         'financials',
         'invoices',
-        ...(nav.showContracts ? ['contracts' as SidebarSection] : []),
-        ...(nav.showUtilities ? ['utilities' as SidebarSection] : []),
       ],
     },
   ]

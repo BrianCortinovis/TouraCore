@@ -30,8 +30,6 @@ import {
   UtensilsCrossed,
   Sparkles,
   Smartphone,
-  FileSignature,
-  Zap,
   BarChart3,
   Gift,
   type LucideIcon,
@@ -67,8 +65,6 @@ const SECTION_META: Record<SidebarSection, { label: string; icon: LucideIcon; ag
   'restaurant': { label: 'Ristorante', icon: UtensilsCrossed, placeholder: true },
   'housekeeping': { label: 'Housekeeping', icon: Sparkles },
   'self-checkin': { label: 'Self check-in', icon: Smartphone },
-  'contracts': { label: 'Contratti', icon: FileSignature, placeholder: true },
-  'utilities': { label: 'Utenze', icon: Zap, placeholder: true },
 }
 
 function sectionToHref(base: string, section: SidebarSection): string {

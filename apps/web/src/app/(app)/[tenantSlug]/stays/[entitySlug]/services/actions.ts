@@ -47,6 +47,25 @@ export async function getRevenueAction() {
   }
 }
 
+// Caricamento consolidato — una singola request HTTP per tutta la pagina
+// invece di 3 separate (ognuna paga il bootstrap auth)
+export async function loadServicesPageAction(filters: { limit?: number } = {}) {
+  try {
+    const [offers, orders, revenue] = await Promise.all([
+      getOffers(),
+      getOrders({ limit: filters.limit ?? 50 }),
+      getUpsellRevenue(),
+    ])
+    return { offers, orders, revenue }
+  } catch {
+    return {
+      offers: [],
+      orders: [],
+      revenue: { totalRevenue: 0, totalOrders: 0, pendingOrders: 0 },
+    }
+  }
+}
+
 export async function createOfferAction(input: CreateOfferData): Promise<ActionResult> {
   try {
     await createOffer(input)

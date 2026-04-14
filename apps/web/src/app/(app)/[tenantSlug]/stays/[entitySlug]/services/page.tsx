@@ -12,9 +12,7 @@ import {
   type ChargeMode,
 } from '@touracore/hospitality-config'
 import {
-  listOffersAction,
-  listOrdersAction,
-  getRevenueAction,
+  loadServicesPageAction,
   createOfferAction,
   updateOfferAction,
   deleteOfferAction,
@@ -101,11 +99,8 @@ export default function ServicesPage() {
 
   const loadData = useCallback(async () => {
     setLoading(true)
-    const [offersData, ordersData, revenueData] = await Promise.all([
-      listOffersAction(),
-      listOrdersAction({ limit: 50 }),
-      getRevenueAction(),
-    ])
+    const { offers: offersData, orders: ordersData, revenue: revenueData } =
+      await loadServicesPageAction({ limit: 50 })
     setOffers(offersData as Offer[])
     setOrders(ordersData as Order[])
     setRevenue(revenueData)

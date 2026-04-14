@@ -106,21 +106,29 @@ export async function getUpsellRevenue() {
   const propId = property?.id
   if (!propId) return { totalRevenue: 0, totalOrders: 0, pendingOrders: 0 }
 
-  const { data, error } = await supabase
-    .from('upsell_orders')
-    .select('total_price, status')
-    .eq('entity_id', propId)
-
-  if (error) return { totalRevenue: 0, totalOrders: 0, pendingOrders: 0 }
-
-  const orders = data ?? []
-  const confirmed = orders.filter((o) => o.status === 'confirmed' || o.status === 'completed')
-  const pending = orders.filter((o) => o.status === 'pending')
+  // Aggregate lato DB invece di scaricare tutte le righe (scala a milioni di ordini)
+  const [totalCount, pendingCount, revenueAgg] = await Promise.all([
+    supabase
+      .from('upsell_orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('entity_id', propId),
+    supabase
+      .from('upsell_orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('entity_id', propId)
+      .eq('status', 'pending'),
+    supabase
+      .from('upsell_orders')
+      .select('total_price.sum()')
+      .eq('entity_id', propId)
+      .in('status', ['confirmed', 'completed'])
+      .single(),
+  ])
 
   return {
-    totalRevenue: confirmed.reduce((sum, o) => sum + (o.total_price || 0), 0),
-    totalOrders: orders.length,
-    pendingOrders: pending.length,
+    totalRevenue: (revenueAgg.data as { sum: number } | null)?.sum ?? 0,
+    totalOrders: totalCount.count ?? 0,
+    pendingOrders: pendingCount.count ?? 0,
   }
 }
 

@@ -41,8 +41,6 @@ export interface PropertyNavigation {
   showRestaurant: boolean
   showHousekeeping: boolean
   showSelfCheckin: boolean
-  showContracts: boolean
-  showUtilities: boolean
 }
 
 // ---------------------------------------------------------------------------
@@ -75,7 +73,6 @@ export interface PropertyCompliance {
   requiresAlloggiati: boolean
   requiresISTAT: boolean
   requiresSCIA: boolean
-  requiresRentalContract: boolean
   maxUnits: number | null
   minUnits: number | null
   requiresInsurance: boolean
@@ -158,8 +155,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       showRestaurant: true,
       showHousekeeping: true,
       showSelfCheckin: false,
-      showContracts: false,
-      showUtilities: false,
     },
     fiscal: {
       defaultFiscalRegime: 'ordinario',
@@ -179,7 +174,7 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
     },
     compliance: {
       requiresCIN: true, requiresAlloggiati: true, requiresISTAT: true, requiresSCIA: true,
-      requiresRentalContract: false, maxUnits: null, minUnits: 7,
+ maxUnits: null, minUnits: 7,
       requiresInsurance: true, requiresAML: true,
     },
     invoicing: {
@@ -221,8 +216,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       showRestaurant: true,
       showHousekeeping: true,
       showSelfCheckin: true,
-      showContracts: false,
-      showUtilities: false,
     },
     fiscal: {
       defaultFiscalRegime: 'ordinario',
@@ -242,7 +235,7 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
     },
     compliance: {
       requiresCIN: true, requiresAlloggiati: true, requiresISTAT: true, requiresSCIA: true,
-      requiresRentalContract: false, maxUnits: null, minUnits: null,
+ maxUnits: null, minUnits: null,
       requiresInsurance: true, requiresAML: true,
     },
     invoicing: {
@@ -284,8 +277,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       showRestaurant: true,
       showHousekeeping: true,
       showSelfCheckin: true,
-      showContracts: false,
-      showUtilities: false,
     },
     fiscal: {
       defaultFiscalRegime: 'ordinario',
@@ -305,7 +296,7 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
     },
     compliance: {
       requiresCIN: true, requiresAlloggiati: true, requiresISTAT: true, requiresSCIA: true,
-      requiresRentalContract: false, maxUnits: null, minUnits: null,
+ maxUnits: null, minUnits: null,
       requiresInsurance: true, requiresAML: true,
     },
     invoicing: {
@@ -347,8 +338,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       showRestaurant: false,
       showHousekeeping: true,
       showSelfCheckin: true,
-      showContracts: false,
-      showUtilities: false,
     },
     fiscal: {
       defaultFiscalRegime: 'cedolare_secca',
@@ -368,7 +357,7 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
     },
     compliance: {
       requiresCIN: true, requiresAlloggiati: true, requiresISTAT: true, requiresSCIA: false,
-      requiresRentalContract: false, maxUnits: 6, minUnits: null,
+ maxUnits: 6, minUnits: null,
       requiresInsurance: false, requiresAML: false,
     },
     invoicing: {
@@ -410,8 +399,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       showRestaurant: false,
       showHousekeeping: true,
       showSelfCheckin: true,
-      showContracts: true,
-      showUtilities: true,
     },
     fiscal: {
       defaultFiscalRegime: 'cedolare_secca',
@@ -431,7 +418,7 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
     },
     compliance: {
       requiresCIN: true, requiresAlloggiati: true, requiresISTAT: true, requiresSCIA: false,
-      requiresRentalContract: true, maxUnits: 2, minUnits: null,
+ maxUnits: 2, minUnits: null,
       requiresInsurance: false, requiresAML: false,
     },
     invoicing: {
@@ -473,8 +460,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       showRestaurant: false,
       showHousekeeping: true,
       showSelfCheckin: true,
-      showContracts: false,
-      showUtilities: false,
     },
     fiscal: {
       defaultFiscalRegime: 'forfettario',
@@ -494,7 +479,7 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
     },
     compliance: {
       requiresCIN: true, requiresAlloggiati: true, requiresISTAT: true, requiresSCIA: true,
-      requiresRentalContract: false, maxUnits: 6, minUnits: null,
+ maxUnits: 6, minUnits: null,
       requiresInsurance: true, requiresAML: true,
     },
     invoicing: {
@@ -536,8 +521,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       showRestaurant: true,
       showHousekeeping: true,
       showSelfCheckin: false,
-      showContracts: false,
-      showUtilities: false,
     },
     fiscal: {
       defaultFiscalRegime: 'agriturismo_special',
@@ -557,7 +540,7 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
     },
     compliance: {
       requiresCIN: true, requiresAlloggiati: true, requiresISTAT: true, requiresSCIA: true,
-      requiresRentalContract: false, maxUnits: null, minUnits: null,
+ maxUnits: null, minUnits: null,
       requiresInsurance: true, requiresAML: true,
     },
     invoicing: {

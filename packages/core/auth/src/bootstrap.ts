@@ -11,6 +11,46 @@ import type {
   TenantMembership,
 } from './types'
 
+// Cache cross-request in-memory: evita di rifare le 3 query staff/membership/profile
+// ad ogni server action quando lo stesso utente naviga rapidamente.
+// TTL breve (15s) per limitare staleness su cambi di permessi/tenant.
+// Chiave = userId, isolata per processo Node (in serverless ogni lambda ha la sua cache).
+interface CachedBootstrap {
+  data: AuthBootstrapData
+  expiresAt: number
+}
+
+const BOOTSTRAP_CACHE_TTL_MS = 15_000
+const BOOTSTRAP_CACHE_MAX = 500
+const bootstrapCache = new Map<string, CachedBootstrap>()
+
+function getCachedBootstrap(userId: string): AuthBootstrapData | null {
+  const entry = bootstrapCache.get(userId)
+  if (!entry) return null
+  if (entry.expiresAt < Date.now()) {
+    bootstrapCache.delete(userId)
+    return null
+  }
+  return entry.data
+}
+
+function setCachedBootstrap(userId: string, data: AuthBootstrapData): void {
+  if (bootstrapCache.size >= BOOTSTRAP_CACHE_MAX) {
+    // LRU semplice: rimuovi la più vecchia
+    const firstKey = bootstrapCache.keys().next().value
+    if (firstKey) bootstrapCache.delete(firstKey)
+  }
+  bootstrapCache.set(userId, {
+    data,
+    expiresAt: Date.now() + BOOTSTRAP_CACHE_TTL_MS,
+  })
+}
+
+export function invalidateBootstrapCache(userId?: string): void {
+  if (userId) bootstrapCache.delete(userId)
+  else bootstrapCache.clear()
+}
+
 type StaffMemberWithEntity = StaffMember & {
   entity: (Entity & { tenant: TenantAccount | null }) | null
 }
@@ -56,6 +96,11 @@ export const getAuthBootstrapData = cache(async (): Promise<AuthBootstrapData> =
     const user = await getCurrentAuthUser()
     if (!user) return EMPTY_BOOTSTRAP
 
+    // Cache cross-request: se questo user ha bootstrappato negli ultimi 15s,
+    // ritorna i dati senza colpire il DB (3 query risparmiate)
+    const cached = getCachedBootstrap(user.id)
+    if (cached) return cached
+
     const selectedEntityId = await getSelectedEntityId()
     const supabase = await createServerSupabaseClient()
 
@@ -79,7 +124,7 @@ export const getAuthBootstrapData = cache(async (): Promise<AuthBootstrapData> =
     const typedMemberships = (membershipRows ?? []) as MembershipWithTenant[]
 
     if (typedStaff.length === 0) {
-      return {
+      const result: AuthBootstrapData = {
         user,
         profile,
         tenant: typedMemberships[0]?.tenant ?? null,
@@ -93,6 +138,8 @@ export const getAuthBootstrapData = cache(async (): Promise<AuthBootstrapData> =
         staffMemberships: [],
         properties: [],
       }
+      setCachedBootstrap(user.id, result)
+      return result
     }
 
     const selectedStaff = typedStaff.find((s) => s.entity_id === selectedEntityId)
@@ -124,7 +171,7 @@ export const getAuthBootstrapData = cache(async (): Promise<AuthBootstrapData> =
       ? { ...activeStaff.entity, tenant: undefined }
       : null
 
-    return {
+    const result: AuthBootstrapData = {
       user,
       profile,
       tenant,
@@ -135,6 +182,8 @@ export const getAuthBootstrapData = cache(async (): Promise<AuthBootstrapData> =
       staffMemberships: typedStaff.map(({ entity: _e, ...rest }) => rest),
       properties: entities.map(({ tenant: _t, ...rest }) => rest) as Entity[],
     }
+    setCachedBootstrap(user.id, result)
+    return result
   } catch {
     return EMPTY_BOOTSTRAP
   }

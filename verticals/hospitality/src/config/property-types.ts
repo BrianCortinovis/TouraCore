@@ -36,8 +36,6 @@ export interface PropertyNavigation {
   showRestaurant: boolean
   showHousekeeping: boolean
   showSelfCheckin: boolean
-  showContracts: boolean
-  showUtilities: boolean
 }
 
 // ---------------------------------------------------------------------------
@@ -70,7 +68,7 @@ export interface PropertyCompliance {
   requiresAlloggiati: boolean
   requiresISTAT: boolean
   requiresSCIA: boolean
-  requiresRentalContract: boolean
+
   maxUnits: number | null          // null = no limit
   minUnits: number | null          // null = no minimum (hotel min 7)
   requiresInsurance: boolean       // assicurazione catastrofale
@@ -135,8 +133,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       showRestaurant: true,
       showHousekeeping: true,
       showSelfCheckin: false,
-      showContracts: false,
-      showUtilities: false,
     },
     fiscal: {
       defaultFiscalRegime: 'ordinario',
@@ -159,7 +155,7 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       requiresAlloggiati: true,
       requiresISTAT: true,
       requiresSCIA: true,
-      requiresRentalContract: false,
+
       maxUnits: null,
       minUnits: 7,
       requiresInsurance: true,
@@ -196,8 +192,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       showRestaurant: true,
       showHousekeeping: true,
       showSelfCheckin: true,
-      showContracts: false,
-      showUtilities: false,
     },
     fiscal: {
       defaultFiscalRegime: 'ordinario',
@@ -220,7 +214,7 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       requiresAlloggiati: true,
       requiresISTAT: true,
       requiresSCIA: true,
-      requiresRentalContract: false,
+
       maxUnits: null,
       minUnits: null,
       requiresInsurance: true,
@@ -257,8 +251,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       showRestaurant: true,
       showHousekeeping: true,
       showSelfCheckin: true,
-      showContracts: false,
-      showUtilities: false,
     },
     fiscal: {
       defaultFiscalRegime: 'ordinario',
@@ -281,7 +273,7 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       requiresAlloggiati: true,
       requiresISTAT: true,
       requiresSCIA: true,
-      requiresRentalContract: false,
+
       maxUnits: null,
       minUnits: null,
       requiresInsurance: true,
@@ -318,8 +310,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       showRestaurant: false,
       showHousekeeping: true,
       showSelfCheckin: true,
-      showContracts: false,
-      showUtilities: false,
     },
     // Fiscal rules depend on is_imprenditoriale flag
     // These are defaults for NON-imprenditoriale (private B&B)
@@ -345,7 +335,7 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       requiresAlloggiati: true,
       requiresISTAT: true,
       requiresSCIA: false, // depends on region, set as soft
-      requiresRentalContract: false,
+
       maxUnits: 6,
       minUnits: null,
       requiresInsurance: false,
@@ -382,8 +372,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       showRestaurant: false,
       showHousekeeping: true,
       showSelfCheckin: true,
-      showContracts: true,
-      showUtilities: true,
     },
     fiscal: {
       defaultFiscalRegime: 'cedolare_secca',
@@ -406,7 +394,7 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       requiresAlloggiati: true,
       requiresISTAT: true,
       requiresSCIA: false,
-      requiresRentalContract: true,
+
       maxUnits: 2,  // dal 2026: max 2 senza P.IVA
       minUnits: null,
       requiresInsurance: false,
@@ -443,8 +431,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       showRestaurant: false,
       showHousekeeping: true,
       showSelfCheckin: true,
-      showContracts: false,
-      showUtilities: false,
     },
     fiscal: {
       defaultFiscalRegime: 'forfettario',
@@ -467,7 +453,7 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       requiresAlloggiati: true,
       requiresISTAT: true,
       requiresSCIA: true,
-      requiresRentalContract: false,
+
       maxUnits: 6,
       minUnits: null,
       requiresInsurance: true,
@@ -504,8 +490,6 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       showRestaurant: true,
       showHousekeeping: true,
       showSelfCheckin: false,
-      showContracts: false,
-      showUtilities: false,
     },
     fiscal: {
       defaultFiscalRegime: 'agriturismo_special',
@@ -528,7 +512,7 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
       requiresAlloggiati: true,
       requiresISTAT: true,
       requiresSCIA: true,
-      requiresRentalContract: false,
+
       maxUnits: null,  // max 30-45 posti letto (regionale)
       minUnits: null,
       requiresInsurance: true,
