@@ -145,6 +145,12 @@ export function EntitySidebar({
     setMobileOpen(false)
   }, [pathname])
 
+  // Sezioni sidebar espandibili (tutti aperte di default)
+  const [closedGroups, setClosedGroups] = useState<Record<string, boolean>>({})
+  const toggleGroup = (key: string) => {
+    setClosedGroups((prev) => ({ ...prev, [key]: !prev[key] }))
+  }
+
   useEffect(() => {
     if (!switcherOpen) return
     function handleClickOutside(e: MouseEvent) {
@@ -186,17 +192,30 @@ export function EntitySidebar({
 
         if (items.length === 0) return null
 
+        const isClosed = closedGroups[group.key] ?? false
+
         return (
           <div key={group.key}>
             {showLabels ? (
-              <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                {group.label}
-              </p>
+              <button
+                type="button"
+                onClick={() => toggleGroup(group.key)}
+                className="mb-1 flex w-full items-center justify-between px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-gray-800 hover:text-black"
+                aria-expanded={!isClosed}
+              >
+                <span>{group.label}</span>
+                <ChevronDown
+                  className={`h-3.5 w-3.5 text-gray-600 transition-transform ${
+                    isClosed ? '-rotate-90' : ''
+                  }`}
+                />
+              </button>
             ) : (
-              <p className="mb-1 text-center text-[9px] font-semibold uppercase tracking-wider text-gray-300">
+              <p className="mb-1 text-center text-[9px] font-bold uppercase tracking-wider text-gray-600">
                 {group.label.slice(0, 4)}
               </p>
             )}
+            {!(showLabels && isClosed) && (
             <div className="space-y-0.5">
               {items.map((section) => {
                 const meta = SECTION_META[section]
@@ -250,6 +269,7 @@ export function EntitySidebar({
                 )
               })}
             </div>
+            )}
           </div>
         )
       })}
@@ -383,15 +403,15 @@ export function EntitySidebar({
           collapsed ? 'w-20' : 'w-56'
         }`}
       >
-        <div className="sticky top-16 space-y-2 px-1 pb-4">
-          {renderHeader(!collapsed)}
-          {renderNav(!collapsed)}
-
-          {/* Toggle collapse desktop */}
+        <div
+          className="sticky top-16 flex flex-col px-1"
+          style={{ height: 'calc(100vh - 4rem)' }}
+        >
+          {/* Toggle collapse — IN ALTO, sempre visibile, fuori dallo scroll */}
           <button
             type="button"
             onClick={() => setCollapsed(!collapsed)}
-            className="mt-2 flex w-full items-center justify-center gap-1 rounded-md border border-gray-200 bg-white py-1.5 text-xs text-gray-500 hover:border-gray-300 hover:text-gray-900"
+            className="mb-2 mt-2 flex w-full items-center justify-center gap-1 rounded-md border border-gray-200 bg-white py-2 text-xs font-semibold text-gray-700 shadow-sm hover:border-gray-400 hover:bg-gray-50"
             aria-label={collapsed ? 'Espandi menu' : 'Comprimi menu'}
             title={collapsed ? 'Espandi menu' : 'Comprimi menu'}
           >
@@ -404,6 +424,12 @@ export function EntitySidebar({
               </>
             )}
           </button>
+
+          {/* Area scrollabile: header + nav */}
+          <div className="flex-1 space-y-2 overflow-y-auto pb-4">
+            {renderHeader(!collapsed)}
+            {renderNav(!collapsed)}
+          </div>
         </div>
       </aside>
 

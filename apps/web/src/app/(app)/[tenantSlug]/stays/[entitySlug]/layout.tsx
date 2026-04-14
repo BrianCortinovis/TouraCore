@@ -62,7 +62,12 @@ export default async function EntityLayout({ children, params }: EntityLayoutPro
         }))}
       />
       <div className="min-w-0 flex-1 pt-14 lg:pt-0">
-        {children}
+        {/* Wrap contenuto con max-width ragionevole per leggibilità form.
+            Pagine che richiedono full-width (planning, reports) possono
+            usare classi -mx-* o annidare in un div con max-w: none */}
+        <div className="mx-auto w-full max-w-5xl">
+          {children}
+        </div>
       </div>
     </div>
   )
