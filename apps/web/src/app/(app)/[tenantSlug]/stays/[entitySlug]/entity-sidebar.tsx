@@ -16,7 +16,6 @@ import {
   BookOpen,
   Image,
   Link2,
-  ArrowLeft,
   ChevronDown,
   Check,
   Plus,
@@ -278,21 +277,7 @@ export function EntitySidebar({
 
   const renderHeader = (showLabels: boolean, onItemClick?: () => void) => (
     <>
-      <Link
-        href={`/${tenantSlug}`}
-        onClick={onItemClick}
-        className={`flex items-center gap-2 rounded-md border border-gray-200 bg-white text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-900 ${
-          showLabels ? 'px-3 py-2' : 'flex-col gap-1.5 py-3'
-        }`}
-        title="Torna all'account"
-      >
-        <ArrowLeft className={showLabels ? 'h-4 w-4' : 'h-6 w-6'} />
-        <span className={showLabels ? 'text-sm font-medium' : 'text-[10px] font-medium leading-none'}>
-          Account
-        </span>
-      </Link>
-
-      <div className="border-t border-gray-200 pt-2">
+      <div>
         {!showLabels && (
           <p className="text-center text-[10px] font-semibold uppercase tracking-wide text-gray-400">
             CMS

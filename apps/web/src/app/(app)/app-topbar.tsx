@@ -8,7 +8,7 @@ import {
   Building2,
   ChevronDown,
   Check,
-  LogOut,
+  ArrowLeft,
   Settings,
   User,
   Shield,
@@ -136,6 +136,7 @@ export function AppTopBar() {
               <Link
                 href={`/${currentTenant.slug}/settings`}
                 className="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                title="Impostazioni account"
               >
                 <Settings className="h-4 w-4" />
               </Link>
@@ -144,14 +145,16 @@ export function AppTopBar() {
               <User className="h-4 w-4" />
               <span>{user?.email}</span>
             </div>
-            <form action="/auth/signout" method="POST">
-              <button
-                type="submit"
-                className="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+            {currentTenant && (
+              <Link
+                href={`/${currentTenant.slug}`}
+                className="flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                title="Torna alla home account"
               >
-                <LogOut className="h-4 w-4" />
-              </button>
-            </form>
+                <ArrowLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">Account</span>
+              </Link>
+            )}
           </div>
         </div>
       </header>
