@@ -24,12 +24,12 @@ export type SidebarSection =
   | 'compliance-alloggiati'
   | 'compliance-tourist-tax'
   | 'compliance-istat'
-  | 'ical'
   | 'settings'
   | 'restaurant'
   | 'housekeeping'
   | 'self-checkin'
   | 'services'
+  | 'channels'
 
 // ---------------------------------------------------------------------------
 // Gruppi navigazione (stile Gest)
@@ -111,7 +111,7 @@ export function getNavigation(
     label: 'Configurazione',
     sections: [
       'media',
-      'ical',
+      'channels',
       'settings',
       ...(nav.showHousekeeping ? ['housekeeping' as SidebarSection] : []),
     ],

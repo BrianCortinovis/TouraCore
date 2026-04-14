@@ -59,7 +59,7 @@ const SECTION_META: Record<SidebarSection, { label: string; icon: LucideIcon; ag
   'compliance-alloggiati': { label: 'Alloggiati', icon: Shield },
   'compliance-tourist-tax': { label: 'Tassa sogg.', icon: Coins },
   'compliance-istat': { label: 'ISTAT', icon: BarChart3 },
-  'ical': { label: 'iCal Sync', icon: Link2, agencyHidden: true },
+  'channels': { label: 'Canali', icon: Link2, agencyHidden: true },
   'settings': { label: 'Impostazioni', icon: Settings, agencyHidden: true },
   'services': { label: 'Servizi extra', icon: Gift },
   'restaurant': { label: 'Ristorante', icon: UtensilsCrossed, placeholder: true },

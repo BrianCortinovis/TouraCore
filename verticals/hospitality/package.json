@@ -9,18 +9,19 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
     "@touracore/auth": "workspace:*",
     "@touracore/db": "workspace:*",
     "@touracore/integrations": "workspace:*",
     "@touracore/types": "workspace:*",
     "@touracore/ui": "workspace:*",
-    "@supabase/supabase-js": "^2.49.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.469.0",
     "next": "^15.3.1",
     "react": "^19.1.0",
-    "zustand": "^5.0.3",
-    "zod": "^3.24.2"
+    "resend": "^6.10.0",
+    "zod": "^3.24.2",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@types/node": "^22.15.2",
