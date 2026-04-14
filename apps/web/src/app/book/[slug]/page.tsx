@@ -8,10 +8,17 @@ import {
   getPropertyBySlugAction,
   searchAvailabilityAction,
   createPublicBookingAction,
-  calculatePetSupplement,
   type AvailabilityItem,
-  type PublicPropertyInfo,
 } from './actions'
+import { calculatePetSupplement, type PublicPetPolicy } from './pet-pricing'
+
+interface PublicPropertyInfo {
+  id: string
+  slug: string
+  name: string
+  pet_policy: PublicPetPolicy
+  [key: string]: unknown
+}
 
 type Step = 'search' | 'results' | 'form' | 'confirmation'
 

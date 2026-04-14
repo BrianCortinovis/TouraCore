@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from '@touracore/db/server'
 import { checkAvailability, type AvailabilityResult } from '@touracore/hospitality/src/queries/availability'
 import { buildStayOffer, type StayOfferResult } from '@touracore/hospitality/src/lib/rates/stay-pricing'
 import type { Property, RoomType } from '@touracore/hospitality/src/types/database'
+import type { PublicPetPolicy } from './pet-pricing'
 
 interface ActionResult {
   success: boolean
@@ -11,15 +12,10 @@ interface ActionResult {
   data?: unknown
 }
 
-export interface PublicPetPolicy {
-  allowed: boolean
-  max_pets: number
-  fee_per_night: number
-  fee_per_stay: number
-  notes: string
-}
-
-export interface PublicPropertyInfo {
+// Shape pubblica property con pet_policy normalizzata — interface usata
+// internamente dalle action, ma il client la importa da './types' per
+// evitare di risalire al file 'use server' (cannot re-export types).
+interface PublicPropertyRow {
   id: string
   slug: string
   name: string
@@ -39,7 +35,7 @@ function normalizePetPolicy(raw: unknown): PublicPetPolicy {
   }
 }
 
-export async function getPropertyBySlugAction(slug: string): Promise<PublicPropertyInfo | null> {
+export async function getPropertyBySlugAction(slug: string): Promise<PublicPropertyRow | null> {
   const supabase = await createServerSupabaseClient()
 
   const { data: entity } = await supabase
@@ -105,18 +101,6 @@ export async function searchAvailabilityAction(
       offer,
     }
   })
-}
-
-// Calcola supplemento totale pet secondo la policy (per_night * pet_count * nights + per_stay * pet_count)
-export function calculatePetSupplement(
-  policy: PublicPetPolicy,
-  petCount: number,
-  nights: number,
-): number {
-  if (!policy.allowed || petCount <= 0) return 0
-  const perNight = policy.fee_per_night * petCount * nights
-  const perStay = policy.fee_per_stay * petCount
-  return Math.round((perNight + perStay) * 100) / 100
 }
 
 export async function createPublicBookingAction(input: {
