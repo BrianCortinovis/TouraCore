@@ -118,19 +118,25 @@ export function EntitySidebar({
   const switcherRef = useRef<HTMLDivElement>(null)
 
   // Stato collapsed (desktop): rail stretta (icone only) vs espansa (icone + label)
-  // Persist in localStorage per ricordare la preferenza utente
-  const [collapsed, setCollapsed] = useState(false)
+  // Persist in localStorage. Durante SSR e primo render client usiamo sempre
+  // il default (expanded) per evitare hydration mismatch — la preferenza si
+  // applica nel useEffect dopo il mount.
+  const [collapsedPref, setCollapsedPref] = useState(false)
   const [mounted, setMounted] = useState(false)
   useEffect(() => {
     const stored = localStorage.getItem('touracore_sidebar_collapsed')
-    if (stored === '1') setCollapsed(true)
+    if (stored === '1') setCollapsedPref(true)
     setMounted(true)
   }, [])
   useEffect(() => {
     if (mounted) {
-      localStorage.setItem('touracore_sidebar_collapsed', collapsed ? '1' : '0')
+      localStorage.setItem('touracore_sidebar_collapsed', collapsedPref ? '1' : '0')
     }
-  }, [collapsed, mounted])
+  }, [collapsedPref, mounted])
+
+  // Valore effettivo usato nel render: server e primo client render → false
+  const collapsed = mounted ? collapsedPref : false
+  const setCollapsed = setCollapsedPref
 
   // Drawer mobile (< lg)
   const [mobileOpen, setMobileOpen] = useState(false)
