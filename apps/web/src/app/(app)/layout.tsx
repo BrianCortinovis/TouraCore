@@ -3,6 +3,10 @@ import { getAuthBootstrapData } from '@touracore/auth/bootstrap'
 import { AuthProvider } from '@touracore/auth/provider'
 import { AppTopBar } from './app-topbar'
 
+// Tutte le pagine sotto (app) richiedono autenticazione e accesso Supabase,
+// quindi sono sempre dinamiche — evita di provare static generation al build.
+export const dynamic = 'force-dynamic'
+
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const bootstrap = await getAuthBootstrapData()
 
