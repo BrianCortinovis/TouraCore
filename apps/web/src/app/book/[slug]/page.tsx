@@ -2,12 +2,15 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
+import { PawPrint } from 'lucide-react'
 import { Button, Input, Card, CardHeader, CardTitle, CardContent, Badge } from '@touracore/ui'
 import {
   getPropertyBySlugAction,
   searchAvailabilityAction,
   createPublicBookingAction,
+  calculatePetSupplement,
   type AvailabilityItem,
+  type PublicPropertyInfo,
 } from './actions'
 
 type Step = 'search' | 'results' | 'form' | 'confirmation'
@@ -32,13 +35,18 @@ export default function PublicBookingPage() {
   const searchParams = useSearchParams()
   const slug = params.slug as string
 
-  const [property, setProperty] = useState<Record<string, unknown> | null>(null)
+  const [property, setProperty] = useState<PublicPropertyInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [step, setStep] = useState<Step>('search')
 
   const [checkIn, setCheckIn] = useState(searchParams.get('check_in') || '')
   const [checkOut, setCheckOut] = useState(searchParams.get('check_out') || '')
   const [guests, setGuests] = useState(Number(searchParams.get('guests')) || 2)
+  const [travelWithPets, setTravelWithPets] = useState(
+    searchParams.get('pets') === '1',
+  )
+  const [petCount, setPetCount] = useState(1)
+  const [petDetails, setPetDetails] = useState('')
 
   const [results, setResults] = useState<AvailabilityItem[]>([])
   const [searching, setSearching] = useState(false)
@@ -55,7 +63,7 @@ export default function PublicBookingPage() {
   const loadProperty = useCallback(async () => {
     setLoading(true)
     const p = await getPropertyBySlugAction(slug)
-    setProperty(p as Record<string, unknown> | null)
+    setProperty(p)
     setLoading(false)
   }, [slug])
 
@@ -88,23 +96,36 @@ export default function PublicBookingPage() {
     setStep('form')
   }
 
+  const nights = checkIn && checkOut
+    ? Math.max(0, Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000))
+    : 0
+
+  const effectivePetCount = travelWithPets ? petCount : 0
+  const petSupplement = property
+    ? calculatePetSupplement(property.pet_policy, effectivePetCount, nights)
+    : 0
+  const roomTotal = selectedRoom?.offer?.totalPrice ?? 0
+  const grandTotal = roomTotal + petSupplement
+
   async function handleBook() {
     if (!property || !selectedRoom) return
     setBooking(true)
     setError('')
 
     const res = await createPublicBookingAction({
-      entityId: property.id as string,
+      entityId: property.id,
       roomTypeId: selectedRoom.roomType.id,
       checkIn,
       checkOut,
       adults: guests,
       children: 0,
+      petCount: effectivePetCount,
+      petDetails: effectivePetCount > 0 ? petDetails : undefined,
       guestName,
       guestEmail,
       guestPhone,
       specialRequests,
-      totalAmount: selectedRoom.offer?.totalPrice ?? 0,
+      totalAmount: grandTotal,
     })
 
     if (res.success) {
@@ -115,10 +136,6 @@ export default function PublicBookingPage() {
     }
     setBooking(false)
   }
-
-  const nights = checkIn && checkOut
-    ? Math.max(0, Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000))
-    : 0
 
   if (loading) {
     return (
@@ -232,8 +249,25 @@ export default function PublicBookingPage() {
                     {searching ? 'Ricerca...' : 'Cerca'}
                   </Button>
                 </div>
-                {nights > 0 && (
-                  <p className="mt-2 text-sm text-gray-500">{nights} {nights === 1 ? 'notte' : 'notti'}</p>
+                <div className="mt-3 flex items-center justify-between">
+                  {nights > 0 && (
+                    <p className="text-sm text-gray-500">{nights} {nights === 1 ? 'notte' : 'notti'}</p>
+                  )}
+                  <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={travelWithPets}
+                      onChange={(e) => setTravelWithPets(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <PawPrint className="h-4 w-4 text-gray-500" />
+                    Viaggio con animali
+                  </label>
+                </div>
+                {travelWithPets && !property.pet_policy.allowed && (
+                  <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                    Questa struttura non accetta animali. Deseleziona l&apos;opzione o scegli un&apos;altra struttura.
+                  </p>
                 )}
               </CardContent>
             </Card>
@@ -259,10 +293,16 @@ export default function PublicBookingPage() {
                               {item.roomType.size_sqm && <span>· {item.roomType.size_sqm} mq</span>}
                               {item.roomType.bed_configuration && <span>· {item.roomType.bed_configuration}</span>}
                             </div>
-                            <div className="mt-2">
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
                               <Badge variant={item.availableRooms > 0 ? 'success' : 'destructive'}>
                                 {item.availableRooms > 0 ? `${item.availableRooms} disponibil${item.availableRooms === 1 ? 'e' : 'i'}` : 'Non disponibile'}
                               </Badge>
+                              {property.pet_policy.allowed && (
+                                <Badge variant="secondary">
+                                  <PawPrint className="mr-1 h-3 w-3" />
+                                  Pet friendly
+                                </Badge>
+                              )}
                             </div>
                           </div>
                           <div className="text-right">
@@ -317,18 +357,94 @@ export default function PublicBookingPage() {
                 <CardContent>
                   <div className="space-y-6">
                     <div className="rounded-lg bg-blue-50 p-4">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-start justify-between">
                         <div>
                           <p className="font-semibold text-blue-900">{selectedRoom.roomType.name}</p>
                           <p className="text-sm text-blue-700">
                             {formatDate(checkIn)} → {formatDate(checkOut)} · {nights} {nights === 1 ? 'notte' : 'notti'}
                           </p>
                         </div>
-                        <p className="text-xl font-bold text-blue-900">
-                          €{selectedRoom.offer?.totalPrice.toFixed(2)}
-                        </p>
+                        <div className="text-right">
+                          <p className="text-sm text-blue-700">Camera</p>
+                          <p className="text-xl font-bold text-blue-900">
+                            €{roomTotal.toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                      {petSupplement > 0 && (
+                        <div className="mt-3 flex items-start justify-between border-t border-blue-200 pt-3">
+                          <div>
+                            <p className="flex items-center gap-1 font-semibold text-blue-900">
+                              <PawPrint className="h-4 w-4" />
+                              Supplemento animali
+                            </p>
+                            <p className="text-xs text-blue-700">
+                              {effectivePetCount} {effectivePetCount === 1 ? 'animale' : 'animali'}
+                              {property.pet_policy.fee_per_night > 0 &&
+                                ` · €${property.pet_policy.fee_per_night}/notte ciascuno`}
+                              {property.pet_policy.fee_per_stay > 0 &&
+                                ` · €${property.pet_policy.fee_per_stay}/soggiorno ciascuno`}
+                            </p>
+                          </div>
+                          <p className="font-semibold text-blue-900">€{petSupplement.toFixed(2)}</p>
+                        </div>
+                      )}
+                      <div className="mt-3 flex items-center justify-between border-t border-blue-200 pt-3">
+                        <p className="text-sm font-semibold text-blue-900">Totale</p>
+                        <p className="text-2xl font-bold text-blue-900">€{grandTotal.toFixed(2)}</p>
                       </div>
                     </div>
+
+                    {/* Sezione animali — visibile solo se la struttura li accetta */}
+                    {property.pet_policy.allowed && (
+                      <div className="rounded-lg border border-gray-200 p-4">
+                        <label className="flex cursor-pointer items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={travelWithPets}
+                            onChange={(e) => setTravelWithPets(e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <PawPrint className="h-4 w-4 text-gray-600" />
+                          <span className="text-sm font-medium text-gray-900">
+                            Porto con me degli animali
+                          </span>
+                        </label>
+                        {property.pet_policy.notes && (
+                          <p className="mt-2 pl-6 text-xs text-gray-500">{property.pet_policy.notes}</p>
+                        )}
+                        {travelWithPets && (
+                          <div className="mt-3 space-y-3 pl-6">
+                            <div className="w-32">
+                              <label className="mb-1 block text-xs font-medium text-gray-700">
+                                Numero animali
+                              </label>
+                              <select
+                                value={petCount}
+                                onChange={(e) => setPetCount(Number(e.target.value))}
+                                className="flex h-9 w-full rounded-lg border border-gray-300 bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                {Array.from({ length: Math.max(1, property.pet_policy.max_pets || 5) }, (_, i) => i + 1).map((n) => (
+                                  <option key={n} value={n}>{n}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="mb-1 block text-xs font-medium text-gray-700">
+                                Tipo e dettagli (opzionale)
+                              </label>
+                              <textarea
+                                value={petDetails}
+                                onChange={(e) => setPetDetails(e.target.value)}
+                                rows={2}
+                                placeholder="Es. Labrador di 3 anni, 25kg, docile"
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     <div className="space-y-4">
                       <Input
@@ -373,7 +489,7 @@ export default function PublicBookingPage() {
                         onClick={handleBook}
                         disabled={booking || !guestName || !guestEmail}
                       >
-                        {booking ? 'Prenotazione in corso...' : 'Conferma prenotazione'}
+                        {booking ? 'Prenotazione in corso...' : `Conferma €${grandTotal.toFixed(2)}`}
                       </Button>
                     </div>
                   </div>

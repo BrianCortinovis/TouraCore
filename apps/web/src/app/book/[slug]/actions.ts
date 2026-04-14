@@ -11,15 +11,59 @@ interface ActionResult {
   data?: unknown
 }
 
-export async function getPropertyBySlugAction(slug: string): Promise<Property | null> {
+export interface PublicPetPolicy {
+  allowed: boolean
+  max_pets: number
+  fee_per_night: number
+  fee_per_stay: number
+  notes: string
+}
+
+export interface PublicPropertyInfo {
+  id: string
+  slug: string
+  name: string
+  pet_policy: PublicPetPolicy
+  [key: string]: unknown
+}
+
+// Normalizza pet_policy dai dati raw (JSONB)
+function normalizePetPolicy(raw: unknown): PublicPetPolicy {
+  const obj = (raw ?? {}) as Record<string, unknown>
+  return {
+    allowed: Boolean(obj.allowed),
+    max_pets: typeof obj.max_pets === 'number' ? obj.max_pets : 0,
+    fee_per_night: typeof obj.fee_per_night === 'number' ? obj.fee_per_night : 0,
+    fee_per_stay: typeof obj.fee_per_stay === 'number' ? obj.fee_per_stay : 0,
+    notes: typeof obj.notes === 'string' ? obj.notes : '',
+  }
+}
+
+export async function getPropertyBySlugAction(slug: string): Promise<PublicPropertyInfo | null> {
   const supabase = await createServerSupabaseClient()
-  const { data } = await supabase
+
+  const { data: entity } = await supabase
     .from('entities')
     .select('*')
     .eq('slug', slug)
     .single()
 
-  return (data as Property) ?? null
+  if (!entity) return null
+
+  // Carica pet_policy da accommodations collegata
+  const { data: accommodation } = await supabase
+    .from('accommodations')
+    .select('pet_policy')
+    .eq('entity_id', entity.id)
+    .maybeSingle()
+
+  return {
+    ...(entity as Record<string, unknown>),
+    id: entity.id,
+    slug: entity.slug,
+    name: entity.name,
+    pet_policy: normalizePetPolicy(accommodation?.pet_policy),
+  }
 }
 
 export interface AvailabilityItem {
@@ -63,6 +107,18 @@ export async function searchAvailabilityAction(
   })
 }
 
+// Calcola supplemento totale pet secondo la policy (per_night * pet_count * nights + per_stay * pet_count)
+export function calculatePetSupplement(
+  policy: PublicPetPolicy,
+  petCount: number,
+  nights: number,
+): number {
+  if (!policy.allowed || petCount <= 0) return 0
+  const perNight = policy.fee_per_night * petCount * nights
+  const perStay = policy.fee_per_stay * petCount
+  return Math.round((perNight + perStay) * 100) / 100
+}
+
 export async function createPublicBookingAction(input: {
   entityId: string
   roomTypeId: string
@@ -70,6 +126,8 @@ export async function createPublicBookingAction(input: {
   checkOut: string
   adults: number
   children: number
+  petCount: number
+  petDetails?: string
   guestName: string
   guestEmail: string
   guestPhone: string
@@ -98,6 +156,27 @@ export async function createPublicBookingAction(input: {
 
   if (!entity) {
     return { success: false, error: 'Struttura non trovata.' }
+  }
+
+  // Verifica policy pet: carica accommodation e valida count <= max_pets
+  const { data: accommodation } = await supabase
+    .from('accommodations')
+    .select('pet_policy')
+    .eq('entity_id', input.entityId)
+    .maybeSingle()
+
+  const petPolicy = normalizePetPolicy(accommodation?.pet_policy)
+
+  if (input.petCount > 0) {
+    if (!petPolicy.allowed) {
+      return { success: false, error: 'Questa struttura non accetta animali.' }
+    }
+    if (petPolicy.max_pets > 0 && input.petCount > petPolicy.max_pets) {
+      return {
+        success: false,
+        error: `Massimo ${petPolicy.max_pets} animali consentiti.`,
+      }
+    }
   }
 
   const { data: guest, error: guestErr } = await supabase
@@ -133,6 +212,10 @@ export async function createPublicBookingAction(input: {
       currency: 'EUR',
       notes: input.specialRequests || null,
       source: 'direct',
+      pet_count: input.petCount,
+      pet_details: input.petCount > 0
+        ? { notes: input.petDetails ?? null, count: input.petCount }
+        : null,
       vertical_data: {
         room_type_id: input.roomTypeId,
         room_type_name: roomTypeAvail.roomType.name,

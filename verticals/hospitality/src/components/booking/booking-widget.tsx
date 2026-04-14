@@ -1,11 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { CalendarDays, Users, Search, ExternalLink, BedDouble } from 'lucide-react'
+import { CalendarDays, Users, Search, ExternalLink, BedDouble, PawPrint } from 'lucide-react'
 
 interface BookingWidgetProps {
   orgSlug: string
-  /** Base URL of the Gest booking engine. Defaults to current origin. */
+  /** Base URL del booking engine TouraCore. Default: origin corrente. */
   baseUrl?: string
   /** Color theme accent. Defaults to blue. */
   accentColor?: string
@@ -40,6 +40,7 @@ export default function BookingWidget({
   const [checkIn, setCheckIn] = useState(defaults.checkIn)
   const [checkOut, setCheckOut] = useState(defaults.checkOut)
   const [guests, setGuests] = useState(2)
+  const [withPets, setWithPets] = useState(false)
 
   const displayName =
     hotelName ||
@@ -50,7 +51,8 @@ export default function BookingWidget({
 
   const handleSearch = () => {
     const origin = baseUrl || (typeof window !== 'undefined' ? window.location.origin : '')
-    const bookingUrl = `${origin}/book/${orgSlug}?check_in=${checkIn}&check_out=${checkOut}&guests=${guests}`
+    const petsParam = withPets ? '&pets=1' : ''
+    const bookingUrl = `${origin}/book/${orgSlug}?check_in=${checkIn}&check_out=${checkOut}&guests=${guests}${petsParam}`
 
     // Open in new tab or redirect based on context
     if (window.parent !== window) {
@@ -182,6 +184,18 @@ export default function BookingWidget({
             </select>
           </div>
 
+          {/* Pet toggle */}
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              checked={withPets}
+              onChange={(e) => setWithPets(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-blue-600"
+            />
+            <PawPrint className="w-3.5 h-3.5 text-gray-500" />
+            Viaggio con animali
+          </label>
+
           {/* Nights badge */}
           {nights > 0 && (
             <div className={`${colors.badge} rounded-lg px-3 py-2 text-sm text-center font-medium`}>
@@ -216,7 +230,7 @@ export default function BookingWidget({
         {/* Powered by */}
         <div className="bg-gray-50 border-t border-gray-100 px-5 py-2.5 flex items-center justify-center gap-1.5 text-xs text-gray-400">
           <span>Powered by</span>
-          <span className="font-semibold text-gray-500">Gest</span>
+          <span className="font-semibold text-gray-500">TouraCore</span>
         </div>
       </div>
     </div>
