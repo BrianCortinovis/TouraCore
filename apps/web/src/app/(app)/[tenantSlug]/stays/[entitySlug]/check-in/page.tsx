@@ -88,7 +88,7 @@ export default function CheckInPage() {
     setError('')
 
     const data: StaffCheckInData = {
-      booking_id: selectedBooking.id,
+      reservation_id: selectedBooking.id,
       guest_id: selectedBooking.guest_id ?? undefined,
       document_type: docType as StaffCheckInData['document_type'],
       document_number: docNumber || undefined,

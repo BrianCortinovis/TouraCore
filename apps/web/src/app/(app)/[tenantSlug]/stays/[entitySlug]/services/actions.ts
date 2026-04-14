@@ -1,7 +1,6 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { getAuthBootstrapData } from '@touracore/auth/bootstrap'
 import {
   getOffers,
   getOrders,

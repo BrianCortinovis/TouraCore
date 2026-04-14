@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, Badge } from '@touracore/ui'
 import { Building2, Plus, MapPin } from 'lucide-react'
+import { useAuthStore } from '@touracore/auth/store'
 import { listPropertiesAction } from '../../../(dashboard)/properties/actions'
 
 interface PropertySummary {
   id: string
+  slug: string
   name: string
   type: string
   city: string | null
@@ -26,6 +28,7 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 export default function AccountPropertiesPage() {
+  const { tenant } = useAuthStore()
   const [properties, setProperties] = useState<PropertySummary[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -81,7 +84,7 @@ export default function AccountPropertiesPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {properties.map((prop) => (
-            <Link key={prop.id} href={`/cms/${prop.id}`}>
+            <Link key={prop.id} href={`/${tenant?.slug}/stays/${prop.slug}`}>
               <Card className="cursor-pointer transition-shadow hover:shadow-md">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">

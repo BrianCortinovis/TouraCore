@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { Button, Card, CardContent, Badge } from '@touracore/ui'
+import { Button, Card, CardContent } from '@touracore/ui'
 import {
   BarChart3, RefreshCw, ChevronLeft, ChevronRight,
-  Download, Users, Globe, MapPin,
+  Globe, MapPin,
 } from 'lucide-react'
 import { loadIstatDataAction } from './actions'
 

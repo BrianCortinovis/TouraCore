@@ -215,8 +215,8 @@ function BookingBar({ booking, days, onClick }: BookingBarProps) {
       title={`${booking.guest_name} · ${booking.check_in} → ${booking.check_out}`}
     >
       <span className="truncate font-semibold">{booking.guest_name}</span>
-      {booking.guest_count && (
-        <span className="shrink-0 text-xs opacity-70">{booking.guest_count} osp.</span>
+      {booking.adults > 0 && (
+        <span className="shrink-0 text-xs opacity-70">{booking.adults + booking.children} osp.</span>
       )}
     </button>
   )

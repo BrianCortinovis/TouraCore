@@ -147,7 +147,7 @@ function GuestTab({ booking }: { booking: PlanningBooking }) {
         </Field>
       )}
       <Field label="Numero ospiti">
-        {booking.guest_count ? `${booking.guest_count} ospiti` : '—'}
+        {booking.adults + booking.children > 0 ? `${booking.adults} adulti${booking.children > 0 ? `, ${booking.children} bambini` : ''}` : '—'}
       </Field>
     </dl>
   )
@@ -232,12 +232,12 @@ function NotesTab({ booking }: { booking: PlanningBooking }) {
 function ActionsTab({ booking }: { booking: PlanningBooking }) {
   return (
     <div className="space-y-2">
-      <ActionButton label="Conferma" enabled={booking.status === 'pending'} />
+      <ActionButton label="Conferma" enabled={booking.status === 'inquiry' || booking.status === 'option'} />
       <ActionButton label="Check-in" enabled={booking.status === 'confirmed'} />
-      <ActionButton label="Check-out" enabled={booking.status === 'confirmed'} />
+      <ActionButton label="Check-out" enabled={booking.status === 'checked_in'} />
       <ActionButton
         label="Cancella prenotazione"
-        enabled={booking.status !== 'canceled' && booking.status !== 'completed'}
+        enabled={booking.status !== 'cancelled' && booking.status !== 'checked_out' && booking.status !== 'no_show'}
         destructive
       />
       <p className="mt-4 text-xs text-gray-500">

@@ -5,7 +5,7 @@ import { Button, Input, Badge, DataTable, Modal, cn } from '@touracore/ui'
 import {
   Search, Plus, Mail, Phone, MapPin, Users,
   Eye, Trash2, Edit, Save, X, Building2, FileText,
-  Download, Filter, Calendar, CreditCard, History,
+  Download, Filter, Calendar, History,
   ChevronDown,
 } from 'lucide-react'
 import { format } from 'date-fns'
@@ -48,18 +48,22 @@ const DOCUMENT_LABELS: Record<string, string> = {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-yellow-100 text-yellow-800',
+  inquiry: 'bg-purple-100 text-purple-800',
+  option: 'bg-yellow-100 text-yellow-800',
   confirmed: 'bg-blue-100 text-blue-800',
-  canceled: 'bg-red-100 text-red-800',
-  completed: 'bg-green-100 text-green-800',
-  no_show: 'bg-gray-100 text-gray-800',
+  checked_in: 'bg-green-100 text-green-800',
+  checked_out: 'bg-gray-100 text-gray-800',
+  cancelled: 'bg-red-100 text-red-800',
+  no_show: 'bg-gray-200 text-gray-700',
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  pending: 'In attesa',
+  inquiry: 'Richiesta',
+  option: 'Opzione',
   confirmed: 'Confermata',
-  canceled: 'Annullata',
-  completed: 'Completata',
+  checked_in: 'In casa',
+  checked_out: 'Partito',
+  cancelled: 'Cancellata',
   no_show: 'No show',
 }
 
@@ -540,7 +544,6 @@ export function GuestsClient({ entityId }: { entityId: string }) {
               <StayHistoryTab
                 stays={stayHistory}
                 isLoading={stayHistoryLoading}
-                guestName={`${selectedGuest.first_name} ${selectedGuest.last_name}`}
               />
             )}
 
@@ -617,11 +620,9 @@ export function GuestsClient({ entityId }: { entityId: string }) {
 function StayHistoryTab({
   stays,
   isLoading,
-  guestName,
 }: {
   stays: GuestStayRecord[]
   isLoading: boolean
-  guestName: string
 }) {
   if (isLoading) {
     return (

@@ -33,7 +33,7 @@ export function YearView({ data, currentDate, onNavigateToMonth }: YearViewProps
     const matrix: number[][] = Array.from({ length: 12 }, () => new Array(31).fill(0))
 
     for (const b of data.bookings) {
-      if (b.status === 'canceled' || b.status === 'no_show') continue
+      if (b.status === 'cancelled' || b.status === 'no_show') continue
       const start = new Date(b.check_in)
       const end = new Date(b.check_out)
 

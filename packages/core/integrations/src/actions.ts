@@ -7,7 +7,7 @@ import { maskPassword } from '@touracore/db/crypto'
 import { getIntegration } from './queries'
 import type { IntegrationProvider, IntegrationScope, IntegrationStatus } from './types'
 
-interface ActionResult {
+export interface ActionResult {
   success: boolean
   error?: string
   data?: Record<string, unknown>

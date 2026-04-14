@@ -3,68 +3,19 @@ import { getCurrentOrg } from './auth'
 import { addDays, format } from 'date-fns'
 import type { PricingRule, PriceSuggestion, DailyStats, RoomType } from '../types/database'
 
-export async function getPricingRules() {
-  const supabase = await createServerSupabaseClient()
-  const { property } = await getCurrentOrg()
-  const propId = property?.id
-
-  let query = supabase
-    .from('pricing_rules')
-    .select(`
-      *,
-      room_type:room_types(*),
-      rate_plan:rate_plans(*)
-    `)
-
-  if (propId) query = query.eq('entity_id', propId)
-
-  const { data, error } = await query.order('priority', { ascending: true })
-
-  if (error) throw error
-  return data as PricingRule[]
+export async function getPricingRules(): Promise<PricingRule[]> {
+  // Tabella pricing_rules non ancora creata — feature revenue management futura
+  return []
 }
 
-export async function getPriceSuggestions(dateFrom?: string, dateTo?: string) {
-  const supabase = await createServerSupabaseClient()
-  const { property } = await getCurrentOrg()
-  const propId = property?.id
-
-  let query = supabase
-    .from('price_suggestions')
-    .select(`
-      *,
-      room_type:room_types(*)
-    `)
-
-  if (propId) query = query.eq('entity_id', propId)
-
-  if (dateFrom) query = query.gte('date', dateFrom)
-  if (dateTo) query = query.lte('date', dateTo)
-
-  const { data, error } = await query.order('date', { ascending: true })
-
-  if (error) throw error
-  return data as PriceSuggestion[]
+export async function getPriceSuggestions(_dateFrom?: string, _dateTo?: string): Promise<PriceSuggestion[]> {
+  // Tabella price_suggestions non ancora creata — feature revenue management futura
+  return []
 }
 
-export async function getDailyStats(dateFrom: string, dateTo: string) {
-  const supabase = await createServerSupabaseClient()
-  const { property } = await getCurrentOrg()
-  const propId = property?.id
-
-  let query = supabase
-    .from('daily_stats')
-    .select('*')
-
-  if (propId) query = query.eq('entity_id', propId)
-
-  const { data, error } = await query
-    .gte('date', dateFrom)
-    .lte('date', dateTo)
-    .order('date', { ascending: true })
-
-  if (error) throw error
-  return data as DailyStats[]
+export async function getDailyStats(_dateFrom: string, _dateTo: string): Promise<DailyStats[]> {
+  // Tabella daily_stats non ancora creata — feature revenue management futura
+  return []
 }
 
 export async function getOccupancyForecast(days = 30) {

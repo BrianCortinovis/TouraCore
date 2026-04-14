@@ -20,7 +20,7 @@ export function DayView({ data, currentDate, onBookingClick }: DayViewProps) {
     const ih: PlanningBooking[] = []
 
     for (const b of data.bookings) {
-      if (b.status === 'canceled' || b.status === 'no_show') continue
+      if (b.status === 'cancelled' || b.status === 'no_show' || b.status === 'checked_out') continue
       if (b.check_in === todayIso) arr.push(b)
       if (b.check_out === todayIso) dep.push(b)
       if (b.check_in <= todayIso && b.check_out > todayIso) ih.push(b)
@@ -150,10 +150,10 @@ function ColumnSection({
                       month: 'short',
                     })}
                   </span>
-                  {booking.guest_count && (
+                  {booking.adults > 0 && (
                     <span className="flex items-center gap-1">
                       <Users className="h-3 w-3" />
-                      {booking.guest_count}
+                      {booking.adults + booking.children}
                     </span>
                   )}
                 </div>

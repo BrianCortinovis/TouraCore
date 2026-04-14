@@ -10,11 +10,17 @@ export interface StatusStyle {
 }
 
 export const STATUS_STYLES: Record<PlanningBooking['status'], StatusStyle> = {
-  pending: {
+  inquiry: {
+    bg: '#F3E8FF',
+    border: '#A855F7',
+    text: '#6B21A8',
+    label: 'Richiesta',
+  },
+  option: {
     bg: '#FEF3C7',
     border: '#F59E0B',
     text: '#92400E',
-    label: 'In attesa',
+    label: 'Opzione',
   },
   confirmed: {
     bg: '#DBEAFE',
@@ -22,13 +28,19 @@ export const STATUS_STYLES: Record<PlanningBooking['status'], StatusStyle> = {
     text: '#1E3A8A',
     label: 'Confermata',
   },
-  completed: {
+  checked_in: {
+    bg: '#D1FAE5',
+    border: '#10B981',
+    text: '#065F46',
+    label: 'In casa',
+  },
+  checked_out: {
     bg: '#E5E7EB',
     border: '#6B7280',
     text: '#374151',
-    label: 'Completata',
+    label: 'Partito',
   },
-  canceled: {
+  cancelled: {
     bg: '#FEE2E2',
     border: '#EF4444',
     text: '#991B1B',
@@ -51,9 +63,17 @@ export const BLOCK_STYLE = {
 
 export const SOURCE_LABELS: Record<PlanningBooking['source'], string> = {
   direct: 'Diretto',
-  portal: 'Portale',
-  widget: 'Widget',
-  api: 'API',
+  booking_com: 'Booking.com',
+  expedia: 'Expedia',
+  airbnb: 'Airbnb',
+  google: 'Google',
+  tripadvisor: 'TripAdvisor',
+  phone: 'Telefono',
+  walk_in: 'Walk-in',
+  website: 'Sito web',
+  email: 'Email',
+  agency: 'Agenzia',
+  other: 'Altro',
 }
 
 export interface RoomGroup {
@@ -98,7 +118,7 @@ export function computeKPIs(
   const totalRooms = rooms.length
 
   const activeBookings = bookings.filter(
-    (b) => b.status !== 'canceled' && b.status !== 'no_show'
+    (b) => b.status !== 'cancelled' && b.status !== 'no_show' && b.status !== 'checked_out'
   )
 
   let arrivals = 0

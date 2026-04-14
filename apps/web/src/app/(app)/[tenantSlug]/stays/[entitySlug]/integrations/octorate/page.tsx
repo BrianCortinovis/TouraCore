@@ -33,7 +33,7 @@ interface Connection {
 export default function OctoratePage() {
   const [connection, setConnection] = useState<Connection | null>(null)
   const [logs, setLogs] = useState<SyncLog[]>([])
-  const [loadingLegacy, setLoadingLegacy] = useState(true)
+  const [, setLoadingLegacy] = useState(true)
 
   const providerDef = getProviderDef('octorate')
 

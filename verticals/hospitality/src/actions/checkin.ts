@@ -55,7 +55,7 @@ export async function createCheckinToken(reservationId: string) {
   if (!orgId) throw new Error('Organization not found')
 
   const { data: reservation } = await supabase
-    .from('bookings')
+    .from('reservations')
     .select('id')
     .eq('id', reservationId)
     .eq('entity_id', orgId)
@@ -70,7 +70,7 @@ export async function createCheckinToken(reservationId: string) {
     .from('checkin_tokens')
     .select('id, token, status, expires_at')
     .eq('entity_id', orgId)
-    .eq('booking_id', reservationId)
+    .eq('reservation_id', reservationId)
     .in('status', ['pending', 'started'])
     .gt('expires_at', new Date().toISOString())
     .limit(1)
@@ -89,7 +89,7 @@ export async function createCheckinToken(reservationId: string) {
     .from('checkin_tokens')
     .insert({
       entity_id: orgId,
-      booking_id: reservationId,
+      reservation_id: reservationId,
       token,
       status: 'pending',
       guest_data: {},
@@ -172,10 +172,10 @@ export async function completeCheckin(token: string) {
   const supabase = await createServiceRoleClient()
   const now = new Date().toISOString()
 
-  // Fetch the token to get booking_id and guest_data
+  // Fetch the token to get reservation_id and guest_data
   const { data: tokenData, error: fetchError } = await supabase
     .from('checkin_tokens')
-    .select('id, entity_id, booking_id, guest_data, status, expires_at')
+    .select('id, entity_id, reservation_id, guest_data, status, expires_at')
     .eq('token', token)
     .single()
 
@@ -200,9 +200,9 @@ export async function completeCheckin(token: string) {
   }
 
   const { error: reservationError } = await supabase
-    .from('bookings')
+    .from('reservations')
     .update(reservationUpdate)
-    .eq('id', tokenData.booking_id)
+    .eq('id', tokenData.reservation_id)
     .eq('entity_id', tokenData.entity_id)
 
   if (reservationError) {
@@ -238,7 +238,7 @@ export async function sendCheckinInvitation(reservationId: string) {
   if (!orgId) throw new Error('Organization not found')
 
   const { data: reservationRecord } = await supabase
-    .from('bookings')
+    .from('reservations')
     .select('id')
     .eq('id', reservationId)
     .eq('entity_id', orgId)
@@ -253,7 +253,7 @@ export async function sendCheckinInvitation(reservationId: string) {
 
   // Fetch reservation + guest for email context
   const { data: reservation, error: resError } = await supabase
-    .from('bookings')
+    .from('reservations')
     .select('*, guest:guests(first_name, last_name, email)')
     .eq('id', reservationId)
     .eq('entity_id', orgId)
@@ -276,7 +276,7 @@ export async function sendCheckinInvitation(reservationId: string) {
   // Send the invitation email (if guest has an email)
   if (guest.email) {
     await sendEmail({
-      organizationId: orgId,
+      entityId: orgId,
       to: guest.email,
       subject: `Check-in online - ${structureName}`,
       html: `
@@ -344,7 +344,7 @@ export interface ActionResult {
 }
 
 const checkInSchema = z.object({
-  booking_id: z.string().uuid(),
+  reservation_id: z.string().uuid(),
   guest_id: z.string().uuid().optional(),
   document_type: z.enum(['id_card', 'passport', 'driving_license', 'residence_permit']).optional(),
   document_number: z.string().max(50).optional(),
@@ -372,9 +372,9 @@ export async function checkInBooking(raw: StaffCheckInData): Promise<ActionResul
     const supabase = await createServerSupabaseClient()
 
     const { data: booking, error: fetchErr } = await supabase
-      .from('bookings')
+      .from('reservations')
       .select('*')
-      .eq('id', input.booking_id)
+      .eq('id', input.reservation_id)
       .single()
 
     if (fetchErr || !booking) {
@@ -404,20 +404,20 @@ export async function checkInBooking(raw: StaffCheckInData): Promise<ActionResul
     }
 
     const { error: updateErr } = await supabase
-      .from('bookings')
+      .from('reservations')
       .update({
         status: 'checked_in',
         actual_check_in: now,
         guest_id: input.guest_id ?? booking.guest_id,
       })
-      .eq('id', input.booking_id)
+      .eq('id', input.reservation_id)
 
     if (updateErr) {
       return { success: false, error: `Errore check-in: ${updateErr.message}` }
     }
 
     revalidateCheckinPaths()
-    return { success: true, data: { booking_id: input.booking_id, checked_in_at: now } }
+    return { success: true, data: { reservation_id: input.reservation_id, checked_in_at: now } }
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Errore check-in'
     return { success: false, error: msg }
@@ -434,7 +434,7 @@ export async function checkOutBooking(bookingId: string): Promise<ActionResult> 
     const supabase = await createServerSupabaseClient()
 
     const { data: booking, error: fetchErr } = await supabase
-      .from('bookings')
+      .from('reservations')
       .select('*')
       .eq('id', bookingId)
       .single()
@@ -450,7 +450,7 @@ export async function checkOutBooking(bookingId: string): Promise<ActionResult> 
     const now = new Date().toISOString()
 
     const { error: updateErr } = await supabase
-      .from('bookings')
+      .from('reservations')
       .update({
         status: 'checked_out',
         actual_check_out: now,
@@ -487,7 +487,7 @@ export async function checkOutBooking(bookingId: string): Promise<ActionResult> 
     }
 
     revalidateCheckinPaths()
-    return { success: true, data: { booking_id: bookingId, checked_out_at: now } }
+    return { success: true, data: { reservation_id: bookingId, checked_out_at: now } }
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Errore check-out'
     return { success: false, error: msg }
@@ -501,7 +501,7 @@ export async function getTodayArrivals(): Promise<ActionResult> {
     const today = new Date().toISOString().split('T')[0]
 
     const { data, error } = await supabase
-      .from('bookings')
+      .from('reservations')
       .select('*, guests(*)')
       .eq('entity_id', property.id)
       .eq('check_in', today)
@@ -526,7 +526,7 @@ export async function getTodayDepartures(): Promise<ActionResult> {
     const today = new Date().toISOString().split('T')[0]
 
     const { data, error } = await supabase
-      .from('bookings')
+      .from('reservations')
       .select('*, guests(*)')
       .eq('entity_id', property.id)
       .eq('check_out', today)
@@ -550,7 +550,7 @@ export async function getCheckedInBookings(): Promise<ActionResult> {
     const supabase = await createServerSupabaseClient()
 
     const { data, error } = await supabase
-      .from('bookings')
+      .from('reservations')
       .select('*, guests(*)')
       .eq('entity_id', property.id)
       .eq('status', 'checked_in')

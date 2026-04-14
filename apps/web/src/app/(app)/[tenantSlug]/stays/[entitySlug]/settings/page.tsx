@@ -28,19 +28,19 @@ export default async function EntitySettingsPage({ params }: SettingsProps) {
 
   if (!entity) notFound()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase client non tipizzato
   const { data: accommodation } = await supabase
     .from('accommodations')
     .select('*')
     .eq('entity_id', entity.id)
-    .maybeSingle() as { data: any }
+    .maybeSingle()
 
   return (
     <EntitySettingsForm
       tenantSlug={tenantSlug}
       tenantCountry={tenant.country ?? 'IT'}
-      entity={entity as any}
-      accommodation={accommodation}
+      entity={entity}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      accommodation={accommodation as any}
     />
   )
 }

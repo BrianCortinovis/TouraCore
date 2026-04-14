@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Button, Input, Select, Modal, DataTable, Badge } from '@touracore/ui'
+import { Button, Input, Select, Modal, Badge } from '@touracore/ui'
 import {
   UPSELL_CATEGORIES,
   PRICING_MODE_LABELS,
@@ -31,7 +31,6 @@ import {
   ToggleRight,
   CheckCircle,
   XCircle,
-  Clock,
 } from 'lucide-react'
 
 interface Offer {

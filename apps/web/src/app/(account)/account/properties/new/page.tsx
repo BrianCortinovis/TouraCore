@@ -48,8 +48,8 @@ export default function NewPropertyPage() {
     })
 
     if (result.success && result.data) {
-      const data = result.data as { id: string }
-      router.push(`/cms/${data.id}`)
+      const data = result.data as { id: string; slug: string; tenantSlug: string }
+      router.push(`/${data.tenantSlug}/stays/${data.slug}`)
     } else {
       setError(result.error ?? 'Errore durante la creazione.')
       setIsLoading(false)

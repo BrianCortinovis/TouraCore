@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import { Plug, ArrowLeft } from 'lucide-react'
-import { Card, CardContent, Badge, Button, IntegrationForm } from '@touracore/ui'
+import { Card, CardContent, IntegrationForm } from '@touracore/ui'
 import { getProvidersForScope } from '@touracore/integrations/registry'
 import type { IntegrationProvider } from '@touracore/integrations'
 import {

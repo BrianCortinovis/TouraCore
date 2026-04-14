@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle, Badge } from '@touracore/ui'
 import {
   CalendarCheck, Users, BarChart3, Building2, Shield,
-  TrendingUp, Banknote, BedDouble, LogIn, LogOut, Clock,
+  TrendingUp, Banknote, BedDouble, LogIn, LogOut,
 } from 'lucide-react'
 
 interface EntityDashboardProps {

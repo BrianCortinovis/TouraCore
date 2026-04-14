@@ -277,10 +277,10 @@ export async function sendQuote(id: string) {
     }
 
     const subject = renderTemplate(template?.subject || 'La nostra proposta - {{hotel_name}}', variables)
-    const html = renderTemplate(template?.html || `<p>Gentile {{guest_name}}, <a href="{{quote_url}}">visualizza il preventivo</a></p>`, variables)
+    const html = renderTemplate(template?.body_html || `<p>Gentile {{guest_name}}, <a href="{{quote_url}}">visualizza il preventivo</a></p>`, variables)
 
     sendEmail({
-      organizationId: quote.entity_id,
+      entityId: quote.entity_id,
       to: quote.guest_email,
       subject,
       html,

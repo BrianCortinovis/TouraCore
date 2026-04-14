@@ -32,4 +32,5 @@ export {
   deleteIntegrationAction,
   testConnectionAction,
   loadIntegrationAction,
+  type ActionResult,
 } from './actions'

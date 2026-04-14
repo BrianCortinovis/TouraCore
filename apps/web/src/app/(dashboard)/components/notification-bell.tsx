@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef } from 'react'
+import Link from 'next/link'
 import type { Notification } from '@touracore/notifications'
 import {
   listNotificationsAction,
@@ -140,9 +141,9 @@ export function NotificationBell() {
 
           {notifications.length > 0 && (
             <div className="p-2 border-t text-center">
-              <a href="/notifications" className="text-xs text-blue-600 hover:underline">
+              <Link href="/notifications" className="text-xs text-blue-600 hover:underline">
                 Vedi tutte
-              </a>
+              </Link>
             </div>
           )}
         </div>

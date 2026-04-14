@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { Button, Badge, Card, CardContent, Modal, cn } from '@touracore/ui'
+import { Button, Card, CardContent, Modal, cn } from '@touracore/ui'
 import {
   Sparkles, Plus, ChevronLeft, ChevronRight,
   CheckCircle, AlertCircle, Clock, X,

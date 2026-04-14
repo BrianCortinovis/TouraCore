@@ -54,8 +54,8 @@ export default function Step3Form() {
     }
 
     const result = await createFirstPropertyAction(input)
-    if (result.success && result.entityId) {
-      router.push(`/cms/${result.entityId}`)
+    if (result.success && result.entitySlug && result.tenantSlug) {
+      router.push(`/${result.tenantSlug}/stays/${result.entitySlug}`)
     } else {
       setError(result.error ?? 'Errore durante la creazione.')
       setIsLoading(false)

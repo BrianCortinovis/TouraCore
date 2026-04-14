@@ -47,7 +47,7 @@ export async function listPropertiesAction(): Promise<ActionResult> {
 
   const { data, error } = await supabase
     .from('entities')
-    .select('id, name, is_active, short_description, kind, accommodations(property_type, city, province, address, logo_url)')
+    .select('id, slug, name, is_active, short_description, kind, accommodations(property_type, city, province, address, logo_url)')
     .eq('tenant_id', bootstrap.tenant.id)
     .eq('kind', 'accommodation')
     .order('name')
@@ -59,6 +59,7 @@ export async function listPropertiesAction(): Promise<ActionResult> {
     const acc = (row.accommodations as Record<string, unknown> | null) ?? {}
     return {
       id: row.id,
+      slug: row.slug,
       name: row.name,
       is_active: row.is_active,
       short_description: row.short_description,
@@ -148,7 +149,7 @@ export async function createPropertyAction(input: PropertyFormData): Promise<Act
       slug: input.slug || null,
       is_active: input.is_active ?? true,
     })
-    .select('id')
+    .select('id, slug')
     .single()
 
   if (error) {
@@ -227,7 +228,7 @@ export async function createPropertyAction(input: PropertyFormData): Promise<Act
   })
 
   revalidatePath('/properties')
-  return { success: true, data: { id: property.id } }
+  return { success: true, data: { id: property.id, slug: property.slug, tenantSlug: bootstrap.tenant.slug } }
 }
 
 // --- Aggiornamento struttura ---

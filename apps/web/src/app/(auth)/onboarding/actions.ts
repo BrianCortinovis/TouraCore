@@ -163,7 +163,7 @@ const Step3Schema = z.object({
 
 export type Step3Input = z.infer<typeof Step3Schema>
 
-export async function createFirstPropertyAction(input: Step3Input): Promise<ActionResult & { entityId?: string }> {
+export async function createFirstPropertyAction(input: Step3Input): Promise<ActionResult & { entityId?: string; entitySlug?: string; tenantSlug?: string | null }> {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Sessione scaduta.' }
@@ -220,7 +220,7 @@ export async function createFirstPropertyAction(input: Step3Input): Promise<Acti
       management_mode: 'self_service',
       is_active: true,
     })
-    .select('id')
+    .select('id, slug')
     .single()
 
   if (entityError || !entity) {
@@ -267,7 +267,13 @@ export async function createFirstPropertyAction(input: Step3Input): Promise<Acti
       is_active: true,
     })
 
-  return { success: true, entityId: entity.id }
+  const { data: tenantForSlug } = await admin
+    .from('tenants')
+    .select('slug')
+    .eq('id', tenantId)
+    .single()
+
+  return { success: true, entityId: entity.id, entitySlug: entity.slug, tenantSlug: tenantForSlug?.slug }
 }
 
 // --- Backward-compatible exports ---

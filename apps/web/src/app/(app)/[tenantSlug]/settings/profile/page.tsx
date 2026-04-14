@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@touracore/auth/store'
 import { Button, Input, Select } from '@touracore/ui'
@@ -94,9 +95,9 @@ export default function ProfileSettingsPage() {
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
           <p className="text-sm text-gray-600">
             Per cambiare la password, usa la funzione{' '}
-            <a href="/forgot-password" className="font-medium text-blue-600 hover:text-blue-700">
+            <Link href="/forgot-password" className="font-medium text-blue-600 hover:text-blue-700">
               Recupera password
-            </a>
+            </Link>
           </p>
         </div>
 

@@ -3,7 +3,7 @@
 import { createServerSupabaseClient } from '@touracore/db'
 import { requireCurrentEntity } from '@touracore/hospitality/src/auth/access'
 import { calculateIstatData } from '@touracore/hospitality/src/compliance/istat-c59'
-import type { IstatReservation, IstatData } from '@touracore/hospitality/src/compliance/istat-c59'
+import type { IstatReservation } from '@touracore/hospitality/src/compliance/istat-c59'
 
 interface ActionResult {
   success: boolean

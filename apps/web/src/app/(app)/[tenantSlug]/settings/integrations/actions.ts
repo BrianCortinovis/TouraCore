@@ -7,7 +7,7 @@ import {
   testConnectionAction,
   loadIntegrationAction,
 } from '@touracore/integrations/actions'
-import type { IntegrationProvider, IntegrationScope } from '@touracore/integrations'
+import type { IntegrationProvider } from '@touracore/integrations'
 
 async function resolveTenantId(tenantSlug: string): Promise<string> {
   const supabase = await createServerSupabaseClient()

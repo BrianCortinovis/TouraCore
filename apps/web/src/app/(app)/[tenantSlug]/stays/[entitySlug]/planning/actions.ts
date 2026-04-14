@@ -1,6 +1,7 @@
 'use server'
 
 import { createServerSupabaseClient } from '@touracore/db/server'
+import type { ReservationStatus, BookingSource } from '@touracore/hospitality/src/types/database'
 
 export interface PlanningRoom {
   id: string
@@ -14,18 +15,20 @@ export interface PlanningRoom {
 
 export interface PlanningBooking {
   id: string
+  reservation_code: string
   room_id: string | null
   guest_name: string
-  guest_email: string
+  guest_email: string | null
   guest_phone: string | null
   check_in: string
   check_out: string
-  status: 'pending' | 'confirmed' | 'canceled' | 'completed' | 'no_show'
-  source: 'direct' | 'portal' | 'widget' | 'api'
+  status: ReservationStatus
+  source: BookingSource
   total_amount: number
   currency: string
   notes: string | null
-  guest_count: number | null
+  adults: number
+  children: number
 }
 
 export interface PlanningBlock {
@@ -50,7 +53,6 @@ export async function getPlanningDataAction(
 ): Promise<{ success: boolean; data?: PlanningData; error?: string }> {
   const supabase = await createServerSupabaseClient()
 
-  // 1. Rooms con join su room_types
   const { data: rooms, error: roomsError } = await supabase
     .from('rooms')
     .select(
@@ -78,66 +80,46 @@ export async function getPlanningDataAction(
     }
   })
 
-  // 2. Bookings — filtra sovrapposizioni con range (check_in < to AND check_out > from)
-  const { data: tenantData } = await supabase
-    .from('entities')
-    .select('tenant_id')
-    .eq('id', entityId)
-    .single()
-
-  if (!tenantData) {
-    return { success: false, error: 'Entity non trovata' }
-  }
-
-  const { data: bookings, error: bookingsError } = await supabase
-    .from('bookings')
+  const { data: reservations, error: resError } = await supabase
+    .from('reservations')
     .select(
-      'id, guest_name, guest_email, guest_phone, check_in, check_out, status, source, total_amount, currency, notes, vertical_data'
+      'id, reservation_code, room_id, check_in, check_out, status, source, total_amount, currency, special_requests, adults, children, guest:guests(first_name, last_name, email, phone)'
     )
-    .eq('tenant_id', tenantData.tenant_id)
+    .eq('entity_id', entityId)
+    .in('status', ['confirmed', 'checked_in', 'option', 'inquiry'])
     .lt('check_in', toDate)
     .gt('check_out', fromDate)
     .order('check_in', { ascending: true })
 
-  if (bookingsError) {
-    return { success: false, error: bookingsError.message }
+  if (resError) {
+    return { success: false, error: resError.message }
   }
 
-  // Filtro bookings per isolation: mantengo solo quelle con room_id appartenente a questa entity
-  // O quelle senza room_id (non ancora assegnate) se vertical_data.entity_id è questa
-  const entityRoomIds = new Set(planningRooms.map((r) => r.id))
-
-  const planningBookings: PlanningBooking[] = (bookings ?? [])
-    .map((b: Record<string, unknown>) => {
-      const vd = (b.vertical_data as Record<string, unknown> | null) ?? {}
+  const planningBookings: PlanningBooking[] = (reservations ?? []).map(
+    (r: Record<string, unknown>) => {
+      const guest = r.guest as Record<string, unknown> | null
+      const firstName = (guest?.first_name as string) ?? ''
+      const lastName = (guest?.last_name as string) ?? ''
       return {
-        id: b.id as string,
-        room_id: (vd.room_id as string | null) ?? null,
-        guest_name: (b.guest_name as string) ?? '',
-        guest_email: (b.guest_email as string) ?? '',
-        guest_phone: (b.guest_phone as string | null) ?? null,
-        check_in: b.check_in as string,
-        check_out: b.check_out as string,
-        status: b.status as PlanningBooking['status'],
-        source: b.source as PlanningBooking['source'],
-        total_amount: Number(b.total_amount ?? 0),
-        currency: (b.currency as string) ?? 'EUR',
-        notes: (b.notes as string | null) ?? null,
-        guest_count: (vd.guest_count as number | null) ?? null,
-        _verticalEntityId: (vd.entity_id as string | null) ?? null,
+        id: r.id as string,
+        reservation_code: (r.reservation_code as string) ?? '',
+        room_id: (r.room_id as string | null) ?? null,
+        guest_name: `${firstName} ${lastName}`.trim() || 'Ospite',
+        guest_email: (guest?.email as string | null) ?? null,
+        guest_phone: (guest?.phone as string | null) ?? null,
+        check_in: r.check_in as string,
+        check_out: r.check_out as string,
+        status: r.status as ReservationStatus,
+        source: r.source as BookingSource,
+        total_amount: Number(r.total_amount ?? 0),
+        currency: (r.currency as string) ?? 'EUR',
+        notes: (r.special_requests as string | null) ?? null,
+        adults: Number(r.adults ?? 1),
+        children: Number(r.children ?? 0),
       }
-    })
-    .filter((b) => {
-      // Include solo se: (a) room_id è di una camera di questa entity
-      // oppure (b) vertical_data.entity_id = questa entity (per prenotazioni non assegnate)
-      if (b.room_id && entityRoomIds.has(b.room_id)) return true
-      if (!b.room_id && b._verticalEntityId === entityId) return true
-      return false
-    })
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    .map(({ _verticalEntityId, ...rest }) => rest)
+    }
+  )
 
-  // 3. Room blocks (manutenzione/OOO)
   const roomIds = planningRooms.map((r) => r.id)
   const { data: blocks } =
     roomIds.length > 0
@@ -171,37 +153,21 @@ export async function getPlanningDataAction(
 }
 
 export async function moveBookingAction(
-  bookingId: string,
+  reservationId: string,
   newRoomId: string,
   newCheckIn: string,
   newCheckOut: string
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createServerSupabaseClient()
 
-  // Recupera vertical_data esistente
-  const { data: existing } = await supabase
-    .from('bookings')
-    .select('vertical_data')
-    .eq('id', bookingId)
-    .single()
-
-  if (!existing) {
-    return { success: false, error: 'Prenotazione non trovata' }
-  }
-
-  const updatedVerticalData = {
-    ...(existing.vertical_data as Record<string, unknown>),
-    room_id: newRoomId,
-  }
-
   const { error } = await supabase
-    .from('bookings')
+    .from('reservations')
     .update({
+      room_id: newRoomId,
       check_in: newCheckIn,
       check_out: newCheckOut,
-      vertical_data: updatedVerticalData,
     })
-    .eq('id', bookingId)
+    .eq('id', reservationId)
 
   if (error) {
     return { success: false, error: error.message }

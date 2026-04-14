@@ -4,7 +4,13 @@ import { revalidatePath } from 'next/cache'
 import { createServerSupabaseClient } from '@touracore/db'
 import { getCurrentOrg } from '../queries/auth'
 import type { AutomationTrigger } from '../types/database'
-import { sendWhatsAppText, type WhatsAppConfig } from '../stubs/integrations/whatsapp'
+import { sendWhatsAppText } from '../stubs/integrations/whatsapp'
+
+type WhatsAppConfig = {
+  provider?: string
+  phone?: string
+  apiKey?: string
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -185,8 +191,8 @@ export async function sendWhatsAppMessage(conversationId: string, content: strin
   } : null
 
   if (waConfig) {
-    // Send via actual WhatsApp API
-    const result = await sendWhatsAppText(waConfig, {
+    // Send via WhatsApp Business API
+    const result = await sendWhatsAppText(conversation.entity_id, {
       to: conversation.phone,
       body: content,
     })

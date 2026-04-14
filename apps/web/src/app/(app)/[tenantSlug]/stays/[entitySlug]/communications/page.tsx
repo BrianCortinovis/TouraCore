@@ -4,8 +4,8 @@ import { useState, useCallback, useEffect } from 'react'
 import { Button, Input, Badge, Card, CardContent, Modal, cn } from '@touracore/ui'
 import {
   Mail, MessageSquare, Phone, Plus, Edit, Trash2,
-  Save, X, ToggleLeft, ToggleRight, Send, Clock,
-  CheckCircle, AlertCircle, Eye,
+  Save, X, ToggleLeft, ToggleRight, Send,
+  CheckCircle, AlertCircle,
 } from 'lucide-react'
 import {
   loadTemplatesAction, createTemplateAction, updateTemplateAction,

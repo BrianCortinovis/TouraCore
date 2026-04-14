@@ -12,7 +12,6 @@ interface ActionResult {
 }
 
 const taskTypeEnum = z.enum(['checkout_clean', 'stay_clean', 'deep_clean', 'turndown', 'maintenance', 'inspection'])
-const statusEnum = z.enum(['pending', 'in_progress', 'completed', 'inspected', 'skipped'])
 const priorityEnum = z.enum(['low', 'normal', 'high', 'urgent'])
 
 const createTaskSchema = z.object({
