@@ -80,7 +80,6 @@ async function requireTenantAccess(): Promise<{
   staffRole: StaffRole
   displayName: string
 }> {
-  const supabase = await createServerSupabaseClient()
   const authBootstrap = await getAuthBootstrapData()
   const user = authBootstrap.user
 
@@ -88,10 +87,10 @@ async function requireTenantAccess(): Promise<{
     throw new Error('Sessione non valida')
   }
 
-  const tenant = authBootstrap.tenant ?? authBootstrap.tenants[0] ?? null
+  const tenant = authBootstrap.tenant
 
   if (!tenant) {
-    throw new Error('Account piattaforma non trovato')
+    throw new Error('Nessuna attività attiva selezionata')
   }
 
   const membership = authBootstrap.tenantMemberships.find(

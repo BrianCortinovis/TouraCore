@@ -121,11 +121,22 @@ export async function getReservationStatsAction(
 }
 
 export async function updateReservationStatusAction(
+  entitySlug: string,
   reservationId: string,
   newStatus: ReservationStatus,
   reason?: string
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createServerSupabaseClient()
+
+  const { data: entity } = await supabase
+    .from('entities')
+    .select('id')
+    .eq('slug', entitySlug)
+    .single()
+
+  if (!entity) {
+    return { success: false, error: 'Struttura non trovata.' }
+  }
 
   const updateData: Record<string, unknown> = {
     status: newStatus,
@@ -149,6 +160,7 @@ export async function updateReservationStatusAction(
     .from('reservations')
     .update(updateData)
     .eq('id', reservationId)
+    .eq('entity_id', entity.id)
 
   if (error) return { success: false, error: error.message }
 

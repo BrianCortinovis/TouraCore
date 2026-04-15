@@ -1,9 +1,9 @@
 'use server'
 
-import { createServerSupabaseClient } from '@touracore/db/server'
+import { createServiceRoleClient } from '@touracore/db/server'
 import { checkAvailability, type AvailabilityResult } from '@touracore/hospitality/src/queries/availability'
 import { buildStayOffer, type StayOfferResult } from '@touracore/hospitality/src/lib/rates/stay-pricing'
-import type { Property, RoomType } from '@touracore/hospitality/src/types/database'
+import type { RoomType } from '@touracore/hospitality/src/types/database'
 import type { PublicPetPolicy } from './pet-pricing'
 
 interface ActionResult {
@@ -36,12 +36,13 @@ function normalizePetPolicy(raw: unknown): PublicPetPolicy {
 }
 
 export async function getPropertyBySlugAction(slug: string): Promise<PublicPropertyRow | null> {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createServiceRoleClient()
 
   const { data: entity } = await supabase
     .from('entities')
     .select('*')
     .eq('slug', slug)
+    .eq('is_active', true)
     .single()
 
   if (!entity) return null
@@ -118,7 +119,18 @@ export async function createPublicBookingAction(input: {
   specialRequests?: string
   totalAmount: number
 }): Promise<ActionResult> {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createServiceRoleClient()
+
+  const { data: entity } = await supabase
+    .from('entities')
+    .select('id, tenant_id')
+    .eq('id', input.entityId)
+    .eq('is_active', true)
+    .maybeSingle()
+
+  if (!entity) {
+    return { success: false, error: 'Struttura non trovata.' }
+  }
 
   const availability = await checkAvailability({
     entityId: input.entityId,
@@ -130,16 +142,6 @@ export async function createPublicBookingAction(input: {
   const roomTypeAvail = availability.find((a) => a.roomType.id === input.roomTypeId)
   if (!roomTypeAvail || roomTypeAvail.availableRooms < 1) {
     return { success: false, error: 'La tipologia selezionata non è più disponibile per le date scelte.' }
-  }
-
-  const { data: entity } = await supabase
-    .from('entities')
-    .select('tenant_id')
-    .eq('id', input.entityId)
-    .single()
-
-  if (!entity) {
-    return { success: false, error: 'Struttura non trovata.' }
   }
 
   // Verifica policy pet: carica accommodation e valida count <= max_pets
@@ -163,67 +165,97 @@ export async function createPublicBookingAction(input: {
     }
   }
 
-  const { data: guest, error: guestErr } = await supabase
-    .from('guests')
-    .insert({
-      entity_id: input.entityId,
-      first_name: input.guestName.split(' ')[0] || input.guestName,
-      last_name: input.guestName.split(' ').slice(1).join(' ') || '',
-      email: input.guestEmail,
-      phone: input.guestPhone || null,
-    })
-    .select()
-    .single()
+  // Usiamo il service role client per bypassare RLS: questa è una action pubblica
+  // chiamata da un ospite non autenticato, non ha entità su get_user_entity_ids().
+  const serviceClient = await createServiceRoleClient()
 
-  if (guestErr) {
-    return { success: false, error: 'Errore nella creazione del profilo ospite.' }
+  // Upsert guest: se esiste già con email+entity lo riusiamo
+  const { data: existingGuest } = await serviceClient
+    .from('guests')
+    .select('id')
+    .eq('entity_id', input.entityId)
+    .eq('email', input.guestEmail)
+    .maybeSingle()
+
+  let guestId: string
+  if (existingGuest) {
+    guestId = existingGuest.id
+  } else {
+    const { data: newGuest, error: guestErr } = await serviceClient
+      .from('guests')
+      .insert({
+        entity_id: input.entityId,
+        first_name: input.guestName.split(' ')[0] || input.guestName,
+        last_name: input.guestName.split(' ').slice(1).join(' ') || '',
+        email: input.guestEmail,
+        phone: input.guestPhone || null,
+      })
+      .select('id')
+      .single()
+
+    if (guestErr || !newGuest) {
+      console.error('[createPublicBooking] guest insert error', guestErr)
+      return { success: false, error: 'Errore nella creazione del profilo ospite.' }
+    }
+    guestId = newGuest.id
   }
 
-  const { data: booking, error: bookErr } = await supabase
-    .from('bookings')
+  // Genera reservation_code via funzione DB (RES-YYYY-NNNNN)
+  const { data: codeResult, error: codeErr } = await serviceClient.rpc(
+    'generate_reservation_code',
+    { org_id: input.entityId },
+  )
+
+  if (codeErr || !codeResult) {
+    console.error('[createPublicBooking] reservation_code rpc error', codeErr)
+    return { success: false, error: 'Errore generazione codice prenotazione.' }
+  }
+
+  const reservationCode = codeResult as string
+
+  const petDetailsJson =
+    input.petCount > 0
+      ? [{ notes: input.petDetails ?? null, count: input.petCount }]
+      : []
+
+  const { data: reservation, error: resErr } = await serviceClient
+    .from('reservations')
     .insert({
-      tenant_id: entity.tenant_id,
       entity_id: input.entityId,
-      guest_id: guest.id,
-      vertical: 'hospitality',
-      status: 'confirmed',
-      guest_name: input.guestName,
-      guest_email: input.guestEmail,
-      guest_phone: input.guestPhone || null,
+      reservation_code: reservationCode,
+      guest_id: guestId,
+      room_type_id: input.roomTypeId,
       check_in: input.checkIn,
       check_out: input.checkOut,
-      total_amount: input.totalAmount,
-      currency: 'EUR',
-      notes: input.specialRequests || null,
-      source: 'direct',
+      status: 'confirmed',
+      source: 'website',
+      adults: input.adults,
+      children: input.children,
+      infants: 0,
       pet_count: input.petCount,
-      pet_details: input.petCount > 0
-        ? { notes: input.petDetails ?? null, count: input.petCount }
-        : null,
-      vertical_data: {
-        room_type_id: input.roomTypeId,
-        room_type_name: roomTypeAvail.roomType.name,
-        adults: input.adults,
-        children: input.children,
-        meal_plan: 'room_only',
-      },
-      confirmed_at: new Date().toISOString(),
+      pet_details: petDetailsJson,
+      meal_plan: 'room_only',
+      total_amount: input.totalAmount,
+      paid_amount: 0,
+      currency: 'EUR',
+      special_requests: input.specialRequests || null,
     })
-    .select()
+    .select('id, reservation_code, check_in, check_out, total_amount')
     .single()
 
-  if (bookErr) {
+  if (resErr || !reservation) {
+    console.error('[createPublicBooking] reservation insert error', resErr)
     return { success: false, error: 'Errore nella creazione della prenotazione.' }
   }
 
   return {
     success: true,
     data: {
-      reservationCode: booking.id.slice(0, 8).toUpperCase(),
-      bookingId: booking.id,
-      checkIn: booking.check_in,
-      checkOut: booking.check_out,
-      totalAmount: booking.total_amount,
+      reservationCode: reservation.reservation_code,
+      reservationId: reservation.id,
+      checkIn: reservation.check_in,
+      checkOut: reservation.check_out,
+      totalAmount: reservation.total_amount,
     },
   }
 }

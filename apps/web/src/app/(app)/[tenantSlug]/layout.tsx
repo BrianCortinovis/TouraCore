@@ -31,13 +31,25 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   const isMember = bootstrap.tenants.some((t) => t.id === tenant.id)
 
   if (!isMember) {
-    // Verifica accesso via agenzia
+    const { data: agencyMemberships } = await supabase
+      .from('agency_memberships')
+      .select('agency_id')
+      .eq('user_id', bootstrap.user.id)
+      .eq('is_active', true)
+
+    const agencyIds = (agencyMemberships ?? []).map((membership) => membership.agency_id)
+
+    if (agencyIds.length === 0) {
+      notFound()
+    }
+
+    // Verifica accesso via agenzia dell'utente corrente
     const { data: agencyLink } = await supabase
       .from('agency_tenant_links')
-      .select('agency_id, status')
+      .select('agency_id')
       .eq('tenant_id', tenant.id)
       .eq('status', 'active')
-      .limit(1)
+      .in('agency_id', agencyIds)
       .maybeSingle()
 
     if (!agencyLink) {

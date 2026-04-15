@@ -368,13 +368,15 @@ export async function checkInBooking(raw: StaffCheckInData): Promise<ActionResul
   }
 
   try {
-    await requireCurrentEntity()
+    const { property } = await requireCurrentEntity()
+    const orgId = property.id
     const supabase = await createServerSupabaseClient()
 
     const { data: booking, error: fetchErr } = await supabase
       .from('reservations')
       .select('*')
       .eq('id', input.reservation_id)
+      .eq('entity_id', orgId)
       .single()
 
     if (fetchErr || !booking) {
@@ -388,6 +390,17 @@ export async function checkInBooking(raw: StaffCheckInData): Promise<ActionResul
     const now = new Date().toISOString()
 
     if (input.guest_id && input.document_type && input.document_number) {
+      const { data: guestRow } = await supabase
+        .from('guests')
+        .select('id')
+        .eq('id', input.guest_id)
+        .eq('entity_id', orgId)
+        .maybeSingle()
+
+      if (!guestRow) {
+        return { success: false, error: 'Ospite non trovato nella struttura corrente' }
+      }
+
       await supabase
         .from('guests')
         .update({
@@ -401,6 +414,7 @@ export async function checkInBooking(raw: StaffCheckInData): Promise<ActionResul
           marketing_consent_date: input.marketing_consent ? now : null,
         })
         .eq('id', input.guest_id)
+        .eq('entity_id', orgId)
     }
 
     const { error: updateErr } = await supabase
@@ -411,6 +425,7 @@ export async function checkInBooking(raw: StaffCheckInData): Promise<ActionResul
         guest_id: input.guest_id ?? booking.guest_id,
       })
       .eq('id', input.reservation_id)
+      .eq('entity_id', orgId)
 
     if (updateErr) {
       return { success: false, error: `Errore check-in: ${updateErr.message}` }
@@ -430,13 +445,15 @@ export async function checkOutBooking(bookingId: string): Promise<ActionResult> 
   }
 
   try {
-    await requireCurrentEntity()
+    const { property } = await requireCurrentEntity()
+    const orgId = property.id
     const supabase = await createServerSupabaseClient()
 
     const { data: booking, error: fetchErr } = await supabase
       .from('reservations')
       .select('*')
       .eq('id', bookingId)
+      .eq('entity_id', orgId)
       .single()
 
     if (fetchErr || !booking) {
@@ -456,6 +473,7 @@ export async function checkOutBooking(bookingId: string): Promise<ActionResult> 
         actual_check_out: now,
       })
       .eq('id', bookingId)
+      .eq('entity_id', orgId)
 
     if (updateErr) {
       return { success: false, error: `Errore check-out: ${updateErr.message}` }
@@ -471,6 +489,7 @@ export async function checkOutBooking(bookingId: string): Promise<ActionResult> 
         .from('guests')
         .select('total_stays, total_nights, total_revenue')
         .eq('id', booking.guest_id)
+        .eq('entity_id', orgId)
         .single()
 
       if (guest) {
@@ -483,6 +502,7 @@ export async function checkOutBooking(bookingId: string): Promise<ActionResult> 
             last_stay_date: now,
           })
           .eq('id', booking.guest_id)
+          .eq('entity_id', orgId)
       }
     }
 

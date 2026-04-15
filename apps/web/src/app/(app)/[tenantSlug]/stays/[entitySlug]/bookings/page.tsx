@@ -77,26 +77,33 @@ export default function EntityBookingsPage() {
     inquiry: 0, option: 0, confirmed: 0, checked_in: 0, checked_out: 0, cancelled: 0, no_show: 0,
   })
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   const perPage = 25
   const totalPages = Math.ceil(count / perPage)
 
   const loadData = useCallback(async () => {
     setLoading(true)
-    const [resResult, statsResult] = await Promise.all([
-      getReservationsAction(entitySlug, page, statusFilter || undefined, search || undefined),
-      getReservationStatsAction(entitySlug),
-    ])
-    setReservations(resResult.data)
-    setCount(resResult.total)
-    setStats(statsResult)
-    setLoading(false)
+    setError('')
+    try {
+      const [resResult, statsResult] = await Promise.all([
+        getReservationsAction(entitySlug, page, statusFilter || undefined, search || undefined),
+        getReservationStatsAction(entitySlug),
+      ])
+      setReservations(resResult.data)
+      setCount(resResult.total)
+      setStats(statsResult)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore durante il caricamento')
+    } finally {
+      setLoading(false)
+    }
   }, [entitySlug, page, statusFilter, search])
 
   useEffect(() => { void loadData() }, [loadData])
 
   const handleTransition = async (resId: string, newStatus: ReservationStatus) => {
-    const result = await updateReservationStatusAction(resId, newStatus)
+    const result = await updateReservationStatusAction(entitySlug, resId, newStatus)
     if (result.success) void loadData()
   }
 
@@ -131,6 +138,12 @@ export default function EntityBookingsPage() {
           Reset filtri
         </Button>
       </div>
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       {loading ? (
         <div className="py-12 text-center text-gray-500">Caricamento...</div>

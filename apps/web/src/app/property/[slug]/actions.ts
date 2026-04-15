@@ -1,15 +1,16 @@
 'use server'
 
-import { createServerSupabaseClient } from '@touracore/db/server'
+import { createServiceRoleClient } from '@touracore/db/server'
 import type { Property, RoomType } from '@touracore/hospitality/src/types/database'
 
 export async function getPublicPropertyAction(slug: string) {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createServiceRoleClient()
 
   const { data: property } = await supabase
     .from('entities')
     .select('*')
     .eq('slug', slug)
+    .eq('is_active', true)
     .single()
 
   if (!property) return null

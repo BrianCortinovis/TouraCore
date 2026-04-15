@@ -2,8 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { assertCurrentEntityAccess, requireCurrentEntity } from '../auth/access'
 import { createServerSupabaseClient } from '@touracore/db'
+import { requireCurrentEntity } from '../auth/access'
 import { logAdminAction } from './compliance'
 
 const documentTypeEnum = z.enum(['id_card', 'passport', 'driving_license', 'residence_permit'])
@@ -75,8 +75,22 @@ export async function createGuest(raw: CreateGuestData): Promise<ActionResult> {
   const data = parsed.data
 
   try {
-    const { property } = await assertCurrentEntityAccess(data.entity_id)
+    const { property } = await requireCurrentEntity()
+    if (property.id !== data.entity_id) {
+      return { success: false, error: 'Operazione consentita solo sulla struttura corrente' }
+    }
+
     const supabase = await createServerSupabaseClient()
+
+    const { data: entity, error: entityError } = await supabase
+      .from('entities')
+      .select('id, tenant_id')
+      .eq('id', data.entity_id)
+      .single()
+
+    if (entityError || !entity) {
+      return { success: false, error: 'Struttura non trovata' }
+    }
 
     const { data: guest, error } = await supabase
       .from('guests')
@@ -129,7 +143,7 @@ export async function createGuest(raw: CreateGuestData): Promise<ActionResult> {
     if (error) return { success: false, error: error.message }
 
     logAdminAction({
-      organizationId: property.tenant_id ?? data.entity_id,
+      organizationId: entity.tenant_id ?? data.entity_id,
       action: 'guest.create',
       entityType: 'guest',
       entityId: guest.id,
@@ -142,7 +156,11 @@ export async function createGuest(raw: CreateGuestData): Promise<ActionResult> {
   }
 }
 
-export async function updateGuest(id: string, raw: UpdateGuestData): Promise<ActionResult> {
+export async function updateGuest(
+  id: string,
+  raw: UpdateGuestData,
+  entityId?: string
+): Promise<ActionResult> {
   if (!id) return { success: false, error: 'Guest id mancante' }
 
   const parsed = updateGuestSchema.safeParse(raw)
@@ -153,7 +171,24 @@ export async function updateGuest(id: string, raw: UpdateGuestData): Promise<Act
 
   try {
     const { property } = await requireCurrentEntity()
+    const scopeEntityId = entityId ?? property.id
+
+    if (scopeEntityId !== property.id) {
+      return { success: false, error: 'Operazione consentita solo sulla struttura corrente' }
+    }
+
     const supabase = await createServerSupabaseClient()
+
+    const { data: existingGuest, error: guestError } = await supabase
+      .from('guests')
+      .select('id, entity_id')
+      .eq('id', id)
+      .eq('entity_id', scopeEntityId)
+      .single()
+
+    if (guestError || !existingGuest) {
+      return { success: false, error: 'Ospite non trovato' }
+    }
 
     const { data: guest, error } = await supabase
       .from('guests')
@@ -162,14 +197,14 @@ export async function updateGuest(id: string, raw: UpdateGuestData): Promise<Act
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
-      .eq('entity_id', property.id)
+      .eq('entity_id', existingGuest.entity_id)
       .select()
       .single()
 
     if (error) return { success: false, error: error.message }
 
     logAdminAction({
-      organizationId: property.tenant_id ?? property.id,
+      organizationId: existingGuest.entity_id,
       action: 'guest.update',
       entityType: 'guest',
       entityId: id,
@@ -182,17 +217,35 @@ export async function updateGuest(id: string, raw: UpdateGuestData): Promise<Act
   }
 }
 
-export async function deleteGuest(id: string): Promise<ActionResult> {
+export async function deleteGuest(id: string, entityId?: string): Promise<ActionResult> {
   if (!id) return { success: false, error: 'Guest id mancante' }
 
   try {
     const { property } = await requireCurrentEntity()
+    const scopeEntityId = entityId ?? property.id
+
+    if (scopeEntityId !== property.id) {
+      return { success: false, error: 'Operazione consentita solo sulla struttura corrente' }
+    }
+
     const supabase = await createServerSupabaseClient()
+
+    const { data: existingGuest, error: guestError } = await supabase
+      .from('guests')
+      .select('id, entity_id')
+      .eq('id', id)
+      .eq('entity_id', scopeEntityId)
+      .single()
+
+    if (guestError || !existingGuest) {
+      return { success: false, error: 'Ospite non trovato' }
+    }
 
     const { count, error: countError } = await supabase
       .from('bookings')
       .select('id', { count: 'exact', head: true })
       .eq('guest_id', id)
+      .eq('entity_id', scopeEntityId)
 
     if (countError) return { success: false, error: countError.message }
 
@@ -207,12 +260,12 @@ export async function deleteGuest(id: string): Promise<ActionResult> {
       .from('guests')
       .delete()
       .eq('id', id)
-      .eq('entity_id', property.id)
+      .eq('entity_id', scopeEntityId)
 
     if (error) return { success: false, error: error.message }
 
     logAdminAction({
-      organizationId: property.tenant_id ?? property.id,
+      organizationId: existingGuest.entity_id,
       action: 'guest.delete',
       entityType: 'guest',
       entityId: id,

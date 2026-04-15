@@ -12,10 +12,11 @@ import {
   Globe,
 } from 'lucide-react'
 import { createServiceRoleClient } from '@touracore/db/server'
-import { getCurrentUser } from '@touracore/auth'
+import { getAuthBootstrapData } from '@touracore/auth'
 
 export default async function HomePage() {
-  const user = await getCurrentUser()
+  const bootstrap = await getAuthBootstrapData()
+  const user = bootstrap.user
 
   // Utente loggato: redirect intelligente in base al ruolo
   if (user) {
@@ -31,14 +32,7 @@ export default async function HomePage() {
       redirect('/superadmin')
     }
 
-    const { data: membership } = await adminClient
-      .from('tenant_members')
-      .select('tenant_id, tenants(slug)')
-      .eq('user_id', user.id)
-      .limit(1)
-      .maybeSingle()
-
-    const tenantSlug = (membership?.tenants as { slug?: string } | null)?.slug
+    const tenantSlug = bootstrap.tenant?.slug
 
     if (tenantSlug) {
       redirect(`/${tenantSlug}`)
