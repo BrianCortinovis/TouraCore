@@ -1,5 +1,27 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalEnv": [
+    "DATABASE_URL",
+    "ENCRYPTION_KEY",
+    "NEXT_PUBLIC_APP_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NODE_ENV",
+    "RESEND_API_KEY",
+    "RESEND_FROM_EMAIL",
+    "RESEND_FROM_NAME",
+    "SDI_ENDPOINT",
+    "STRIPE_CONNECT_CLIENT_ID",
+    "STRIPE_PRICE_ENTERPRISE",
+    "STRIPE_PRICE_PROFESSIONAL",
+    "STRIPE_PRICE_STARTER",
+    "STRIPE_SECRET_KEY",
+    "STRIPE_WEBHOOK_SECRET",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_URL",
+    "SUPERADMIN_EMAILS",
+    "VERCEL_URL"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"]
