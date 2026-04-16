@@ -20,7 +20,7 @@ import {
   createManagedLinenItem,
   createManagedPoolAccessory,
   createPropertyTypeModuleItem,
-  getNonHotelOperationsSettings,
+  getStructureOperationsSettings,
   getPropertyTypeModuleDefinitions,
   type ExtraAmenityType,
   type KitchenItemCategory,
@@ -31,13 +31,13 @@ import {
   type ManagedLaundryService,
   type ManagedLinenItem,
   type ManagedPoolAccessory,
-  type NonHotelOperationsSettings,
+  type StructureOperationsSettings,
   type PoolAccessoryType,
   type PropertyTypeModuleDefinition,
   type PropertyTypeModuleItem,
   type ServiceChargeMode,
   type ServicePricingMode,
-} from '../../config/non-hotel-operations'
+} from '../../config/structure-operations'
 import {
   buildOperationsSettingsPayload,
   getPropertyTypeOperationsProfile,
@@ -46,7 +46,7 @@ import {
 } from '../../config/property-operations'
 import type { Json, Organization } from '../../types/database'
 
-interface NonHotelOperationsSectionProps {
+interface StructureOperationsSectionProps {
   org: Organization | null
   onSave: (data: Record<string, unknown>) => void
   isPending: boolean
@@ -131,7 +131,7 @@ function defaultSharedCatalogLabel(key: SharedOperationsCatalogKey) {
   }
 }
 
-function getSharedCatalogCount(key: SharedOperationsCatalogKey, draft: NonHotelOperationsSettings) {
+function getSharedCatalogCount(key: SharedOperationsCatalogKey, draft: StructureOperationsSettings) {
   switch (key) {
     case 'linens':
       return draft.linens.length
@@ -145,14 +145,14 @@ function getSharedCatalogCount(key: SharedOperationsCatalogKey, draft: NonHotelO
   }
 }
 
-export function NonHotelOperationsSection({
+export function StructureOperationsSection({
   org,
   onSave,
   isPending,
-}: NonHotelOperationsSectionProps) {
+}: StructureOperationsSectionProps) {
   const [activeTab, setActiveTab] = useState('linens')
-  const [draft, setDraft] = useState<NonHotelOperationsSettings>(() =>
-    getNonHotelOperationsSettings(org?.settings, org?.type ?? 'hotel')
+  const [draft, setDraft] = useState<StructureOperationsSettings>(() =>
+    getStructureOperationsSettings(org?.settings, org?.type ?? 'hotel')
   )
 
   if (!org || org.type === 'hotel') {
@@ -181,7 +181,7 @@ export function NonHotelOperationsSection({
   const availableTabKeys = tabs.map((tab) => tab.key)
   const resolvedActiveTab = availableTabKeys.includes(activeTab) ? activeTab : availableTabKeys[0] ?? 'extras'
 
-  function updateSettings(partial: Partial<NonHotelOperationsSettings>) {
+  function updateSettings(partial: Partial<StructureOperationsSettings>) {
     setDraft((current) => ({ ...current, ...partial }))
   }
 

@@ -80,6 +80,9 @@ export async function updatePricingRule(id: string, data: UpdatePricingRuleData)
   if (!id) throw new Error('Pricing rule id is required')
 
   const supabase = await createServerSupabaseClient()
+  const { property } = await getCurrentOrg()
+  const orgId = property?.id
+  if (!orgId) throw new Error('Property not found')
 
   const { data: rule, error } = await supabase
     .from('pricing_rules')
@@ -88,6 +91,7 @@ export async function updatePricingRule(id: string, data: UpdatePricingRuleData)
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)
+    .eq('entity_id', orgId)
     .select()
     .single()
 
@@ -102,12 +106,16 @@ export async function togglePricingRule(id: string) {
   if (!id) throw new Error('Pricing rule id is required')
 
   const supabase = await createServerSupabaseClient()
+  const { property } = await getCurrentOrg()
+  const orgId = property?.id
+  if (!orgId) throw new Error('Property not found')
 
   // Get current state
   const { data: current, error: fetchError } = await supabase
     .from('pricing_rules')
     .select('is_active')
     .eq('id', id)
+    .eq('entity_id', orgId)
     .single()
 
   if (fetchError || !current) throw new Error('Pricing rule not found')
@@ -119,6 +127,7 @@ export async function togglePricingRule(id: string) {
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)
+    .eq('entity_id', orgId)
     .select()
     .single()
 
@@ -133,11 +142,15 @@ export async function deletePricingRule(id: string) {
   if (!id) throw new Error('Pricing rule id is required')
 
   const supabase = await createServerSupabaseClient()
+  const { property } = await getCurrentOrg()
+  const orgId = property?.id
+  if (!orgId) throw new Error('Property not found')
 
   const { error } = await supabase
     .from('pricing_rules')
     .delete()
     .eq('id', id)
+    .eq('entity_id', orgId)
 
   if (error) throw new Error(`Failed to delete pricing rule: ${error.message}`)
 
@@ -154,11 +167,15 @@ export async function acceptSuggestion(id: string) {
   if (!id) throw new Error('Suggestion id is required')
 
   const supabase = await createServerSupabaseClient()
+  const { property } = await getCurrentOrg()
+  const orgId = property?.id
+  if (!orgId) throw new Error('Property not found')
 
   const { data: suggestion, error } = await supabase
     .from('price_suggestions')
     .update({ status: 'accepted' })
     .eq('id', id)
+    .eq('entity_id', orgId)
     .select()
     .single()
 
@@ -172,11 +189,15 @@ export async function rejectSuggestion(id: string) {
   if (!id) throw new Error('Suggestion id is required')
 
   const supabase = await createServerSupabaseClient()
+  const { property } = await getCurrentOrg()
+  const orgId = property?.id
+  if (!orgId) throw new Error('Property not found')
 
   const { data: suggestion, error } = await supabase
     .from('price_suggestions')
     .update({ status: 'rejected' })
     .eq('id', id)
+    .eq('entity_id', orgId)
     .select()
     .single()
 

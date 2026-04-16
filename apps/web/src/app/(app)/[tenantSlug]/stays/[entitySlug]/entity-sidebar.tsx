@@ -27,10 +27,10 @@ import {
   FileText,
   TrendingUp,
   UtensilsCrossed,
-  Sparkles,
   Smartphone,
   BarChart3,
   Gift,
+  Sparkles,
   ChevronsLeft,
   ChevronsRight,
   Menu,
@@ -39,11 +39,12 @@ import {
 } from 'lucide-react'
 import {
   getNavigation,
+  getPropertyTypeConfig,
   type PropertyType,
   type SidebarSection,
 } from '@touracore/hospitality-config'
 
-const SECTION_META: Record<SidebarSection, { label: string; icon: LucideIcon; agencyHidden?: boolean; placeholder?: boolean }> = {
+const STATIC_SECTION_META: Record<SidebarSection, { label: string; icon: LucideIcon; agencyHidden?: boolean; placeholder?: boolean }> = {
   'overview': { label: 'Panoramica', icon: LayoutDashboard },
   'planning': { label: 'Planning', icon: CalendarDays },
   'bookings': { label: 'Prenotazioni', icon: BookOpen },
@@ -56,6 +57,7 @@ const SECTION_META: Record<SidebarSection, { label: string; icon: LucideIcon; ag
   'rate-plans': { label: 'Tariffe', icon: Banknote, agencyHidden: true },
   'seasons': { label: 'Periodi', icon: Calendar, agencyHidden: true },
   'communications': { label: 'Comunicazioni', icon: Mail },
+  'booking-engine': { label: 'Booking engine', icon: Sparkles },
   'media': { label: 'Media', icon: Image },
   'financials': { label: 'Finanze', icon: TrendingUp },
   'invoices': { label: 'Fatture', icon: FileText, agencyHidden: true },
@@ -71,12 +73,17 @@ const SECTION_META: Record<SidebarSection, { label: string; icon: LucideIcon; ag
   'self-checkin': { label: 'Self check-in', icon: Smartphone },
 }
 
+function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
 function sectionToHref(base: string, section: SidebarSection): string {
   switch (section) {
     case 'overview': return base
     case 'compliance-alloggiati': return `${base}/compliance/alloggiati`
     case 'compliance-tourist-tax': return `${base}/compliance/tourist-tax`
     case 'compliance-istat': return `${base}/compliance/istat`
+    case 'booking-engine': return `${base}/booking-engine`
     default: return `${base}/${section}`
   }
 }
@@ -112,6 +119,14 @@ export function EntitySidebar({
   const pathname = usePathname()
   const basePath = `/${tenantSlug}/stays/${entitySlug}`
   const isAgencyManaged = managementMode === 'agency_managed'
+  const typeConfig = getPropertyTypeConfig((propertyType ?? 'hotel') as PropertyType)
+  const unitLabel = capitalize(typeConfig.unitLabelPlural)
+  const sectionMeta: Record<SidebarSection, { label: string; icon: LucideIcon; agencyHidden?: boolean; placeholder?: boolean }> = {
+    ...STATIC_SECTION_META,
+    rooms: { label: unitLabel, icon: BedDouble },
+    'room-types': { label: `Tipologie ${unitLabel}`, icon: Grid3x3 },
+    'room-blocks': { label: `Blocchi ${unitLabel}`, icon: Ban },
+  }
 
   const [switcherOpen, setSwitcherOpen] = useState(false)
   const switcherRef = useRef<HTMLDivElement>(null)
@@ -183,7 +198,7 @@ export function EntitySidebar({
     <nav className="space-y-3">
       {groups.map((group) => {
         const items = group.sections.filter((section) => {
-          const meta = SECTION_META[section]
+          const meta = sectionMeta[section]
           if (!meta) return false
           if (isAgencyManaged && meta.agencyHidden) return false
           return true
@@ -217,7 +232,7 @@ export function EntitySidebar({
             {!(showLabels && isClosed) && (
             <div className="space-y-0.5">
               {items.map((section) => {
-                const meta = SECTION_META[section]
+                const meta = sectionMeta[section]
                 const href = sectionToHref(basePath, section)
                 const isActive =
                   pathname === href ||

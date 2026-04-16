@@ -150,6 +150,11 @@ export default function SeasonsPage() {
         <Button onClick={openCreate}>Nuova stagione</Button>
       </div>
 
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+        Qui imposti il modificatore percentuale della stagione. Per il prezzo diretto delle unità usa la matrice tariffe
+        nella pagina <span className="font-medium text-slate-900">Tariffe</span>.
+      </div>
+
       <DataTable
         columns={columns}
         data={seasons}
@@ -188,6 +193,9 @@ export default function SeasonsPage() {
             <Input label="Soggiorno minimo" type="number" value={form.min_stay} onChange={(e) => set('min_stay', e.target.value)} />
             <Input label="Soggiorno massimo" type="number" value={form.max_stay} onChange={(e) => set('max_stay', e.target.value)} />
           </div>
+          <p className="text-xs text-slate-500">
+            Esempio: `1.10` = +10%, `0.90` = -10%.
+          </p>
 
           <div className="flex justify-end gap-3 pt-4">
             <Button variant="ghost" onClick={() => setModalOpen(false)}>Annulla</Button>

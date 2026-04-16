@@ -36,7 +36,8 @@ const CHECKIN_PUBLIC_SELECT = `
     *,
     guest:guests(*),
     room_type:room_types(*),
-    property:properties(*)
+    entity:entities(*),
+    accommodation:accommodations(*)
   )
 `
 
@@ -71,7 +72,30 @@ export async function getCheckinByToken(token: string) {
     .single()
 
   if (error) throw error
-  return data as CheckinTokenPublic
+
+  const reservation = data?.reservation as Record<string, unknown> | null
+  const entity = reservation?.entity as Record<string, unknown> | null
+  const accommodation = reservation?.accommodation as Record<string, unknown> | null
+
+  const property = entity || accommodation
+    ? {
+        ...(entity ?? {}),
+        ...(accommodation ?? {}),
+        type: (accommodation?.property_type as string | undefined) ?? null,
+      }
+    : null
+
+  const { reservation: reservationRaw, ...tokenData } = data as Record<string, unknown>
+  const { entity: _entity, accommodation: _accommodation, ...reservationData } =
+    (reservation ?? {}) as Record<string, unknown>
+
+  return {
+    ...(tokenData as unknown as CheckinToken),
+    reservation: {
+      ...(reservationData as unknown as Reservation),
+      property: property as Property,
+    },
+  } as CheckinTokenPublic
 }
 
 export async function getCheckinByReservation(reservationId: string) {

@@ -74,17 +74,22 @@ export default function AlloggiatiPage() {
   const loadData = useCallback(async () => {
     setLoading(true)
     setError('')
-    const [pendResult, regResult] = await Promise.all([
-      loadPendingBookingsAction(),
-      loadRegistrationsAction(selectedDate),
-    ])
-    if (pendResult.success && pendResult.data) {
-      setPending((pendResult.data.bookings ?? []) as PendingBooking[])
+    try {
+      const [pendResult, regResult] = await Promise.all([
+        loadPendingBookingsAction(),
+        loadRegistrationsAction(selectedDate),
+      ])
+      if (pendResult.success && pendResult.data) {
+        setPending((pendResult.data.bookings ?? []) as PendingBooking[])
+      }
+      if (regResult.success && regResult.data) {
+        setRegistrations((regResult.data.registrations ?? []) as Registration[])
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore durante il caricamento')
+    } finally {
+      setLoading(false)
     }
-    if (regResult.success && regResult.data) {
-      setRegistrations((regResult.data.registrations ?? []) as Registration[])
-    }
-    setLoading(false)
   }, [selectedDate])
 
   useEffect(() => { void loadData() }, [loadData])
@@ -112,17 +117,21 @@ export default function AlloggiatiPage() {
     setError('')
     setSuccess('')
 
-    const result = await generateAlloggiatiAction(Array.from(selectedIds))
-    setGenerating(false)
-
-    if (result.success && result.data) {
-      const gen = result.data.generated as number
-      const skipped = (result.data.skipped ?? []) as Array<{ booking_id: string; reason: string }>
-      setSuccess(`${gen} schedine generate.${skipped.length > 0 ? ` ${skipped.length} saltate.` : ''}`)
-      setSelectedIds(new Set())
-      void loadData()
-    } else {
-      setError(result.error ?? 'Errore generazione')
+    try {
+      const result = await generateAlloggiatiAction(Array.from(selectedIds))
+      if (result.success && result.data) {
+        const gen = result.data.generated as number
+        const skipped = (result.data.skipped ?? []) as Array<{ booking_id: string; reason: string }>
+        setSuccess(`${gen} schedine generate.${skipped.length > 0 ? ` ${skipped.length} saltate.` : ''}`)
+        setSelectedIds(new Set())
+        void loadData()
+      } else {
+        setError(result.error ?? 'Errore generazione')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore generazione')
+    } finally {
+      setGenerating(false)
     }
   }
 

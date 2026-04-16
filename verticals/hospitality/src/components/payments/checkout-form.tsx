@@ -52,7 +52,7 @@ export function CheckoutForm({
   const [status, setStatus] = useState<PaymentStatus>('idle')
   const [errorMessage, setErrorMessage] = useState<string>('')
 
-  // Campi carta (placeholder - in produzione Stripe Elements gestisce questo)
+  // Campi carta di supporto: il form richiede Stripe Elements per l'esecuzione reale.
   const [cardNumber, setCardNumber] = useState('')
   const [cardExpiry, setCardExpiry] = useState('')
   const [cardCvc, setCardCvc] = useState('')
@@ -219,9 +219,8 @@ export function CheckoutForm({
               />
               <CreditCard className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             </div>
-            {/* Placeholder: in produzione qui va Stripe CardElement */}
             <p className="text-[10px] text-gray-400">
-              Demo: usa 4242 4242 4242 4242 per simulare un pagamento
+              Il pagamento reale richiede Stripe Elements e un client secret valido.
             </p>
           </div>
 

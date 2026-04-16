@@ -14,9 +14,10 @@ export async function checkAvailability(params: {
   checkIn: string
   checkOut: string
   guests: number
+  ratePlanId?: string
 }): Promise<AvailabilityResult[]> {
   const supabase = await createServerSupabaseClient()
-  const { entityId, checkIn, checkOut, guests } = params
+  const { entityId, checkIn, checkOut, guests, ratePlanId } = params
 
   const { data: roomTypes, error: rtErr } = await supabase
     .from('room_types')
@@ -72,11 +73,17 @@ export async function checkAvailability(params: {
     .eq('entity_id', entityId)
     .eq('is_active', true)
     .eq('is_public', true)
-    .eq('rate_type', 'standard')
+
+  if (ratePlanId) {
+    ratePlanQuery.eq('id', ratePlanId)
+  } else {
+    ratePlanQuery.eq('rate_type', 'standard')
+  }
+
+  const { data: publicPlans } = await ratePlanQuery
     .order('sort_order', { ascending: true })
     .limit(1)
 
-  const { data: publicPlans } = await ratePlanQuery
   const publicPlanId = publicPlans?.[0]?.id
 
   const results: AvailabilityResult[] = []

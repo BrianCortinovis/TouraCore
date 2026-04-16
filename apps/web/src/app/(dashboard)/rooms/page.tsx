@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { Button, Input, Select, Modal, DataTable, Badge } from '@touracore/ui'
+import { useAuthStore } from '@touracore/auth/store'
+import { getStructureTerms } from '../structure-terms'
 import {
   listRoomsAction,
   listRoomTypesForSelectAction,
@@ -44,6 +46,7 @@ const emptyForm = {
 }
 
 export default function RoomsPage() {
+  const { property } = useAuthStore()
   const [rooms, setRooms] = useState<Room[]>([])
   const [roomTypeOptions, setRoomTypeOptions] = useState<{ value: string; label: string }[]>([])
   const [loading, setLoading] = useState(true)
@@ -52,6 +55,7 @@ export default function RoomsPage() {
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const terms = getStructureTerms(property?.property_type)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -160,13 +164,13 @@ export default function RoomsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Camere</h1>
-        <Button onClick={openCreate} disabled={roomTypeOptions.length === 0}>Nuova camera</Button>
+        <h1 className="text-2xl font-bold text-gray-900">{terms.unitLabelPluralTitle}</h1>
+        <Button onClick={openCreate} disabled={roomTypeOptions.length === 0}>{terms.newUnitLabel}</Button>
       </div>
 
       {roomTypeOptions.length === 0 && !loading && (
         <div className="rounded-lg bg-yellow-50 px-4 py-3 text-sm text-yellow-700">
-          Crea prima una tipologia camera nella sezione &quot;Tipologie camera&quot;.
+          Crea prima una tipologia {terms.unitLabel} nella sezione &quot;{terms.roomTypesLabel}&quot;.
         </div>
       )}
 
@@ -176,15 +180,15 @@ export default function RoomsPage() {
         keyExtractor={(r) => r.id}
         onRowClick={openEdit}
         isLoading={loading}
-        emptyMessage="Nessuna camera configurata"
+        emptyMessage={terms.emptyUnitLabel}
       />
 
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Modifica camera' : 'Nuova camera'}>
+      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editing ? `Modifica ${terms.unitLabel}` : terms.newUnitLabel}>
         <div className="space-y-4">
           {error && <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Numero camera" value={form.room_number} onChange={(e) => set('room_number', e.target.value)} />
+            <Input label={`Numero ${terms.unitLabel}`} value={form.room_number} onChange={(e) => set('room_number', e.target.value)} />
             <Input label="Nome (opzionale)" value={form.name} onChange={(e) => set('name', e.target.value)} />
           </div>
 

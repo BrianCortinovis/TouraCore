@@ -6,6 +6,7 @@ import {
   TrendingUp, Banknote, BedDouble, LogIn, LogOut, Home,
 } from 'lucide-react'
 import { getPropertyTypeConfig, type PropertyType } from '@touracore/hospitality-config'
+import { getStructureTerms } from '../../../../structure-terms'
 
 interface EntityDashboardProps {
   params: Promise<{ tenantSlug: string; entitySlug: string }>
@@ -101,8 +102,8 @@ export default async function EntityDashboard({ params }: EntityDashboardProps) 
   // Config property-type condiziona quali KPI mostrare
   const propertyType = (accommodation?.property_type ?? 'hotel') as PropertyType
   const typeConfig = getPropertyTypeConfig(propertyType)
+  const terms = getStructureTerms(propertyType)
   const showHotelKpis = typeConfig.hasRooms && typeConfig.hasRatePlans
-  const unitLabel = typeConfig.unitLabelPlural ?? 'camere'
 
   return (
     <div className="space-y-6">
@@ -174,7 +175,7 @@ export default async function EntityDashboard({ params }: EntityDashboardProps) 
                 ) : (
                   <Home className="h-4 w-4 text-blue-500" />
                 )}
-                <span className="capitalize">{unitLabel}</span>
+                <span>{terms.unitLabelPluralTitle}</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -246,11 +247,11 @@ export default async function EntityDashboard({ params }: EntityDashboardProps) 
                     RevPAR
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold text-gray-900">{fmtCurrency(revpar)}</p>
+              <CardContent>
+                <p className="text-2xl font-bold text-gray-900">{fmtCurrency(revpar)}</p>
                   <p className="mt-1 text-xs text-gray-500">Ricavo per {typeConfig.unitLabel} disponibile</p>
-                </CardContent>
-              </Card>
+              </CardContent>
+            </Card>
             </>
           ) : (
             <>
@@ -313,7 +314,7 @@ export default async function EntityDashboard({ params }: EntityDashboardProps) 
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm font-medium text-gray-500">
                 <Building2 className="h-4 w-4" />
-                Camere configurate
+                {terms.unitLabelPluralTitle} configurate
               </CardTitle>
             </CardHeader>
             <CardContent>

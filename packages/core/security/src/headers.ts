@@ -9,7 +9,9 @@ export function getSecurityHeaders(config: SecurityHeadersConfig): Record<string
 
   const cspDirectives = [
     "default-src 'self'",
-    `script-src 'self'${isDev ? " 'unsafe-eval' 'unsafe-inline'" : " 'strict-dynamic'"}`,
+    // Next App Router relies on inline scripts for RSC/hydration payloads.
+    // In production we allow inline scripts here so client components can hydrate.
+    `script-src 'self'${isDev ? " 'unsafe-eval' 'unsafe-inline'" : " 'unsafe-inline'"}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",

@@ -44,6 +44,7 @@ export interface Entity {
   kind: 'accommodation' | 'activity'
   slug: string
   name: string
+  property_type?: string | null
   description: string | null
   short_description: string | null
   country_override: string | null

@@ -232,7 +232,9 @@ export async function sendQuote(id: string) {
     })
     .eq('id', id)
     .eq('entity_id', orgId)
-    .select('*, organization:organizations(id, name, tagline, email, phone, address, city, province, zip)')
+    .select(
+      '*, entity:entities(name, short_description, email, phone, address, city, province, zip), accommodation:accommodations(legal_name, vat_number, fiscal_code, address, city, province, zip, phone, email)'
+    )
     .single()
 
   if (error) throw new Error(`Failed to send quote: ${error.message}`)
@@ -240,7 +242,8 @@ export async function sendQuote(id: string) {
   // Send the actual email to guest
   if (quote.guest_email && quote.token) {
     const template = await getTemplateById('quote_proposal')
-    const org = quote.organization as Record<string, string | null> | null
+    const entity = quote.entity as Record<string, string | null> | null
+    const accommodation = quote.accommodation as Record<string, string | null> | null
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const quoteUrl = `${appUrl}/quote/${quote.token}`
     const options = (quote.options ?? []) as Array<{ total_price?: number }>
@@ -269,11 +272,16 @@ export async function sendQuote(id: string) {
       valid_until: quote.valid_until
         ? new Date(quote.valid_until).toLocaleDateString('it-IT')
         : '',
-      hotel_name: org?.name || '',
-      hotel_tagline: org?.tagline || '',
-      hotel_address: [org?.address, org?.city, org?.province, org?.zip].filter(Boolean).join(', '),
-      hotel_phone: org?.phone || '',
-      hotel_email: org?.email || '',
+      hotel_name: entity?.name || accommodation?.legal_name || '',
+      hotel_tagline: entity?.short_description || '',
+      hotel_address: [
+        accommodation?.address,
+        accommodation?.city,
+        accommodation?.province,
+        accommodation?.zip,
+      ].filter(Boolean).join(', '),
+      hotel_phone: accommodation?.phone || entity?.phone || '',
+      hotel_email: accommodation?.email || entity?.email || '',
     }
 
     const subject = renderTemplate(template?.subject || 'La nostra proposta - {{hotel_name}}', variables)

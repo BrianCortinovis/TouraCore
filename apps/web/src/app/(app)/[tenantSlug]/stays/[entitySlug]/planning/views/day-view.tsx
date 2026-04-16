@@ -3,15 +3,18 @@
 import { useMemo } from 'react'
 import { LogIn, LogOut, Bed, Users } from 'lucide-react'
 import type { PlanningData, PlanningBooking } from '../actions'
+import { getStructureTerms } from '../../../../../../structure-terms'
 import { STATUS_STYLES, toIsoDate } from '../planning-types'
 
 interface DayViewProps {
   data: PlanningData
   currentDate: Date
   onBookingClick: (id: string) => void
+  propertyType?: string | null
 }
 
-export function DayView({ data, currentDate, onBookingClick }: DayViewProps) {
+export function DayView({ data, currentDate, onBookingClick, propertyType }: DayViewProps) {
+  const terms = getStructureTerms(propertyType)
   const todayIso = toIsoDate(currentDate)
 
   const { arrivals, departures, inHouse } = useMemo(() => {
@@ -37,7 +40,7 @@ export function DayView({ data, currentDate, onBookingClick }: DayViewProps) {
   if (data.rooms.length === 0) {
     return (
       <div className="flex h-full items-center justify-center text-sm text-gray-500">
-        Nessuna camera configurata.
+        Nessuna {terms.unitLabel} configurata.
       </div>
     )
   }

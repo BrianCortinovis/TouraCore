@@ -11,6 +11,7 @@ import {
   Package,
   Plug,
   LayoutGrid,
+  Sparkles,
 } from 'lucide-react'
 
 interface SettingsSidebarProps {
@@ -33,6 +34,7 @@ export function SettingsSidebar({
     { href: `${base}/billing`, label: 'Fatturazione', icon: CreditCard },
     { href: `${base}/team`, label: 'Team', icon: Users },
     { href: `${base}/modules`, label: 'Moduli', icon: Package },
+    { href: `${base}/booking-engine`, label: 'Booking engine', icon: Sparkles },
     { href: `${base}/integrations`, label: 'Integrazioni', icon: Plug },
     { href: `${base}/preferences`, label: 'Preferenze', icon: Bell },
   ]

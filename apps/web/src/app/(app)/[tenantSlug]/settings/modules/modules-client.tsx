@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import Link from 'next/link'
 import { Home, Bike, Loader2 } from 'lucide-react'
 import { Button } from '@touracore/ui'
 import { saveModulesAction } from './actions'
@@ -67,6 +68,19 @@ export function ModulesClient({
           enabled={experiences}
           onChange={setExperiences}
         />
+      </div>
+
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+        <h3 className="text-sm font-semibold text-slate-900">Booking engine</h3>
+        <p className="mt-1 text-sm text-slate-600">
+          Apri la preview completa con step, template pubblico e moduli visibili all’ospite.
+        </p>
+        <Link
+          href={`/${tenantSlug}/settings/booking-engine`}
+          className="mt-3 inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+        >
+          Vai al booking engine
+        </Link>
       </div>
 
       {message && (

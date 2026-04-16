@@ -1,4 +1,4 @@
-import { getNonHotelOperationsSettings, getSharedExtraAmenitiesSettings } from './non-hotel-operations'
+import { getStructureOperationsSettings, getSharedExtraAmenitiesSettings } from './structure-operations'
 import { buildHotelAmenitySuggestionCodes, getHotelOperationsSettings } from './hotel-operations'
 import { getPropertyTypeOperationsProfile } from './property-operations'
 import type { Json, Property } from '../types/database'
@@ -548,7 +548,7 @@ export function buildPmsAmenitySuggestions(org: Property | null): string[] {
   }
 
   const suggestions = new Set<string>()
-  const settings = getNonHotelOperationsSettings(org.settings, org.type)
+  const settings = getStructureOperationsSettings(org.settings, org.type)
   const profile = getPropertyTypeOperationsProfile(org.type)
   const sharedCatalogs = new Set(profile?.sharedCatalogs ?? [])
 

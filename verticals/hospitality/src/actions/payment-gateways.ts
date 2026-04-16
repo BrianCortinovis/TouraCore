@@ -15,9 +15,20 @@ import type { GatewayType, Json } from '../types/database'
 // Credential Management
 // ---------------------------------------------------------------------------
 
-function getOctoratePropertyId(credentials: Record<string, unknown>): string | null {
-  const entityId = credentials.property_id_external
-  return typeof entityId === 'string' && entityId.trim() ? entityId.trim() : null
+function getOctoratePropertyId(
+  organizationId: string,
+  credentials: Record<string, unknown>
+): string | null {
+  const directId = credentials.property_id_external
+  if (typeof directId === 'string' && directId.trim()) return directId.trim()
+
+  const mapping = credentials.property_mapping
+  if (mapping && typeof mapping === 'object' && !Array.isArray(mapping)) {
+    const mapped = (mapping as Record<string, unknown>)[organizationId]
+    if (typeof mapped === 'string' && mapped.trim()) return mapped.trim()
+  }
+
+  return null
 }
 
 async function syncOctorateChannelConnection(
@@ -25,7 +36,7 @@ async function syncOctorateChannelConnection(
   credentials: Record<string, unknown>
 ) {
   const supabase = await createServerSupabaseClient()
-  const entityId = getOctoratePropertyId(credentials)
+  const entityId = getOctoratePropertyId(organizationId, credentials)
 
   const { data: existingRows } = await supabase
     .from('channel_connections')
@@ -40,6 +51,9 @@ async function syncOctorateChannelConnection(
     credentials: credentials as Json,
     property_id_external: entityId,
     is_active: Boolean(entityId),
+    settings: {
+      property_mapping: (credentials.property_mapping as Json) ?? {},
+    },
     updated_at: new Date().toISOString(),
   }
 
@@ -61,7 +75,6 @@ async function syncOctorateChannelConnection(
     .insert({
       entity_id: organizationId,
       channel_name: 'octorate',
-      settings: {},
       ...payload,
     })
 
@@ -81,6 +94,7 @@ async function disableOctorateChannelConnection(organizationId: string) {
       is_active: false,
       property_id_external: null,
       credentials: {},
+      last_sync_status: 'disabled',
       updated_at: new Date().toISOString(),
     })
     .eq('entity_id', organizationId)
@@ -141,15 +155,17 @@ export async function getIntegrationCredentials() {
 
   const supabase = await createServerSupabaseClient()
   const { data } = await supabase
-    .from('organization_credentials')
-    .select('provider, is_active, validation_status, last_validated_at, updated_at')
-    .eq('entity_id', property.id)
+    .from('integration_credentials')
+    .select('provider, status, last_sync_at, last_error, updated_at')
+    .eq('scope', 'entity')
+    .eq('scope_id', property.id)
 
   return (data ?? []).map((c) => ({
     provider: c.provider as CredentialProvider,
-    is_active: c.is_active,
-    validation_status: c.validation_status,
-    last_validated_at: c.last_validated_at,
+    is_active: c.status === 'configured',
+    validation_status: c.status,
+    last_validated_at: c.last_sync_at,
+    last_error: c.last_error,
     updated_at: c.updated_at,
   }))
 }

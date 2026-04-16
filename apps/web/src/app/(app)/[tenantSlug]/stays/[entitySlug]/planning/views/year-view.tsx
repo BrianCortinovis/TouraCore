@@ -2,11 +2,13 @@
 
 import { useMemo } from 'react'
 import type { PlanningData } from '../actions'
+import { getStructureTerms } from '../../../../../../structure-terms'
 
 interface YearViewProps {
   data: PlanningData
   currentDate: Date
   onNavigateToMonth: (date: Date) => void
+  propertyType?: string | null
 }
 
 const MONTHS = [
@@ -24,7 +26,8 @@ const MONTHS = [
   'Dicembre',
 ]
 
-export function YearView({ data, currentDate, onNavigateToMonth }: YearViewProps) {
+export function YearView({ data, currentDate, onNavigateToMonth, propertyType }: YearViewProps) {
+  const terms = getStructureTerms(propertyType)
   const year = currentDate.getFullYear()
   const totalRooms = data.rooms.length
 
@@ -56,7 +59,7 @@ export function YearView({ data, currentDate, onNavigateToMonth }: YearViewProps
   if (totalRooms === 0) {
     return (
       <div className="flex h-full items-center justify-center text-sm text-gray-500">
-        Nessuna camera configurata. Serve almeno una camera per calcolare l&apos;occupazione.
+        Nessuna {terms.unitLabel} configurata. Serve almeno una {terms.unitLabel} per calcolare l&apos;occupazione.
       </div>
     )
   }

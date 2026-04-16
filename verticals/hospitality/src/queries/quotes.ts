@@ -84,10 +84,29 @@ export async function getQuoteByToken(token: string) {
 
   const { data, error } = await supabase
     .from('quotes')
-    .select('*, property:properties(id, name, logo_url, email, phone, address, city, province, zip, primary_color, secondary_color)')
+    .select(
+      '*, entity:entities(id, name, slug, short_description, email, phone, address, city, province, zip), accommodation:accommodations(property_type, legal_name, logo_url, email, phone, address, city, province, zip, primary_color, secondary_color)'
+    )
     .eq('token', token)
     .single()
 
   if (error) throw error
-  return data as QuoteWithProperty
+
+  const entity = data?.entity as Record<string, unknown> | null
+  const accommodation = data?.accommodation as Record<string, unknown> | null
+
+  const property = entity || accommodation
+    ? {
+        ...(entity ?? {}),
+        ...(accommodation ?? {}),
+        type: (accommodation?.property_type as string | undefined) ?? null,
+        short_description: (entity?.short_description as string | undefined) ?? null,
+      }
+    : null
+
+  const { entity: _entity, accommodation: _accommodation, ...quote } = data as Record<string, unknown>
+  return {
+    ...(quote as unknown as Quote),
+    property,
+  } as QuoteWithProperty
 }

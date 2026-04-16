@@ -1,7 +1,7 @@
 import { getOperationsSharedCatalogs, getPropertyTypeOperationsModule } from './property-operations'
 import type { Json, PropertyType } from '../types/database'
 
-export type NonHotelPropertyType = Exclude<PropertyType, 'hotel'>
+export type StructurePropertyType = Exclude<PropertyType, 'hotel'>
 export type ServiceChargeMode = 'free' | 'paid'
 export type ServicePricingMode = 'per_stay' | 'per_night' | 'per_guest' | 'per_item' | 'per_hour' | 'per_day'
 export type LinenItemType =
@@ -161,7 +161,7 @@ export interface PropertyTypeModuleDefinition {
   defaults: PropertyTypeModuleItem[]
 }
 
-export interface NonHotelOperationsSettings {
+export interface StructureOperationsSettings {
   linens: ManagedLinenItem[]
   laundry: ManagedLaundryService[]
   kitchen: ManagedKitchenItem[]
@@ -287,7 +287,7 @@ function createTypeSpecificDefault(
   }
 }
 
-export const DEFAULT_NON_HOTEL_OPERATIONS_SETTINGS: Omit<NonHotelOperationsSettings, 'type_specific'> = {
+export const DEFAULT_STRUCTURE_OPERATIONS_SETTINGS: Omit<StructureOperationsSettings, 'type_specific'> = {
   linens: [
     {
       id: 'linen-bed',
@@ -980,7 +980,7 @@ export const DEFAULT_NON_HOTEL_OPERATIONS_SETTINGS: Omit<NonHotelOperationsSetti
   ],
 }
 
-export const PROPERTY_TYPE_MODULE_DEFINITIONS: Partial<Record<NonHotelPropertyType, PropertyTypeModuleDefinition[]>> = {
+export const PROPERTY_TYPE_MODULE_DEFINITIONS: Partial<Record<StructurePropertyType, PropertyTypeModuleDefinition[]>> = {
   agriturismo: [
     {
       key: 'farm_experiences',
@@ -1517,19 +1517,19 @@ function isPoolAccessoryType(value: unknown): value is PoolAccessoryType {
   return ['sunbed', 'umbrella'].includes(String(value))
 }
 
-function isNonHotelPropertyType(value: PropertyType): value is NonHotelPropertyType {
+function isStructurePropertyType(value: PropertyType): value is StructurePropertyType {
   return value !== 'hotel'
 }
 
 export function getPropertyTypeModuleDefinitions(propertyType: PropertyType): PropertyTypeModuleDefinition[] {
-  if (!isNonHotelPropertyType(propertyType)) return []
+  if (!isStructurePropertyType(propertyType)) return []
   return PROPERTY_TYPE_MODULE_DEFINITIONS[propertyType] ?? []
 }
 
-export function getNonHotelOperationsSettings(
+export function getStructureOperationsSettings(
   settings: Json | null | undefined,
   propertyType: PropertyType
-): NonHotelOperationsSettings {
+): StructureOperationsSettings {
   const sharedCatalogs = getOperationsSharedCatalogs(settings)
   const root = {
     ...sharedCatalogs,
@@ -1557,9 +1557,9 @@ export function getNonHotelOperationsSettings(
   const extrasWithoutLegacyStandalone = normalizeSharedExtraAmenities(root.extras)
 
   return {
-    linens: normalizeList(root.linens, DEFAULT_NON_HOTEL_OPERATIONS_SETTINGS.linens, normalizeLinenItem),
-    laundry: normalizeList(root.laundry, DEFAULT_NON_HOTEL_OPERATIONS_SETTINGS.laundry, normalizeLaundryItem),
-    kitchen: normalizeList(root.kitchen, DEFAULT_NON_HOTEL_OPERATIONS_SETTINGS.kitchen, normalizeKitchenItem),
+    linens: normalizeList(root.linens, DEFAULT_STRUCTURE_OPERATIONS_SETTINGS.linens, normalizeLinenItem),
+    laundry: normalizeList(root.laundry, DEFAULT_STRUCTURE_OPERATIONS_SETTINGS.laundry, normalizeLaundryItem),
+    kitchen: normalizeList(root.kitchen, DEFAULT_STRUCTURE_OPERATIONS_SETTINGS.kitchen, normalizeKitchenItem),
     extras: extrasWithoutLegacyStandalone,
     type_specific: typeSpecific,
   }
@@ -1581,7 +1581,7 @@ function normalizeSharedExtraAmenities(items: unknown): ManagedExtraAmenity[] {
     )
   const normalizedExtras = normalizeList(
     rawExtras.filter((item) => !(isRecord(item) && isPoolAccessoryType(item.kind))),
-    DEFAULT_NON_HOTEL_OPERATIONS_SETTINGS.extras,
+    DEFAULT_STRUCTURE_OPERATIONS_SETTINGS.extras,
     normalizeExtraAmenity
   )
 

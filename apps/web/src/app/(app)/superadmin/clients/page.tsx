@@ -26,12 +26,12 @@ export default async function SuperadminClientsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Clienti</h1>
-        <span className="text-sm text-gray-500">{tenants?.length ?? 0} organizzazioni</span>
+        <span className="text-sm text-gray-500">{tenants?.length ?? 0} tenant</span>
       </div>
 
       {(!tenants || tenants.length === 0) ? (
         <div className="rounded-lg border border-dashed border-gray-300 p-12 text-center">
-          <p className="text-sm text-gray-500">Nessuna organizzazione registrata.</p>
+          <p className="text-sm text-gray-500">Nessun tenant registrato.</p>
         </div>
       ) : (
         <div className="divide-y rounded-lg border bg-white">

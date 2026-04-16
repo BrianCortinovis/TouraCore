@@ -39,7 +39,9 @@ export default function BookingWidget({
   const defaults = getDefaultDates()
   const [checkIn, setCheckIn] = useState(defaults.checkIn)
   const [checkOut, setCheckOut] = useState(defaults.checkOut)
-  const [guests, setGuests] = useState(2)
+  const [adults, setAdults] = useState(2)
+  const [children, setChildren] = useState(0)
+  const [infants, setInfants] = useState(0)
   const [withPets, setWithPets] = useState(false)
 
   const displayName =
@@ -52,7 +54,8 @@ export default function BookingWidget({
   const handleSearch = () => {
     const origin = baseUrl || (typeof window !== 'undefined' ? window.location.origin : '')
     const petsParam = withPets ? '&pets=1' : ''
-    const bookingUrl = `${origin}/book/${orgSlug}?check_in=${checkIn}&check_out=${checkOut}&guests=${guests}${petsParam}`
+    const totalGuests = adults + children
+    const bookingUrl = `${origin}/book/${orgSlug}?check_in=${checkIn}&check_out=${checkOut}&guests=${totalGuests}&adults=${adults}&children=${children}&infants=${infants}${petsParam}`
 
     // Open in new tab or redirect based on context
     if (window.parent !== window) {
@@ -164,24 +167,59 @@ export default function BookingWidget({
             />
           </div>
 
-          {/* Guests */}
-          <div className="space-y-1.5">
-            <label htmlFor="widget-guests" className="block text-sm font-medium text-gray-700">
-              <Users className="w-3.5 h-3.5 inline mr-1 text-gray-400" />
-              Ospiti
-            </label>
-            <select
-              id="widget-guests"
-              value={guests}
-              onChange={(e) => setGuests(parseInt(e.target.value, 10))}
-              className={`flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 ${colors.ring} focus:border-transparent`}
-            >
-              {[1, 2, 3, 4, 5, 6].map((n) => (
-                <option key={n} value={n}>
-                  {n} {n === 1 ? 'ospite' : 'ospiti'}
-                </option>
-              ))}
-            </select>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1.5">
+              <label htmlFor="widget-adults" className="block text-sm font-medium text-gray-700">
+                <Users className="mr-1 inline h-3.5 w-3.5 text-gray-400" />
+                Adulti
+              </label>
+              <select
+                id="widget-adults"
+                value={adults}
+                onChange={(e) => setAdults(parseInt(e.target.value, 10))}
+                className={`flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 ${colors.ring} focus:border-transparent`}
+              >
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="widget-children" className="block text-sm font-medium text-gray-700">
+                Bambini
+              </label>
+              <select
+                id="widget-children"
+                value={children}
+                onChange={(e) => setChildren(parseInt(e.target.value, 10))}
+                className={`flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 ${colors.ring} focus:border-transparent`}
+              >
+                {[0, 1, 2, 3, 4].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="widget-infants" className="block text-sm font-medium text-gray-700">
+                Infanti
+              </label>
+              <select
+                id="widget-infants"
+                value={infants}
+                onChange={(e) => setInfants(parseInt(e.target.value, 10))}
+                className={`flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 ${colors.ring} focus:border-transparent`}
+              >
+                {[0, 1, 2, 3].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Pet toggle */}
@@ -210,7 +248,7 @@ export default function BookingWidget({
             className={`w-full inline-flex items-center justify-center gap-2 h-11 px-4 rounded-lg ${colors.bg} text-sm font-semibold text-white transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <Search className="w-4 h-4" />
-            Cerca disponibilita`
+            Cerca disponibilità
           </button>
         </div>
 

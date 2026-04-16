@@ -1,5 +1,4 @@
 import { createServerSupabaseClient } from '@touracore/db'
-import { requireCurrentEntity } from '../auth/access'
 import type { Guest } from '../types/database'
 
 interface GuestFilters {
@@ -15,15 +14,14 @@ export type GuestWithBookingCount = Guest & {
   booking_count: number
 }
 
-export async function getGuests(filters: GuestFilters = {}) {
-  const { property } = await requireCurrentEntity()
+export async function getGuests(filters: GuestFilters = {}, entityId: string) {
   const supabase = await createServerSupabaseClient()
   const { search, country, tags, loyaltyLevel, page = 1, limit = 25 } = filters
 
   let query = supabase
     .from('guests')
     .select('*', { count: 'exact' })
-    .eq('entity_id', property.id)
+    .eq('entity_id', entityId)
 
   if (search) {
     query = query.or(
@@ -62,16 +60,16 @@ export async function getGuests(filters: GuestFilters = {}) {
   }
 }
 
-export async function getGuest(id: string) {
-  const { property } = await requireCurrentEntity()
+export async function getGuest(id: string, entityId: string) {
   const supabase = await createServerSupabaseClient()
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('guests')
     .select('*')
     .eq('id', id)
-    .eq('entity_id', property.id)
-    .single()
+    .eq('entity_id', entityId)
+
+  const { data, error } = await query.single()
 
   if (error) throw error
   return data as Guest
@@ -90,45 +88,55 @@ export interface GuestStayRecord {
   created_at: string
 }
 
-export async function getGuestStayHistory(guestId: string): Promise<GuestStayRecord[]> {
-  const { property } = await requireCurrentEntity()
+export async function getGuestStayHistory(
+  guestId: string,
+  entityId: string
+): Promise<GuestStayRecord[]> {
   const supabase = await createServerSupabaseClient()
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('bookings')
     .select('id, guest_name, check_in, check_out, status, source, total_amount, currency, notes, created_at')
     .eq('guest_id', guestId)
     .order('check_in', { ascending: false })
     .limit(50)
 
+  query = query.eq('entity_id', entityId)
+
+  const { data, error } = await query
+
   if (error) throw error
   return (data ?? []) as GuestStayRecord[]
 }
 
-export async function getGuestCountries(): Promise<string[]> {
-  const { property } = await requireCurrentEntity()
+export async function getGuestCountries(entityId: string): Promise<string[]> {
   const supabase = await createServerSupabaseClient()
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('guests')
     .select('country')
-    .eq('entity_id', property.id)
     .not('country', 'is', null)
     .order('country')
+
+  query = query.eq('entity_id', entityId)
+
+  const { data, error } = await query
 
   if (error) throw error
   const unique = [...new Set((data ?? []).map((d) => d.country).filter(Boolean))]
   return unique as string[]
 }
 
-export async function getGuestTags(): Promise<string[]> {
-  const { property } = await requireCurrentEntity()
+export async function getGuestTags(entityId: string): Promise<string[]> {
   const supabase = await createServerSupabaseClient()
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('guests')
     .select('tags')
-    .eq('entity_id', property.id)
+
+  query = query.eq('entity_id', entityId)
+
+  const { data, error } = await query
 
   if (error) throw error
   const allTags = (data ?? []).flatMap((d) => d.tags ?? [])

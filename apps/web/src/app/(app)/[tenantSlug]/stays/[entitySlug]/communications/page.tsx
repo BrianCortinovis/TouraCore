@@ -12,6 +12,8 @@ import {
   deleteTemplateAction, toggleTemplateAction, loadSentMessagesAction,
 } from './actions'
 import type { TemplateData } from './actions'
+import { useAuthStore } from '@touracore/auth/store'
+import { getStructureTerms } from '../../../../../structure-terms'
 
 const TRIGGER_LABELS: Record<string, string> = {
   booking_confirmed: 'Prenotazione confermata',
@@ -60,21 +62,23 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   bounced: { label: 'Rimbalzato', color: 'bg-gray-100 text-gray-800' },
 }
 
-const AVAILABLE_VARIABLES = [
-  { key: 'guest_name', label: 'Nome ospite' },
-  { key: 'guest_first_name', label: 'Nome' },
-  { key: 'guest_last_name', label: 'Cognome' },
-  { key: 'guest_email', label: 'Email ospite' },
-  { key: 'check_in_date', label: 'Data check-in' },
-  { key: 'check_out_date', label: 'Data check-out' },
-  { key: 'nights', label: 'Numero notti' },
-  { key: 'room_name', label: 'Nome camera' },
-  { key: 'total_amount', label: 'Importo totale' },
-  { key: 'property_name', label: 'Nome struttura' },
-  { key: 'property_address', label: 'Indirizzo struttura' },
-  { key: 'property_phone', label: 'Telefono struttura' },
-  { key: 'reservation_code', label: 'Codice prenotazione' },
-]
+function getAvailableVariables(unitLabel: string) {
+  return [
+    { key: 'guest_name', label: 'Nome ospite' },
+    { key: 'guest_first_name', label: 'Nome' },
+    { key: 'guest_last_name', label: 'Cognome' },
+    { key: 'guest_email', label: 'Email ospite' },
+    { key: 'check_in_date', label: 'Data check-in' },
+    { key: 'check_out_date', label: 'Data check-out' },
+    { key: 'nights', label: 'Numero notti' },
+    { key: 'room_name', label: `Nome ${unitLabel}` },
+    { key: 'total_amount', label: 'Importo totale' },
+    { key: 'property_name', label: 'Nome struttura' },
+    { key: 'property_address', label: 'Indirizzo struttura' },
+    { key: 'property_phone', label: 'Telefono struttura' },
+    { key: 'reservation_code', label: 'Codice prenotazione' },
+  ]
+}
 
 interface Template {
   id: string
@@ -105,6 +109,8 @@ interface SentMessage {
 type TabView = 'templates' | 'history'
 
 export default function CommunicationsPage() {
+  const { property } = useAuthStore()
+  const terms = getStructureTerms(property?.property_type)
   const [view, setView] = useState<TabView>('templates')
   const [templates, setTemplates] = useState<Template[]>([])
   const [messages, setMessages] = useState<SentMessage[]>([])
@@ -129,20 +135,30 @@ export default function CommunicationsPage() {
 
   const loadTemplates = useCallback(async () => {
     setLoading(true)
-    const result = await loadTemplatesAction()
-    if (result.success && result.data) {
-      setTemplates(result.data.templates as Template[])
+    try {
+      const result = await loadTemplatesAction()
+      if (result.success && result.data) {
+        setTemplates(result.data.templates as Template[])
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore caricamento template')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }, [])
 
   const loadMessages = useCallback(async () => {
     setLoading(true)
-    const result = await loadSentMessagesAction({ limit: 50 })
-    if (result.success && result.data) {
-      setMessages(result.data.messages as SentMessage[])
+    try {
+      const result = await loadSentMessagesAction({ limit: 50 })
+      if (result.success && result.data) {
+        setMessages(result.data.messages as SentMessage[])
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore caricamento messaggi')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }, [])
 
   useEffect(() => {
@@ -471,7 +487,7 @@ export default function CommunicationsPage() {
           <div>
             <label className="mb-2 block text-xs font-medium text-gray-600">Variabili disponibili (clicca per inserire)</label>
             <div className="flex flex-wrap gap-1.5">
-              {AVAILABLE_VARIABLES.map((v) => (
+              {getAvailableVariables(terms.unitLabel).map((v) => (
                 <button
                   key={v.key}
                   type="button"

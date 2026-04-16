@@ -17,7 +17,7 @@ export interface PropertyTypeOperationsProfile {
   description: string
   serviceSummary: string
   operationalModel: 'hospitality' | 'residential' | 'hybrid'
-  usesHotelServiceModel: boolean
+  usesStructureServiceModel: boolean
   sharedCatalogs: SharedOperationsCatalogKey[]
   sharedCatalogPresentation: Partial<Record<SharedOperationsCatalogKey, SharedOperationsCatalogPresentation>>
 }
@@ -43,15 +43,12 @@ function toOperationsConfigRecord(settings: Json | null | undefined): UnknownRec
 function toSharedCatalogRecord(settings: Json | null | undefined): Partial<Record<SharedOperationsCatalogKey, unknown>> {
   const root = toOperationsConfigRecord(settings)
   const shared = isRecord(root.shared_catalogs) ? root.shared_catalogs : {}
-  const legacyNonHotel = isRecord(toSettingsRecord(settings).non_hotel_operations)
-    ? (toSettingsRecord(settings).non_hotel_operations as UnknownRecord)
-    : {}
 
   return {
-    linens: shared.linens ?? legacyNonHotel.linens,
-    laundry: shared.laundry ?? legacyNonHotel.laundry,
-    kitchen: shared.kitchen ?? legacyNonHotel.kitchen,
-    extras: shared.extras ?? legacyNonHotel.extras,
+    linens: shared.linens,
+    laundry: shared.laundry,
+    kitchen: shared.kitchen,
+    extras: shared.extras,
   }
 }
 
@@ -66,22 +63,6 @@ function toPropertyTypeModuleRecord(
     : null
 
   if (fromUnified) return fromUnified
-
-  const settingsRecord = toSettingsRecord(settings)
-  if (propertyType === 'hotel' && isRecord(settingsRecord.hotel_operations)) {
-    return settingsRecord.hotel_operations as UnknownRecord
-  }
-
-  const legacyNonHotel = isRecord(settingsRecord.non_hotel_operations)
-    ? (settingsRecord.non_hotel_operations as UnknownRecord)
-    : {}
-
-  if (
-    isRecord(legacyNonHotel.property_type_modules) &&
-    isRecord((legacyNonHotel.property_type_modules as UnknownRecord)[propertyType])
-  ) {
-    return (legacyNonHotel.property_type_modules as UnknownRecord)[propertyType] as UnknownRecord
-  }
 
   return {}
 }
@@ -143,31 +124,6 @@ export function buildOperationsSettingsPayload({
     },
   }
 
-  if (propertyType === 'hotel' && typeModule) {
-    nextSettings.hotel_operations = typeModule as unknown as Json
-  }
-
-  if (propertyType !== 'hotel') {
-    const legacyNonHotel = isRecord(settingsRecord.non_hotel_operations)
-      ? (settingsRecord.non_hotel_operations as UnknownRecord)
-      : {}
-    const legacyTypeModules = isRecord(legacyNonHotel.property_type_modules)
-      ? (legacyNonHotel.property_type_modules as UnknownRecord)
-      : {}
-
-    nextSettings.non_hotel_operations = {
-      ...legacyNonHotel,
-      linens: nextSharedCatalogs.linens as Json,
-      laundry: nextSharedCatalogs.laundry as Json,
-      kitchen: nextSharedCatalogs.kitchen as Json,
-      extras: nextSharedCatalogs.extras as Json,
-      property_type_modules: {
-        ...legacyTypeModules,
-        ...(typeModule ? { [propertyType]: typeModule as unknown as Json } : {}),
-      },
-    } as unknown as Json
-  }
-
   return {
     settings: nextSettings as unknown as Json,
   }
@@ -180,7 +136,7 @@ export const PROPERTY_TYPE_OPERATIONS_PROFILES: Record<PropertyType, PropertyTyp
     description: 'Modello alberghiero con front office, housekeeping, add-on vendibili e dotazioni per tipologia camera.',
     serviceSummary: 'Servizi trasversali struttura, moduli hotel dedicati, housekeeping, add-on vendibili e tipologie camera.',
     operationalModel: 'hospitality',
-    usesHotelServiceModel: true,
+    usesStructureServiceModel: true,
     sharedCatalogs: ['extras'],
     sharedCatalogPresentation: {
       extras: {
@@ -197,7 +153,7 @@ export const PROPERTY_TYPE_OPERATIONS_PROFILES: Record<PropertyType, PropertyTyp
     description: 'Struttura ibrida tra alberghiero e soggiorno medio-lungo, con servizi comuni e unita` abitative.',
     serviceSummary: 'Pulizie programmate, servizi struttura, extra e soggiorni medio-lunghi.',
     operationalModel: 'hybrid',
-    usesHotelServiceModel: false,
+    usesStructureServiceModel: false,
     sharedCatalogs: ['linens', 'laundry', 'kitchen', 'extras'],
     sharedCatalogPresentation: {
       linens: {
@@ -232,7 +188,7 @@ export const PROPERTY_TYPE_OPERATIONS_PROFILES: Record<PropertyType, PropertyTyp
     description: 'Gestione self-service o semi-assistita con cucina, biancheria e servizi extra della struttura.',
     serviceSummary: 'Biancheria, cucina, extra, self-service e servizi prenotabili.',
     operationalModel: 'residential',
-    usesHotelServiceModel: false,
+    usesStructureServiceModel: false,
     sharedCatalogs: ['linens', 'laundry', 'kitchen', 'extras'],
     sharedCatalogPresentation: {
       linens: {
@@ -267,7 +223,7 @@ export const PROPERTY_TYPE_OPERATIONS_PROFILES: Record<PropertyType, PropertyTyp
     description: 'Modello leggero con forte attenzione a colazione, accoglienza e servizi ospite essenziali.',
     serviceSummary: 'Accoglienza, colazione, biancheria, servizi ospite ed extra.',
     operationalModel: 'hospitality',
-    usesHotelServiceModel: false,
+    usesStructureServiceModel: false,
     sharedCatalogs: ['linens', 'laundry', 'extras'],
     sharedCatalogPresentation: {
       linens: {
@@ -296,7 +252,7 @@ export const PROPERTY_TYPE_OPERATIONS_PROFILES: Record<PropertyType, PropertyTyp
     description: 'Struttura rurale con servizi ospite, esperienze, outdoor e moduli dedicati all’identita` agricola.',
     serviceSummary: 'Servizi struttura, outdoor, esperienze, biancheria e moduli rurali.',
     operationalModel: 'hybrid',
-    usesHotelServiceModel: false,
+    usesStructureServiceModel: false,
     sharedCatalogs: ['linens', 'laundry', 'kitchen', 'extras'],
     sharedCatalogPresentation: {
       linens: {
@@ -331,7 +287,7 @@ export const PROPERTY_TYPE_OPERATIONS_PROFILES: Record<PropertyType, PropertyTyp
     description: 'Gestione camere con servizi leggeri, pulizie e dotazioni essenziali.',
     serviceSummary: 'Biancheria, lavanderia, servizi ospite e moduli leggeri per camere.',
     operationalModel: 'hospitality',
-    usesHotelServiceModel: false,
+    usesStructureServiceModel: false,
     sharedCatalogs: ['linens', 'laundry', 'extras'],
     sharedCatalogPresentation: {
       linens: {
@@ -360,7 +316,7 @@ export const PROPERTY_TYPE_OPERATIONS_PROFILES: Record<PropertyType, PropertyTyp
     description: 'Configurazione flessibile che combina esigenze alberghiere e unita` indipendenti.',
     serviceSummary: 'Configurazione flessibile con servizi comuni e moduli dedicati.',
     operationalModel: 'hybrid',
-    usesHotelServiceModel: false,
+    usesStructureServiceModel: false,
     sharedCatalogs: ['linens', 'laundry', 'kitchen', 'extras'],
     sharedCatalogPresentation: {
       linens: {

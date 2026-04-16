@@ -14,6 +14,8 @@ import {
   bulkCreateBlocksAction,
   bulkDeleteBlocksAction,
 } from './actions'
+import { useAuthStore } from '@touracore/auth/store'
+import { getStructureTerms } from '../../../../../structure-terms'
 
 interface RoomBlock {
   id: string
@@ -60,6 +62,8 @@ function daysBetween(from: string, to: string): number {
 }
 
 export default function RoomBlocksPage() {
+  const { property } = useAuthStore()
+  const terms = getStructureTerms(property?.property_type)
   const [blocks, setBlocks] = useState<RoomBlock[]>([])
   const [rooms, setRooms] = useState<Room[]>([])
   const [loading, setLoading] = useState(true)
@@ -80,17 +84,22 @@ export default function RoomBlocksPage() {
   const loadData = useCallback(async () => {
     setLoading(true)
     setError('')
-    const [blocksResult, roomsResult] = await Promise.all([
-      loadBlocksAction(),
-      loadRoomsAction(),
-    ])
-    if (blocksResult.success && blocksResult.data) {
-      setBlocks(blocksResult.data.blocks as RoomBlock[])
+    try {
+      const [blocksResult, roomsResult] = await Promise.all([
+        loadBlocksAction(),
+        loadRoomsAction(),
+      ])
+      if (blocksResult.success && blocksResult.data) {
+        setBlocks(blocksResult.data.blocks as RoomBlock[])
+      }
+      if (roomsResult.success && roomsResult.data) {
+        setRooms(roomsResult.data.rooms as Room[])
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore durante il caricamento')
+    } finally {
+      setLoading(false)
     }
-    if (roomsResult.success && roomsResult.data) {
-      setRooms(roomsResult.data.rooms as Room[])
-    }
-    setLoading(false)
   }, [])
 
   useEffect(() => { void loadData() }, [loadData])
@@ -196,7 +205,7 @@ export default function RoomBlocksPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Ban className="h-6 w-6" />
-            Blocchi Camere
+            Blocchi {terms.unitLabelPluralTitle}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
             Gestione chiusure, manutenzioni e blocchi disponibilità
@@ -272,7 +281,7 @@ export default function RoomBlocksPage() {
                   onChange={(e) => setFormRoomIds(e.target.value ? [e.target.value] : [])}
                   className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
                 >
-                  <option value="">Seleziona camera...</option>
+                  <option value="">Seleziona {terms.unitLabel}...</option>
                   {rooms.map((room) => (
                     <option key={room.id} value={room.id}>
                       {room.room_number} — {room.name} ({room.room_type?.name ?? ''})

@@ -19,6 +19,7 @@ import {
   type SciaStatus,
 } from '@touracore/hospitality-config'
 import { updateEntitySettingsAction } from './actions'
+import { getStructureTerms } from '../../../../../structure-terms'
 
 type SettingsTab = 'struttura' | 'posizione' | 'fiscale' | 'compliance' | 'policy' | 'contatti'
 
@@ -201,6 +202,7 @@ export function EntitySettingsForm({ tenantSlug, tenantCountry, entity, accommod
 
   const visibility = getFormVisibility(propertyType)
   const typeConfig = getPropertyTypeConfig(propertyType)
+  const terms = getStructureTerms(propertyType)
   const country = entity.country_override ?? tenantCountry ?? 'IT'
 
   const effectiveImprenditoriale = isAlwaysImprenditoriale(propertyType) ? true : isImprenditoriale
@@ -480,7 +482,7 @@ export function EntitySettingsForm({ tenantSlug, tenantCountry, entity, accommod
                   Unità: {typeConfig.unitLabelPlural}
                 </span>
                 <span className={visibility.showRoomTypes ? 'text-green-700' : 'text-gray-400'}>
-                  {visibility.showRoomTypes ? '\u2713' : '\u2014'} Tipologie camera
+                  {visibility.showRoomTypes ? '\u2713' : '\u2014'} {terms.roomTypesLabel}
                 </span>
                 <span className={visibility.showRooms ? 'text-green-700' : 'text-gray-400'}>
                   {visibility.showRooms ? '\u2713' : '\u2014'} Gestione camere

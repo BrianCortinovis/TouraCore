@@ -51,17 +51,22 @@ export default function CheckInPage() {
 
   const loadData = useCallback(async () => {
     setLoading(true)
-    const [arrResult, ciResult] = await Promise.all([
-      loadArrivalsAction(),
-      loadCheckedInAction(),
-    ])
-    if (arrResult.success && arrResult.data) {
-      setArrivals((arrResult.data.arrivals ?? []) as BookingRow[])
+    try {
+      const [arrResult, ciResult] = await Promise.all([
+        loadArrivalsAction(),
+        loadCheckedInAction(),
+      ])
+      if (arrResult.success && arrResult.data) {
+        setArrivals((arrResult.data.arrivals ?? []) as BookingRow[])
+      }
+      if (ciResult.success && ciResult.data) {
+        setCheckedIn((ciResult.data.bookings ?? []) as BookingRow[])
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore durante il caricamento')
+    } finally {
+      setLoading(false)
     }
-    if (ciResult.success && ciResult.data) {
-      setCheckedIn((ciResult.data.bookings ?? []) as BookingRow[])
-    }
-    setLoading(false)
   }, [])
 
   useEffect(() => { void loadData() }, [loadData])

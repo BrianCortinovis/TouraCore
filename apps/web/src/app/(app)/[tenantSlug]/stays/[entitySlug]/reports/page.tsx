@@ -54,13 +54,18 @@ export default function ReportsPage() {
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
-    const result = await loadReportsAction({ year })
-    if (result.success && result.data) {
-      setData(result.data as ReportData)
-    } else {
-      setError(result.error ?? 'Errore')
+    try {
+      const result = await loadReportsAction({ year })
+      if (result.success && result.data) {
+        setData(result.data as ReportData)
+      } else {
+        setError(result.error ?? 'Errore')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }, [year])
 
   useEffect(() => {

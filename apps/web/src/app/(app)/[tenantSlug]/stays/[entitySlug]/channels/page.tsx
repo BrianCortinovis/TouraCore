@@ -41,20 +41,29 @@ export default function ChannelsHubPage() {
   const [channels, setChannels] = useState<Record<string, ChannelStatus>>({})
   const [logs, setLogs] = useState<SyncLog[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [openProvider, setOpenProvider] = useState<IntegrationProvider | null>(null)
 
   const loadHub = useCallback(async () => {
     setLoading(true)
-    const result = await loadChannelsHubAction()
-    if (result.success && result.data) {
-      const map: Record<string, ChannelStatus> = {}
-      for (const ch of result.data.channels as ChannelStatus[]) {
-        map[ch.provider] = ch
+    setError('')
+    try {
+      const result = await loadChannelsHubAction()
+      if (result.success && result.data) {
+        const map: Record<string, ChannelStatus> = {}
+        for (const ch of result.data.channels as ChannelStatus[]) {
+          map[ch.provider] = ch
+        }
+        setChannels(map)
+        setLogs((result.data.logs as SyncLog[]) ?? [])
+      } else {
+        setError(result.error ?? 'Errore caricamento canali')
       }
-      setChannels(map)
-      setLogs((result.data.logs as SyncLog[]) ?? [])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore caricamento canali')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }, [])
 
   useEffect(() => {
@@ -159,6 +168,12 @@ export default function ChannelsHubPage() {
           )
         })}
       </div>
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       {logs.length > 0 && (
         <div>

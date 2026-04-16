@@ -16,6 +16,7 @@ function isPublicRoute(pathname: string): boolean {
     pathname === '/' ||
     pathname === '/superadmin-login' ||
     pathname.startsWith('/superadmin-login/') ||
+    pathname.startsWith('/api/auth') ||
     pathname.startsWith('/forgot-password') ||
     pathname.startsWith('/reset-password') ||
     pathname.startsWith('/auth/callback') ||

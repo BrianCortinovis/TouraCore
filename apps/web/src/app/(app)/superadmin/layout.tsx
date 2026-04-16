@@ -23,10 +23,12 @@ export default async function SuperadminLayout({ children }: SuperadminLayoutPro
   if (!admin) redirect('/superadmin-login')
 
   return (
-    <div className="flex gap-6">
-      <SuperadminSidebar role={admin.role} />
-      <div className="flex-1 min-w-0">
-        {children}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      <div className="mx-auto flex max-w-[1600px] gap-6 px-4 py-6">
+        <SuperadminSidebar role={admin.role} />
+        <main className="min-w-0 flex-1 rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-sm backdrop-blur">
+          {children}
+        </main>
       </div>
     </div>
   )

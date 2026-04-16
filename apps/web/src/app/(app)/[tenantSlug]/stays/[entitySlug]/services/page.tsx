@@ -32,6 +32,8 @@ import {
   Clock,
 } from 'lucide-react'
 import { SlotManager } from './slot-manager'
+import { useAuthStore } from '@touracore/auth/store'
+import { getStructureTerms } from '../../../../../structure-terms'
 
 interface Offer {
   id: string
@@ -94,6 +96,8 @@ const STATUS_COLORS: Record<string, 'success' | 'warning' | 'destructive' | 'sec
 }
 
 export default function ServicesPage() {
+  const { property } = useAuthStore()
+  const terms = getStructureTerms(property?.property_type)
   const [tab, setTab] = useState<'offers' | 'orders'>('offers')
   const [offers, setOffers] = useState<Offer[]>([])
   const [orders, setOrders] = useState<Order[]>([])
@@ -108,12 +112,17 @@ export default function ServicesPage() {
 
   const loadData = useCallback(async () => {
     setLoading(true)
-    const { offers: offersData, orders: ordersData, revenue: revenueData } =
-      await loadServicesPageAction({ limit: 50 })
-    setOffers(offersData as Offer[])
-    setOrders(ordersData as Order[])
-    setRevenue(revenueData)
-    setLoading(false)
+    try {
+      const { offers: offersData, orders: ordersData, revenue: revenueData } =
+        await loadServicesPageAction({ limit: 50 })
+      setOffers(offersData as Offer[])
+      setOrders(ordersData as Order[])
+      setRevenue(revenueData)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore caricamento servizi')
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => { loadData() }, [loadData])
@@ -422,7 +431,7 @@ export default function ServicesPage() {
             label="Nome"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder="Es. Colazione in camera"
+            placeholder={`Es. Colazione in ${terms.unitLabel}`}
           />
 
           <Input

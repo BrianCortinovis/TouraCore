@@ -72,16 +72,21 @@ export default function FinancialsPage() {
   const loadData = useCallback(async () => {
     setLoading(true)
     setError('')
-    const result = await loadFinancialDashboardAction(dateFrom, dateTo)
-    if (result.success && result.data) {
-      setSummary(result.data.summary as Summary)
-      setMonthly(result.data.monthly as MonthlyData[])
-      setChannels(result.data.channels as ChannelData[])
-      setDirectVsOta(result.data.directVsOta as DirectVsOta)
-    } else {
-      setError(result.error ?? 'Errore')
+    try {
+      const result = await loadFinancialDashboardAction(dateFrom, dateTo)
+      if (result.success && result.data) {
+        setSummary(result.data.summary as Summary)
+        setMonthly(result.data.monthly as MonthlyData[])
+        setChannels(result.data.channels as ChannelData[])
+        setDirectVsOta(result.data.directVsOta as DirectVsOta)
+      } else {
+        setError(result.error ?? 'Errore')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }, [dateFrom, dateTo])
 
   useEffect(() => { void loadData() }, [loadData])

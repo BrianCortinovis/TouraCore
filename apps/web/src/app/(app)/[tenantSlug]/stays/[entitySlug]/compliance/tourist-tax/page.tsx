@@ -93,14 +93,19 @@ export default function TouristTaxPage() {
   const loadRecords = useCallback(async () => {
     setLoading(true)
     setError('')
-    const result = await loadTaxRecordsAction(month, year)
-    if (result.success && result.data) {
-      setRecords(result.data.records as TaxRecord[])
-      setSummary(result.data.summary as Summary)
-    } else {
-      setError(result.error ?? 'Errore caricamento')
+    try {
+      const result = await loadTaxRecordsAction(month, year)
+      if (result.success && result.data) {
+        setRecords(result.data.records as TaxRecord[])
+        setSummary(result.data.summary as Summary)
+      } else {
+        setError(result.error ?? 'Errore caricamento')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore caricamento')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }, [month, year])
 
   const loadConfig = useCallback(async () => {

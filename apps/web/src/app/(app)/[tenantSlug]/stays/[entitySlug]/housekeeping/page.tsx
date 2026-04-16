@@ -9,6 +9,8 @@ import {
 } from 'lucide-react'
 import { format, addDays, subDays } from 'date-fns'
 import { it } from 'date-fns/locale'
+import { useAuthStore } from '@touracore/auth/store'
+import { getStructureTerms } from '../../../../../structure-terms'
 import {
   loadHousekeepingAction, createHousekeepingTaskAction,
   updateTaskStatusAction, deleteHousekeepingTaskAction,
@@ -71,6 +73,8 @@ interface RoomOption {
 }
 
 export default function HousekeepingPage() {
+  const { property } = useAuthStore()
+  const terms = getStructureTerms(property?.property_type)
   const [tasks, setTasks] = useState<HkTask[]>([])
   const [stats, setStats] = useState<Record<string, number>>({})
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]!)
@@ -89,14 +93,19 @@ export default function HousekeepingPage() {
   const loadData = useCallback(async () => {
     setLoading(true)
     setError('')
-    const result = await loadHousekeepingAction({ date })
-    if (result.success && result.data) {
-      setTasks(result.data.tasks as HkTask[])
-      setStats(result.data.stats as Record<string, number>)
-    } else {
-      setError(result.error ?? 'Errore')
+    try {
+      const result = await loadHousekeepingAction({ date })
+      if (result.success && result.data) {
+        setTasks(result.data.tasks as HkTask[])
+        setStats(result.data.stats as Record<string, number>)
+      } else {
+        setError(result.error ?? 'Errore')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }, [date])
 
   useEffect(() => { loadData() }, [loadData])
@@ -119,7 +128,7 @@ export default function HousekeepingPage() {
   }
 
   const handleCreate = async () => {
-    if (!formRoom) { setError('Seleziona una camera'); return }
+    if (!formRoom) { setError(`Seleziona una ${terms.unitLabel}`); return }
     setCreating(true)
     setError('')
 
@@ -173,7 +182,7 @@ export default function HousekeepingPage() {
             <Sparkles className="h-6 w-6" />
             Housekeeping
           </h1>
-          <p className="mt-1 text-sm text-gray-500">Gestione pulizie e manutenzione camere</p>
+          <p className="mt-1 text-sm text-gray-500">Gestione pulizie e manutenzione {terms.unitLabelPlural}</p>
         </div>
         <Button onClick={openCreate}>
           <Plus className="mr-1.5 h-4 w-4" /> Nuovo task
@@ -254,7 +263,7 @@ export default function HousekeepingPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-gray-900">
-                      {task.room?.name ?? 'Camera'}
+                      {task.room?.name ?? terms.unitLabelTitle}
                     </span>
                     {task.room?.floor != null && (
                       <span className="text-xs text-gray-400">Piano {task.room.floor}</span>
@@ -317,13 +326,13 @@ export default function HousekeepingPage() {
       >
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Camera *</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">{terms.unitLabelTitle} *</label>
             <select
               value={formRoom}
               onChange={(e) => setFormRoom(e.target.value)}
               className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">Seleziona camera</option>
+              <option value="">Seleziona {terms.unitLabel}</option>
               {rooms.map((r) => (
                 <option key={r.id} value={r.id}>
                   {r.name}{r.floor != null ? ` (Piano ${r.floor})` : ''}

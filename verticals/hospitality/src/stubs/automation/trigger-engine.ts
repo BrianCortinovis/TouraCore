@@ -32,10 +32,20 @@ export async function fireAutomationTrigger(
         entity:entities(name)
       `)
       .eq('id', context.reservationId)
+      .eq('entity_id', context.organizationId)
       .single()
 
     if (resError || !reservation) {
       console.error('[Automation] Prenotazione non trovata:', context.reservationId)
+      return
+    }
+
+    if (reservation.entity_id !== context.organizationId) {
+      console.warn('[Automation] Reservation scope mismatch:', {
+        reservationId: context.reservationId,
+        expectedEntityId: context.organizationId,
+        actualEntityId: reservation.entity_id,
+      })
       return
     }
 
@@ -94,7 +104,7 @@ export async function fireAutomationTrigger(
           templateId: template.id,
         })
       } else if (template.channel === 'whatsapp') {
-        // Salva come queued per WhatsApp — verrà processato quando il client è attivo
+        // Salva in coda per la consegna asincrona su WhatsApp
         await supabase.from('sent_messages').insert({
           entity_id: reservation.entity_id,
           template_id: template.id,

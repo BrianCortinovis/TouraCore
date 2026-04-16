@@ -119,15 +119,16 @@ export function GuestsClient({ entityId }: { entityId: string }) {
   const pageSize = 25
 
   useEffect(() => {
-    loadGuestCountriesAction().then(setAvailableCountries).catch(() => {})
-    loadGuestTagsAction().then(setAvailableTags).catch(() => {})
-  }, [])
+    loadGuestCountriesAction(entityId).then(setAvailableCountries).catch(() => {})
+    loadGuestTagsAction(entityId).then(setAvailableTags).catch(() => {})
+  }, [entityId])
 
   const loadGuests = useCallback(async () => {
     setIsLoading(true)
     setError(null)
     try {
       const result = await loadGuestsAction({
+        entityId,
         search: search || undefined,
         country: filterCountry || undefined,
         loyaltyLevel: filterLoyalty || undefined,
@@ -142,7 +143,7 @@ export function GuestsClient({ entityId }: { entityId: string }) {
     } finally {
       setIsLoading(false)
     }
-  }, [search, page, filterCountry, filterLoyalty, filterTag])
+  }, [entityId, search, page, filterCountry, filterLoyalty, filterTag])
 
   useEffect(() => { loadGuests() }, [loadGuests])
 
@@ -150,7 +151,7 @@ export function GuestsClient({ entityId }: { entityId: string }) {
     setError(null)
     setStayHistory([])
     try {
-      const full = await loadGuestAction(guest.id)
+      const full = await loadGuestAction(guest.id, entityId)
       setSelectedGuest(full)
     } catch {
       setSelectedGuest(guest)
@@ -158,24 +159,24 @@ export function GuestsClient({ entityId }: { entityId: string }) {
     setIsDetailOpen(true)
     setIsEditing(false)
     setActiveTab('info')
-  }, [])
+  }, [entityId])
 
   const loadStayHistoryForGuest = useCallback(async (guestId: string) => {
     setStayHistoryLoading(true)
     try {
-      const history = await loadGuestStayHistoryAction(guestId)
+      const history = await loadGuestStayHistoryAction(guestId, entityId)
       setStayHistory(history)
     } catch {
       setStayHistory([])
     } finally {
       setStayHistoryLoading(false)
     }
-  }, [])
+  }, [entityId])
 
   const handleTabChange = useCallback((tab: Tab) => {
     setActiveTab(tab)
     if (tab === 'stays' && selectedGuest && stayHistory.length === 0) {
-      loadStayHistoryForGuest(selectedGuest.id)
+      void loadStayHistoryForGuest(selectedGuest.id)
     }
   }, [selectedGuest, stayHistory.length, loadStayHistoryForGuest])
 
@@ -218,7 +219,7 @@ export function GuestsClient({ entityId }: { entityId: string }) {
     if (!selectedGuest) return
     setSaving(true)
     setError(null)
-    const result = await updateGuestAction(selectedGuest.id, editData)
+    const result = await updateGuestAction(selectedGuest.id, editData, entityId)
     setSaving(false)
     if (!result.success) {
       setError(result.error ?? 'Errore salvataggio')
@@ -227,12 +228,12 @@ export function GuestsClient({ entityId }: { entityId: string }) {
     setIsEditing(false)
     setIsDetailOpen(false)
     loadGuests()
-  }, [selectedGuest, editData, loadGuests])
+  }, [selectedGuest, editData, loadGuests, entityId])
 
   const handleDelete = useCallback(async () => {
     if (!selectedGuest) return
     if (!confirm(`Eliminare ${selectedGuest.first_name} ${selectedGuest.last_name}?`)) return
-    const result = await deleteGuestAction(selectedGuest.id)
+    const result = await deleteGuestAction(selectedGuest.id, entityId)
     if (!result.success) {
       setError(result.error ?? 'Errore eliminazione')
       return
@@ -240,7 +241,7 @@ export function GuestsClient({ entityId }: { entityId: string }) {
     setIsDetailOpen(false)
     setSelectedGuest(null)
     loadGuests()
-  }, [selectedGuest, loadGuests])
+  }, [selectedGuest, loadGuests, entityId])
 
   const handleCreate = useCallback(async (first_name: string, last_name: string, email: string, phone: string, country: string) => {
     setSaving(true)

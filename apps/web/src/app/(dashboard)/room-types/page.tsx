@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { Button, Input, Select, Modal, DataTable, Badge } from '@touracore/ui'
+import { useAuthStore } from '@touracore/auth/store'
+import { getStructureTerms } from '../structure-terms'
 import { listRoomTypesAction, createRoomTypeAction, updateRoomTypeAction } from './actions'
 
 const CATEGORIES = [
@@ -37,6 +39,7 @@ const emptyForm = {
 }
 
 export default function RoomTypesPage() {
+  const { property } = useAuthStore()
   const [types, setTypes] = useState<RoomType[]>([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
@@ -44,6 +47,7 @@ export default function RoomTypesPage() {
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const terms = getStructureTerms(property?.property_type)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -146,8 +150,8 @@ export default function RoomTypesPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Tipologie camera</h1>
-        <Button onClick={openCreate}>Nuova tipologia</Button>
+        <h1 className="text-2xl font-bold text-gray-900">{terms.roomTypesLabel}</h1>
+        <Button onClick={openCreate}>{terms.newRoomTypeLabel}</Button>
       </div>
 
       <DataTable
@@ -156,10 +160,10 @@ export default function RoomTypesPage() {
         keyExtractor={(rt) => rt.id}
         onRowClick={openEdit}
         isLoading={loading}
-        emptyMessage="Nessuna tipologia camera configurata"
+        emptyMessage={terms.emptyRoomTypeLabel}
       />
 
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Modifica tipologia' : 'Nuova tipologia'} size="lg">
+      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editing ? `Modifica tipologia ${terms.unitLabel}` : terms.newRoomTypeLabel} size="lg">
         <div className="space-y-4">
           {error && <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 

@@ -75,12 +75,17 @@ export default function InvoicesPage() {
   const loadData = useCallback(async () => {
     setLoading(true)
     setError('')
-    const result = await loadInvoicesAction()
-    if (result.success && result.data) {
-      setInvoices(result.data.invoices as InvoiceRow[])
-      setTotals(result.data.totals as { total: number; paid: number; unpaid: number })
+    try {
+      const result = await loadInvoicesAction()
+      if (result.success && result.data) {
+        setInvoices(result.data.invoices as InvoiceRow[])
+        setTotals(result.data.totals as { total: number; paid: number; unpaid: number })
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore durante il caricamento')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }, [])
 
   useEffect(() => { void loadData() }, [loadData])

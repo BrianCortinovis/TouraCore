@@ -4,11 +4,13 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@touracore/db/client'
 import { useAuthStore } from '@touracore/auth/store'
+import { getStructureTerms } from './structure-terms'
 import { PropertySelector } from './property-selector'
 import { NotificationBell } from './components/notification-bell'
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { user, profile, tenant, property, isLoading } = useAuthStore()
+  const terms = getStructureTerms(property?.property_type)
   const router = useRouter()
 
   async function handleLogout() {
@@ -48,16 +50,19 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 Strutture
               </Link>
               <Link href="/room-types" className="text-gray-600 hover:text-gray-900">
-                Tipologie alloggio
+                {terms.roomTypesLabel}
               </Link>
               <Link href="/rooms" className="text-gray-600 hover:text-gray-900">
-                Unità
+                {terms.unitLabelPluralTitle}
               </Link>
               <Link href="/seasons" className="text-gray-600 hover:text-gray-900">
                 Periodi tariffari
               </Link>
               <Link href="/rate-plans" className="text-gray-600 hover:text-gray-900">
                 Tariffe
+              </Link>
+              <Link href="/revenue" className="text-gray-600 hover:text-gray-900">
+                Revenue
               </Link>
               <Link href="/bookings" className="text-gray-600 hover:text-gray-900">
                 Prenotazioni

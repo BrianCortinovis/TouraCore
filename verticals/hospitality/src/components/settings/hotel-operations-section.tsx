@@ -10,7 +10,7 @@ import {
   Sparkles,
   Trash2,
 } from 'lucide-react'
-import { ManagedExtraEditor } from './non-hotel-operations-section'
+import { ManagedExtraEditor } from './structure-operations-section'
 import {
   buildHotelAmenitySuggestionCodes,
   createHotelAddon,
@@ -33,7 +33,7 @@ import {
   createManagedExtraAmenity,
   getSharedExtraAmenitiesSettings,
   type ManagedExtraAmenity,
-} from '../../config/non-hotel-operations'
+} from '../../config/structure-operations'
 import { buildOperationsSettingsPayload } from '../../config/property-operations'
 import type { Organization, RoomType } from '../../types/database'
 

@@ -13,24 +13,26 @@ export async function loadGuestsAction(filters: {
   loyaltyLevel?: string
   page?: number
   limit?: number
+  entityId: string
 }) {
-  return getGuests(filters)
+  const { entityId, ...guestFilters } = filters
+  return getGuests(guestFilters, entityId)
 }
 
-export async function loadGuestAction(id: string) {
-  return getGuest(id)
+export async function loadGuestAction(id: string, entityId: string) {
+  return getGuest(id, entityId)
 }
 
-export async function loadGuestStayHistoryAction(guestId: string) {
-  return getGuestStayHistory(guestId)
+export async function loadGuestStayHistoryAction(guestId: string, entityId: string) {
+  return getGuestStayHistory(guestId, entityId)
 }
 
-export async function loadGuestCountriesAction() {
-  return getGuestCountries()
+export async function loadGuestCountriesAction(entityId: string) {
+  return getGuestCountries(entityId)
 }
 
-export async function loadGuestTagsAction() {
-  return getGuestTags()
+export async function loadGuestTagsAction(entityId: string) {
+  return getGuestTags(entityId)
 }
 
 export { createGuest as createGuestAction }

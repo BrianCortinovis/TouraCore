@@ -305,7 +305,9 @@ export async function sendToSdi(id: string) {
   // Fetch completa con items e organizzazione
   let sdiQuery = supabase
     .from('invoices')
-    .select('*, organization:organizations(name, vat_number, fiscal_code, address, city, province, zip, phone, email, sdi_code, pec)')
+    .select(
+      '*, entity:entities(name), accommodation:accommodations(legal_name, vat_number, fiscal_code, address, city, province, zip, phone, email, sdi_code, pec)'
+    )
     .eq('id', id)
 
   if (orgId) sdiQuery = sdiQuery.eq('entity_id', orgId)
@@ -320,20 +322,21 @@ export async function sendToSdi(id: string) {
     .eq('invoice_id', id)
     .order('sort_order')
 
-  const org = invoice.organization as Record<string, string> | null
+  const entity = invoice.entity as Record<string, string | null> | null
+  const accommodation = invoice.accommodation as Record<string, string | null> | null
 
   // Genera XML FatturaPA semplificato
   const progressivo = invoice.invoice_number?.replace(/[^0-9]/g, '') ?? '00001'
   const xml = generateFatturaPAXml({
     progressivoInvio: progressivo,
     cedente: {
-      denominazione: org?.name ?? '',
-      partitaIva: org?.vat_number ?? '',
-      codiceFiscale: org?.fiscal_code ?? '',
-      indirizzo: org?.address ?? '',
-      cap: org?.zip ?? '',
-      comune: org?.city ?? '',
-      provincia: org?.province ?? '',
+      denominazione: entity?.name ?? accommodation?.legal_name ?? '',
+      partitaIva: accommodation?.vat_number ?? '',
+      codiceFiscale: accommodation?.fiscal_code ?? '',
+      indirizzo: accommodation?.address ?? '',
+      cap: accommodation?.zip ?? '',
+      comune: accommodation?.city ?? '',
+      provincia: accommodation?.province ?? '',
     },
     cessionario: {
       denominazione: invoice.customer_name ?? '',

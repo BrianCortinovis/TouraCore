@@ -36,11 +36,16 @@ export default function CheckOutPage() {
 
   const loadData = useCallback(async () => {
     setLoading(true)
-    const result = await loadDeparturesAction()
-    if (result.success && result.data) {
-      setDepartures((result.data.departures ?? []) as BookingRow[])
+    try {
+      const result = await loadDeparturesAction()
+      if (result.success && result.data) {
+        setDepartures((result.data.departures ?? []) as BookingRow[])
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore durante il caricamento')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }, [])
 
   useEffect(() => { void loadData() }, [loadData])

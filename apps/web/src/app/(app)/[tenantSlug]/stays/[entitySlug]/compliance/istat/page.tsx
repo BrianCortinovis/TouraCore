@@ -43,14 +43,19 @@ export default function IstatPage() {
   const loadData = useCallback(async () => {
     setLoading(true)
     setError('')
-    const result = await loadIstatDataAction(month + 1, year)
-    if (result.success && result.data) {
-      setData(result.data.istat as IstatResult)
-      setReservationCount(result.data.reservationCount as number)
-    } else {
-      setError(result.error ?? 'Errore')
+    try {
+      const result = await loadIstatDataAction(month + 1, year)
+      if (result.success && result.data) {
+        setData(result.data.istat as IstatResult)
+        setReservationCount(result.data.reservationCount as number)
+      } else {
+        setError(result.error ?? 'Errore')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }, [month, year])
 
   useEffect(() => { loadData() }, [loadData])

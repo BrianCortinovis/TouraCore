@@ -24,7 +24,13 @@ export function AuthProvider({ children, initialData }: AuthProviderProps) {
   const loadAuthData = useCallback(async () => {
     try {
       setLoading(true)
-      const supabase = createClient()
+      let supabase
+      try {
+        supabase = createClient()
+      } catch {
+        reset()
+        return
+      }
 
       const {
         data: { user },
@@ -119,12 +125,17 @@ export function AuthProvider({ children, initialData }: AuthProviderProps) {
     if (initialized.current) return
     initialized.current = true
 
-    const supabase = createClient()
-
     if (initialData) {
       hydrate(initialData)
     } else {
       loadAuthData()
+    }
+
+    let supabase
+    try {
+      supabase = createClient()
+    } catch {
+      return
     }
 
     const {

@@ -1,3 +1,6 @@
+import { createServerSupabaseClient } from '@touracore/db'
+import { saveIntegrationAction, deleteIntegrationAction } from '@touracore/integrations/actions'
+import { getProviderDef } from '@touracore/integrations'
 import { resolveIntegration } from '@touracore/integrations/queries'
 import { decryptCredentials } from '@touracore/integrations/crypto'
 import type { IntegrationProvider } from '@touracore/integrations'
@@ -14,31 +17,79 @@ export async function getDecryptedCredentials(
 }
 
 export async function saveCredentials(
-  _entityId: string,
-  _provider: CredentialProvider,
-  _credentials: never,
+  entityId: string,
+  provider: CredentialProvider,
+  credentials: never,
 ): Promise<{ success: boolean; error?: string }> {
-  // Delega a saveIntegrationAction — questo stub resta per retrocompatibilità
-  return { success: true }
+  const result = await saveIntegrationAction({
+    scope: 'entity',
+    scope_id: entityId,
+    provider,
+    credentials: credentials as Record<string, unknown>,
+  })
+
+  return result.success ? { success: true } : { success: false, error: result.error }
 }
 
 export async function deleteCredentials(
-  _entityId: string,
-  _provider: CredentialProvider,
+  entityId: string,
+  provider: CredentialProvider,
 ): Promise<{ success: boolean; error?: string }> {
-  return { success: true }
+  const result = await deleteIntegrationAction({
+    scope: 'entity',
+    scope_id: entityId,
+    provider,
+  })
+
+  return result.success ? { success: true } : { success: false, error: result.error }
 }
 
 export async function validateCredentials(
   _entityId: string,
-  _provider: CredentialProvider,
-  _credentials: never,
+  provider: CredentialProvider,
+  credentials: never,
 ): Promise<{ valid: boolean; error?: string }> {
+  const def = getProviderDef(provider)
+  const payload = credentials as Record<string, unknown>
+  const missingField = def.fields.find((field) => {
+    if (!field.required) return false
+    const value = payload[field.key]
+    if (value === null || value === undefined) return true
+    if (typeof value === 'string') return value.trim().length === 0
+    if (Array.isArray(value)) return value.length === 0
+    if (typeof value === 'object') return Object.keys(value as Record<string, unknown>).length === 0
+    return false
+  })
+
+  if (missingField) {
+    return { valid: false, error: `Campo obbligatorio mancante: ${missingField.label}` }
+  }
+
   return { valid: true }
 }
 
 export async function updateValidationStatus(
-  _entityId: string,
-  _provider: CredentialProvider,
-  _status: string,
-): Promise<void> {}
+  entityId: string,
+  provider: CredentialProvider,
+  status: string,
+): Promise<void> {
+  const supabase = await createServerSupabaseClient()
+  const normalized = status.toLowerCase()
+  const nextStatus = normalized === 'valid' || normalized === 'success'
+    ? 'configured'
+    : normalized === 'error' || normalized === 'invalid'
+      ? 'error'
+      : 'configured'
+
+  await supabase
+    .from('integration_credentials')
+    .update({
+      status: nextStatus,
+      last_sync_at: nextStatus === 'configured' ? new Date().toISOString() : null,
+      last_error: nextStatus === 'error' ? status : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('scope', 'entity')
+    .eq('scope_id', entityId)
+    .eq('provider', provider)
+}

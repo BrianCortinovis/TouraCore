@@ -20,7 +20,7 @@ interface CachedBootstrap {
   expiresAt: number
 }
 
-const BOOTSTRAP_CACHE_TTL_MS = 15_000
+const BOOTSTRAP_CACHE_TTL_MS = 5_000
 const BOOTSTRAP_CACHE_MAX = 500
 const bootstrapCache = new Map<string, CachedBootstrap>()
 
@@ -73,14 +73,18 @@ const EMPTY_BOOTSTRAP: AuthBootstrapData = {
 
 // Cached per request — evita round-trip ripetuti a Supabase Auth (ogni getUser ~250ms da IT)
 export const getCurrentAuthUser = cache(async (): Promise<AuthUser | null> => {
-  const supabase = await createServerSupabaseClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  try {
+    const supabase = await createServerSupabaseClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-  if (!user) return null
+    if (!user) return null
 
-  return { id: user.id, email: user.email ?? '' }
+    return { id: user.id, email: user.email ?? '' }
+  } catch {
+    return null
+  }
 })
 
 // Alias semantico per uso nelle server actions

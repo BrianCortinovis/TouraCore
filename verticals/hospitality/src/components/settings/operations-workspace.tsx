@@ -10,7 +10,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { HotelOperationsSection } from './hotel-operations-section'
-import { NonHotelOperationsSection } from './non-hotel-operations-section'
+import { StructureOperationsSection } from './structure-operations-section'
 import { getPropertyTypeOperationsProfile } from '../../config/property-operations'
 import type { Organization, RoomType } from '../../types/database'
 
@@ -444,8 +444,8 @@ export function OperationsWorkspace({
                 isPending={isPending}
               />
             ) : (
-              <NonHotelOperationsSection
-                key={`${org?.id ?? 'org'}-${org?.type ?? 'unknown'}-non-hotel-operations`}
+              <StructureOperationsSection
+                key={`${org?.id ?? 'org'}-${org?.type ?? 'unknown'}-structure-operations`}
                 org={org}
                 onSave={onSave}
                 isPending={isPending}

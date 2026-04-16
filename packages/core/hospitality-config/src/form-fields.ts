@@ -18,6 +18,7 @@ export type SidebarSection =
   | 'rate-plans'
   | 'seasons'
   | 'communications'
+  | 'booking-engine'
   | 'media'
   | 'financials'
   | 'invoices'
@@ -78,6 +79,7 @@ export function getNavigation(
         ...(config.hasRatePlans ? ['rate-plans' as SidebarSection] : []),
         ...(config.hasSeasons ? ['seasons' as SidebarSection] : []),
         'communications',
+        'booking-engine',
         'services',
         ...(nav.showRestaurant ? ['restaurant' as SidebarSection] : []),
       ],

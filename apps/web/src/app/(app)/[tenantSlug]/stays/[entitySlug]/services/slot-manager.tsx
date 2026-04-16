@@ -88,15 +88,20 @@ export function SlotManager({
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
-    const result = await loadOfferSlotsDataAction(offerId, selectedDate)
-    if (result.success && result.data) {
-      setRules(result.data.rules)
-      setAvailableSlots(result.data.availableSlots)
-      setBookings(result.data.bookings)
-    } else {
-      setError(result.error ?? 'Errore caricamento')
+    try {
+      const result = await loadOfferSlotsDataAction(offerId, selectedDate)
+      if (result.success && result.data) {
+        setRules(result.data.rules)
+        setAvailableSlots(result.data.availableSlots)
+        setBookings(result.data.bookings)
+      } else {
+        setError(result.error ?? 'Errore caricamento')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore caricamento')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }, [offerId, selectedDate])
 
   useEffect(() => {

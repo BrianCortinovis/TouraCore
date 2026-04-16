@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createServerSupabaseClient, createServiceRoleClient } from '@touracore/db'
+import { createServiceRoleClient } from '@touracore/db'
 import { getEnabledPlatformPropertyTypes } from '../queries/platform-settings'
 import { getAuthBootstrapData } from '../queries/auth'
 import type {
@@ -52,10 +52,16 @@ interface UpdateTenantOrganizationInput {
   website?: string
 }
 
-function daysFromNow(days: number) {
-  const date = new Date()
-  date.setDate(date.getDate() + days)
-  return date.toISOString()
+function slugifyStructureName(name: string) {
+  return (
+    name
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'struttura'
+  )
 }
 
 function splitFullName(fullName: string) {
@@ -163,6 +169,7 @@ export async function updateTenantAccountProfile(input: UpdateTenantProfileInput
 export async function createOrganizationForTenant(input: CreateTenantOrganizationInput) {
   const { tenant, userId, userEmail, staffRole, displayName } = await requireTenantAccess()
   const name = input.name.trim()
+  const slug = slugifyStructureName(name)
   const legalName = input.legalName?.trim() || tenant.legal_name || tenant.name
   const vatNumber = input.vatNumber?.trim() || null
   const fiscalCode = input.fiscalCode?.trim() || null
@@ -193,11 +200,31 @@ export async function createOrganizationForTenant(input: CreateTenantOrganizatio
   const serviceSupabase = await createServiceRoleClient()
 
   const { data: organization, error: organizationError } = await serviceSupabase
-    .from('organizations')
+    .from('entities')
     .insert({
       tenant_id: tenant.id,
+      kind: 'accommodation',
+      slug,
       name,
-      type: input.type,
+      short_description: null,
+      description: null,
+      country_override: country !== 'IT' ? country : null,
+      management_mode: 'self_service',
+      is_active: true,
+    })
+    .select('id, slug, name')
+    .single()
+
+  if (organizationError || !organization) {
+    throw new Error(`Impossibile creare la struttura: ${organizationError?.message || 'unknown error'}`)
+  }
+
+  const { error: accommodationError } = await serviceSupabase
+    .from('accommodations')
+    .insert({
+      entity_id: organization.id,
+      property_type: input.type,
+      is_imprenditoriale: true,
       legal_name: legalName,
       vat_number: vatNumber,
       fiscal_code: fiscalCode,
@@ -209,18 +236,16 @@ export async function createOrganizationForTenant(input: CreateTenantOrganizatio
       email,
       phone,
       website,
-      subscription_plan: 'trial',
-      subscription_status: 'trialing',
-      trial_ends_at: daysFromNow(14),
+      default_check_in_time: '14:00',
+      default_check_out_time: '10:00',
       settings: {
         created_from_platform: true,
       },
     })
-    .select('*, tenant:tenant_accounts(*)')
-    .single()
 
-  if (organizationError || !organization) {
-    throw new Error(`Impossibile creare la struttura: ${organizationError?.message || 'unknown error'}`)
+  if (accommodationError) {
+    await serviceSupabase.from('entities').delete().eq('id', organization.id)
+    throw new Error(`Impossibile creare la struttura: ${accommodationError.message}`)
   }
 
   const { error: staffError } = await serviceSupabase.from('staff_members').insert({
@@ -234,7 +259,7 @@ export async function createOrganizationForTenant(input: CreateTenantOrganizatio
   })
 
   if (staffError) {
-    await serviceSupabase.from('organizations').delete().eq('id', organization.id)
+    await serviceSupabase.from('entities').delete().eq('id', organization.id)
     throw new Error(`Impossibile collegare l'utente alla struttura: ${staffError.message}`)
   }
 
@@ -280,7 +305,7 @@ export async function updateTenantOrganization(input: UpdateTenantOrganizationIn
 
   const serviceSupabase = await createServiceRoleClient()
   const { data: existingOrganization, error: existingOrganizationError } = await serviceSupabase
-    .from('organizations')
+    .from('entities')
     .select('id, tenant_id')
     .eq('id', id)
     .eq('tenant_id', tenant.id)
@@ -291,10 +316,25 @@ export async function updateTenantOrganization(input: UpdateTenantOrganizationIn
   }
 
   const { data, error } = await serviceSupabase
-    .from('organizations')
+    .from('entities')
     .update({
       name,
-      type: input.type,
+      country_override: country !== 'IT' ? country : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .eq('tenant_id', tenant.id)
+    .select('id, tenant_id, name, slug, country_override, is_active')
+    .single()
+
+  if (error || !data) {
+    throw new Error(`Impossibile aggiornare la struttura: ${error?.message || 'unknown error'}`)
+  }
+
+  const { error: accommodationError } = await serviceSupabase
+    .from('accommodations')
+    .update({
+      property_type: input.type,
       legal_name: legalName,
       vat_number: vatNumber,
       fiscal_code: fiscalCode,
@@ -306,20 +346,16 @@ export async function updateTenantOrganization(input: UpdateTenantOrganizationIn
       email,
       phone,
       website,
-      updated_at: new Date().toISOString(),
     })
-    .eq('id', id)
-    .eq('tenant_id', tenant.id)
-    .select('*, tenant:tenant_accounts(*)')
-    .single()
+    .eq('entity_id', id)
 
-  if (error || !data) {
-    throw new Error(`Impossibile aggiornare la struttura: ${error?.message || 'unknown error'}`)
+  if (accommodationError) {
+    throw new Error(`Impossibile aggiornare la struttura: ${accommodationError.message}`)
   }
 
   revalidatePath('/platform')
   revalidatePath('/select-org')
   revalidatePath('/settings')
 
-  return data as Organization
+  return data as unknown as Organization
 }

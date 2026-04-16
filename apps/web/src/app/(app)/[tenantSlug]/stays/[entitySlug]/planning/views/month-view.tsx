@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import type { PlanningData, PlanningBooking, PlanningBlock } from '../actions'
+import { getStructureTerms } from '../../../../../../structure-terms'
 import {
   STATUS_STYLES,
   groupRoomsByType,
@@ -19,13 +20,15 @@ interface MonthViewProps {
   data: PlanningData
   currentDate: Date
   onBookingClick: (id: string) => void
+  propertyType?: string | null
 }
 
 const ROW_HEIGHT = 44
 const ROOM_COL_WIDTH = 220
 const DAY_COL_WIDTH = 44
 
-export function MonthView({ data, currentDate, onBookingClick }: MonthViewProps) {
+export function MonthView({ data, currentDate, onBookingClick, propertyType }: MonthViewProps) {
+  const terms = getStructureTerms(propertyType)
   const days = useMemo(() => {
     return dateRange(startOfMonth(currentDate), endOfMonth(currentDate))
   }, [currentDate])
@@ -37,7 +40,7 @@ export function MonthView({ data, currentDate, onBookingClick }: MonthViewProps)
   if (data.rooms.length === 0) {
     return (
       <div className="flex h-full items-center justify-center text-sm text-gray-500">
-        Nessuna camera creata. Configura le camere della struttura prima di usare il planning.
+        Nessun {terms.unitLabel} creato. Configura le {terms.unitLabelPlural} della struttura prima di usare il planning.
       </div>
     )
   }
@@ -56,7 +59,7 @@ export function MonthView({ data, currentDate, onBookingClick }: MonthViewProps)
             className="sticky left-0 z-40 shrink-0 border-r border-gray-200 bg-gray-50 px-3 py-2 text-xs font-medium text-gray-500"
             style={{ width: ROOM_COL_WIDTH }}
           >
-            Camera
+            {terms.unitLabelTitle}
           </div>
           {days.map((day) => {
             const weekend = isWeekend(day)
@@ -94,7 +97,7 @@ export function MonthView({ data, currentDate, onBookingClick }: MonthViewProps)
                 </span>
                 <span className="ml-2 text-xs text-gray-500">
                   {group.rooms.length}{' '}
-                  {group.rooms.length === 1 ? 'camera' : 'camere'}
+                  {group.rooms.length === 1 ? terms.unitLabel : terms.unitLabelPlural}
                 </span>
               </div>
             </div>

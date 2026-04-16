@@ -6,12 +6,6 @@ import { getCurrentOrg } from '../queries/auth'
 import type { AutomationTrigger } from '../types/database'
 import { sendWhatsAppText } from '../stubs/integrations/whatsapp'
 
-type WhatsAppConfig = {
-  provider?: string
-  phone?: string
-  apiKey?: string
-}
-
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -149,7 +143,7 @@ export async function sendWhatsAppMessage(conversationId: string, content: strin
   // Get conversation with org info to resolve WhatsApp config
   const { data: conversation } = await supabase
     .from('whatsapp_conversations')
-    .select('id, phone, entity_id')
+    .select('id, phone, entity_id, guest_id, reservation_id')
     .eq('id', conversationId)
     .eq('entity_id', orgId)
     .single()
@@ -176,40 +170,25 @@ export async function sendWhatsAppMessage(conversationId: string, content: strin
     .eq('id', conversationId)
     .eq('entity_id', orgId)
 
-  // Resolve WhatsApp config from organization settings (separate columns)
-  const { data: org } = await supabase
-    .from('organizations')
-    .select('whatsapp_phone, whatsapp_provider, whatsapp_api_key, whatsapp_enabled')
-    .eq('id', conversation.entity_id)
-    .single()
+  const result = await sendWhatsAppText(conversation.entity_id, {
+    to: conversation.phone,
+    body: content,
+    reservationId: conversation.reservation_id ?? undefined,
+    guestId: conversation.guest_id ?? undefined,
+  })
 
-  const hasWhatsApp = org?.whatsapp_enabled && org?.whatsapp_api_key
-  const waConfig: WhatsAppConfig | null = hasWhatsApp ? {
-    provider: (org.whatsapp_provider as WhatsAppConfig['provider']) ?? 'twilio',
-    phone: org.whatsapp_phone ?? '',
-    apiKey: org.whatsapp_api_key ?? '',
-  } : null
-
-  if (waConfig) {
-    // Send via WhatsApp Business API
-    const result = await sendWhatsAppText(conversation.entity_id, {
-      to: conversation.phone,
-      body: content,
-    })
-
+  if (result.success && !result.skipped) {
     await supabase
       .from('whatsapp_messages')
       .update({
-        status: result.success ? 'sent' : 'failed',
-        external_id: result.messageId ?? null,
+        status: 'sent',
+        sent_at: new Date().toISOString(),
       })
       .eq('id', message.id)
   } else {
-    // No config: mark as sent (dev mode / mock)
-    console.log(`[WhatsApp] Dev mode: messaggio a ${conversation.phone}: ${content}`)
     await supabase
       .from('whatsapp_messages')
-      .update({ status: 'sent' })
+      .update({ status: 'failed' })
       .eq('id', message.id)
   }
 

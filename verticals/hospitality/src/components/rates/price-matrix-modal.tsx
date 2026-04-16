@@ -226,6 +226,10 @@ export function PriceMatrixModal({
         {syncMessage && (
           <div className="rounded-lg bg-blue-50 p-3 text-sm text-blue-700">{syncMessage}</div>
         )}
+        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          Inserimento diretto prezzo unità: questa matrice imposta il prezzo finale per camera e stagione.
+          Per variazioni a percentuale usa le stagioni o le regole revenue.
+        </div>
 
         {/* Price grid */}
         <div className="overflow-x-auto">
@@ -279,7 +283,7 @@ export function PriceMatrixModal({
                               className="w-20 rounded border border-gray-300 px-2 py-1 text-right text-sm font-bold focus:border-blue-500 focus:outline-none"
                               placeholder="0"
                             />
-                            <span className="text-xs text-gray-400">EUR</span>
+                            <span className="text-xs text-gray-400">Prezzo unità</span>
                           </div>
 
                           {/* Expand toggle */}

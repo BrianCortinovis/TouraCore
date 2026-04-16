@@ -27,5 +27,17 @@ export default async function PlanningPage({ params }: PlanningPageProps) {
 
   if (!entity) notFound()
 
-  return <PlanningContainer entityId={entity.id} entityName={entity.name} />
+  const { data: accommodation } = await supabase
+    .from('accommodations')
+    .select('property_type')
+    .eq('entity_id', entity.id)
+    .maybeSingle()
+
+  return (
+    <PlanningContainer
+      entityId={entity.id}
+      entityName={entity.name}
+      propertyType={accommodation?.property_type ?? null}
+    />
+  )
 }

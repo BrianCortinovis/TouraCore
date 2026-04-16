@@ -1,15 +1,15 @@
 import {
-  getNonHotelOperationsSettings,
+  getStructureOperationsSettings,
   getSharedExtraAmenitiesSettings,
   type ManagedExtraAmenity,
   type ManagedKitchenItem,
   type ManagedLaundryService,
   type ManagedLinenItem,
   type ManagedPoolAccessory,
-  type NonHotelOperationsSettings,
+  type StructureOperationsSettings,
   type PropertyTypeModuleItem,
   type ServicePricingMode,
-} from './non-hotel-operations'
+} from './structure-operations'
 import {
   getHotelOperationsSettings,
   getHotelRoomAmenityLabels,
@@ -401,7 +401,7 @@ export function buildPropertyServicePreviewData({
   propertyName?: string | null
   propertyType: PropertyType
   settings?: Json | null | undefined
-  operations?: NonHotelOperationsSettings | HotelOperationsSettings
+  operations?: StructureOperationsSettings | HotelOperationsSettings
   petsAllowed: boolean
   petPolicy?: Json | null | undefined
   visibility?: PreviewVisibility
@@ -569,7 +569,7 @@ export function buildPropertyServicePreviewData({
     }
   }
 
-  const data = (operations as NonHotelOperationsSettings | undefined) ?? getNonHotelOperationsSettings(settings, propertyType)
+  const data = (operations as StructureOperationsSettings | undefined) ?? getStructureOperationsSettings(settings, propertyType)
   const profile = getPropertyTypeOperationsProfile(propertyType)
   const sharedCatalogs = new Set(profile?.sharedCatalogs ?? [])
 

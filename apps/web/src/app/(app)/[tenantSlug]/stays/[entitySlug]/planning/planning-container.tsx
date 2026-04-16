@@ -25,9 +25,10 @@ import { ReservationDrawer } from './reservation-drawer'
 interface PlanningContainerProps {
   entityId: string
   entityName: string
+  propertyType?: string | null
 }
 
-export function PlanningContainer({ entityId, entityName }: PlanningContainerProps) {
+export function PlanningContainer({ entityId, entityName, propertyType }: PlanningContainerProps) {
   const [view, setView] = useState<PlanningView>('month')
   const [currentDate, setCurrentDate] = useState<Date>(() => new Date())
   const [data, setData] = useState<PlanningData | null>(null)
@@ -63,17 +64,22 @@ export function PlanningContainer({ entityId, entityName }: PlanningContainerPro
   const loadData = useCallback(async () => {
     setIsLoading(true)
     setError(null)
-    const result = await getPlanningDataAction(
-      entityId,
-      toIsoDate(fromDate),
-      toIsoDate(toDate)
-    )
-    if (result.success && result.data) {
-      setData(result.data)
-    } else {
-      setError(result.error ?? 'Errore nel caricamento dati')
+    try {
+      const result = await getPlanningDataAction(
+        entityId,
+        toIsoDate(fromDate),
+        toIsoDate(toDate)
+      )
+      if (result.success && result.data) {
+        setData(result.data)
+      } else {
+        setError(result.error ?? 'Errore nel caricamento dati')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore nel caricamento dati')
+    } finally {
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }, [entityId, fromDate, toDate])
 
   useEffect(() => {
@@ -144,6 +150,7 @@ export function PlanningContainer({ entityId, entityName }: PlanningContainerPro
                 data={data}
                 currentDate={currentDate}
                 onBookingClick={setSelectedBookingId}
+                propertyType={propertyType}
               />
             )}
             {view === 'week' && (
@@ -151,6 +158,7 @@ export function PlanningContainer({ entityId, entityName }: PlanningContainerPro
                 data={data}
                 currentDate={currentDate}
                 onBookingClick={setSelectedBookingId}
+                propertyType={propertyType}
               />
             )}
             {view === 'day' && (
@@ -158,6 +166,7 @@ export function PlanningContainer({ entityId, entityName }: PlanningContainerPro
                 data={data}
                 currentDate={currentDate}
                 onBookingClick={setSelectedBookingId}
+                propertyType={propertyType}
               />
             )}
             {view === 'year' && (
@@ -168,6 +177,7 @@ export function PlanningContainer({ entityId, entityName }: PlanningContainerPro
                   setCurrentDate(month)
                   setView('month')
                 }}
+                propertyType={propertyType}
               />
             )}
           </>
