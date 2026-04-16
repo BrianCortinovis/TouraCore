@@ -8,8 +8,8 @@ import type { PropertyType } from '@touracore/hospitality/src/types/database'
 
 const PROPERTY_TYPE_OPTIONS = [
   { value: 'hotel', label: 'Hotel' },
-  { value: 'b_and_b', label: 'B&B' },
-  { value: 'apartment', label: 'Appartamento' },
+  { value: 'b_and_b', label: 'Bed & Breakfast' },
+  { value: 'apartment', label: 'Casa Vacanze' },
   { value: 'agriturismo', label: 'Agriturismo' },
   { value: 'residence', label: 'Residence' },
   { value: 'affittacamere', label: 'Affittacamere' },
