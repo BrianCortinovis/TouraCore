@@ -15,6 +15,7 @@ import {
   Package,
   Thermometer,
   UserCog,
+  BarChart3,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -50,6 +51,7 @@ export function RestaurantSidebar({ tenantSlug, entitySlug, entityName, hasResta
     { href: `${base}/inventory`, label: 'Inventario', icon: Package },
     { href: `${base}/haccp`, label: 'HACCP', icon: Thermometer },
     { href: `${base}/staff`, label: 'Staff & Turni', icon: UserCog },
+    { href: `${base}/analytics`, label: 'Analytics', icon: BarChart3 },
     { href: `${base}/settings`, label: 'Impostazioni', icon: Settings },
   ]
 
