@@ -12,6 +12,7 @@ import {
   Plug,
   LayoutGrid,
   Sparkles,
+  Receipt,
 } from 'lucide-react'
 
 interface SettingsSidebarProps {
@@ -31,6 +32,7 @@ export function SettingsSidebar({
   const navItems = [
     { href: `${base}/profile`, label: 'Profilo', icon: User },
     { href: `${base}/business`, label: 'Azienda', icon: Building2 },
+    { href: `${base}/legal-entities`, label: 'Fiscale', icon: Receipt },
     { href: `${base}/billing`, label: 'Fatturazione', icon: CreditCard },
     { href: `${base}/team`, label: 'Team', icon: Users },
     { href: `${base}/modules`, label: 'Moduli', icon: Package },

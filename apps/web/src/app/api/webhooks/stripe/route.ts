@@ -41,6 +41,71 @@ export async function POST(request: NextRequest) {
       const plan = session.metadata?.plan
       const kind = session.metadata?.kind
 
+      // Unified reservation bundle (multi-vertical cart)
+      if (session.metadata?.type === 'bundle') {
+        const bundleId = session.metadata?.bundle_id
+        if (bundleId) {
+          const { data: bundle } = await supabase
+            .from('reservation_bundles')
+            .select('id, tenant_id, status, stripe_payment_intent_id')
+            .eq('id', bundleId)
+            .maybeSingle()
+
+          if (bundle && bundle.status !== 'confirmed') {
+            await supabase
+              .from('reservation_bundles')
+              .update({
+                status: 'paid',
+                paid_at: new Date().toISOString(),
+                stripe_charge_id: (session.payment_intent as string) ?? session.id,
+                stripe_customer_id: (session.customer as string) ?? null,
+                payment_method_type: session.payment_method_types?.[0] ?? 'card',
+              })
+              .eq('id', bundleId)
+
+            await supabase.from('bundle_audit_log').insert({
+              bundle_id: bundleId,
+              tenant_id: bundle.tenant_id,
+              actor_type: 'webhook',
+              actor_id: event.id,
+              event_type: 'bundle.paid',
+              event_data: { session_id: session.id, amount: session.amount_total },
+            })
+
+            // Saga fulfillment (async trigger — in v1 direct call)
+            // TODO: enqueue to Inngest/edge function per reliability
+            try {
+              const fulfillRes = await fetch(
+                `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/api/v1/bundles/${bundleId}/fulfill`,
+                {
+                  method: 'POST',
+                  headers: {
+                    'content-type': 'application/json',
+                    'x-cron-secret': process.env.CRON_SECRET ?? '',
+                  },
+                },
+              )
+              if (!fulfillRes.ok) {
+                await supabase
+                  .from('reservation_bundles')
+                  .update({
+                    last_saga_error: `fulfill trigger failed: ${fulfillRes.status}`,
+                  })
+                  .eq('id', bundleId)
+              }
+            } catch (e) {
+              await supabase
+                .from('reservation_bundles')
+                .update({
+                  last_saga_error: e instanceof Error ? e.message : String(e),
+                })
+                .eq('id', bundleId)
+            }
+          }
+        }
+        break
+      }
+
       // Restaurant deposit hold via Stripe checkout
       if (session.metadata?.type === 'restaurant_deposit') {
         const restaurantReservationId = session.metadata?.restaurant_reservation_id

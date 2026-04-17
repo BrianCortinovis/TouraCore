@@ -1,0 +1,250 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createServiceRoleClient } from '@touracore/db/server'
+import { getStripe } from '@touracore/billing/server'
+import { defaultFiscalRouter } from '@touracore/fiscal'
+import { extractVat, type VatRate } from '@touracore/fiscal'
+import type Stripe from 'stripe'
+
+interface BundleRequestBody {
+  tenantSlug: string
+  guest: {
+    fullName: string
+    email: string
+    phone?: string
+    fiscalCode?: string
+    vatNumber?: string
+    isBusiness: boolean
+    companyName?: string
+    sdiCode?: string
+    consentPrivacy: boolean
+    consentMarketing?: boolean
+  }
+  items: Array<{
+    itemType: 'hospitality' | 'restaurant' | 'experience' | 'bike_rental' | 'wellness'
+    entityId: string
+    description: string
+    config: Record<string, unknown>
+    quantity: number
+    unitPriceCents: number
+    vatRate: number
+  }>
+  locale?: string
+  promoCode?: string
+}
+
+export async function POST(request: NextRequest) {
+  let body: BundleRequestBody
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  // Validation
+  if (!body.tenantSlug) return NextResponse.json({ error: 'Missing tenantSlug' }, { status: 400 })
+  if (!body.guest?.email || !body.guest?.fullName) {
+    return NextResponse.json({ error: 'Missing guest info' }, { status: 400 })
+  }
+  if (!body.guest.consentPrivacy) {
+    return NextResponse.json({ error: 'Privacy consent required' }, { status: 400 })
+  }
+  if (!Array.isArray(body.items) || body.items.length === 0) {
+    return NextResponse.json({ error: 'Empty cart' }, { status: 400 })
+  }
+
+  const supabase = await createServiceRoleClient()
+
+  // Resolve tenant
+  const { data: tenant } = await supabase
+    .from('tenants')
+    .select('id, name')
+    .eq('slug', body.tenantSlug)
+    .single()
+  if (!tenant) return NextResponse.json({ error: 'Tenant not found' }, { status: 404 })
+
+  // Upsert guest profile
+  const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null
+  const { data: guestId, error: guestError } = await supabase.rpc('upsert_guest_profile', {
+    p_tenant_id: tenant.id,
+    p_email: body.guest.email,
+    p_full_name: body.guest.fullName,
+    p_phone: body.guest.phone ?? null,
+    p_locale: body.locale ?? 'it',
+    p_consent_privacy: body.guest.consentPrivacy,
+    p_consent_marketing: body.guest.consentMarketing ?? false,
+    p_consent_ip: clientIp,
+  })
+  if (guestError || !guestId) {
+    return NextResponse.json({ error: 'Guest profile error: ' + (guestError?.message ?? '') }, { status: 500 })
+  }
+
+  // Update guest fiscal info
+  await supabase
+    .from('guest_profiles')
+    .update({
+      guest_fiscal_code: body.guest.fiscalCode || null,
+      guest_vat_number: body.guest.vatNumber || null,
+      guest_sdi_code: body.guest.sdiCode || null,
+      guest_is_business: body.guest.isBusiness,
+      guest_company_name: body.guest.companyName || null,
+    })
+    .eq('id', guestId)
+
+  // Resolve entity → legal_entity per item
+  const entityIds = [...new Set(body.items.map((i) => i.entityId))]
+  const { data: entitiesData } = await supabase
+    .from('entities')
+    .select('id, name, kind, legal_entity_id')
+    .eq('tenant_id', tenant.id)
+    .in('id', entityIds)
+
+  const entityMap = new Map((entitiesData ?? []).map((e) => [e.id as string, e]))
+
+  // Validate: ogni item deve avere entity con legal_entity_id assegnato
+  for (const item of body.items) {
+    const e = entityMap.get(item.entityId)
+    if (!e) return NextResponse.json({ error: `Entity ${item.entityId} not found in tenant` }, { status: 400 })
+    if (!e.legal_entity_id) {
+      return NextResponse.json({
+        error: `Entity "${e.name}" has no legal_entity assigned. Setup in /settings/legal-entities.`,
+      }, { status: 400 })
+    }
+  }
+
+  // Create bundle (pending)
+  const totalCents = body.items.reduce((s, i) => s + i.unitPriceCents * i.quantity, 0)
+  const { data: bundle, error: bundleError } = await supabase
+    .from('reservation_bundles')
+    .insert({
+      tenant_id: tenant.id,
+      guest_profile_id: guestId,
+      status: 'pending',
+      currency: 'EUR',
+      total_amount_cents: totalCents,
+      locale: body.locale ?? 'it',
+      client_ip: clientIp,
+      user_agent: request.headers.get('user-agent'),
+      promo_code: body.promoCode ?? null,
+      source: 'direct',
+      expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),  // 30min
+    })
+    .select()
+    .single()
+
+  if (bundleError || !bundle) {
+    return NextResponse.json({ error: 'Bundle create error: ' + (bundleError?.message ?? '') }, { status: 500 })
+  }
+
+  // Insert bundle items
+  const itemRows = body.items.map((i, idx) => {
+    const e = entityMap.get(i.entityId)!
+    const vatRate = i.vatRate as VatRate
+    const subtotalCents = i.unitPriceCents * i.quantity
+    const { taxableCents: _taxable, vatCents } = extractVat(subtotalCents, vatRate)
+    return {
+      bundle_id: bundle.id,
+      tenant_id: tenant.id,
+      legal_entity_id: e.legal_entity_id,
+      entity_id: i.entityId,
+      item_type: i.itemType,
+      config: i.config,
+      quantity: i.quantity,
+      unit_price_cents: i.unitPriceCents,
+      subtotal_cents: subtotalCents,
+      vat_rate: vatRate,
+      vat_cents: vatCents,
+      discount_cents: 0,
+      total_cents: subtotalCents,
+      sort_order: idx,
+      fulfillment_status: 'pending',
+    }
+  })
+
+  const { error: itemsError } = await supabase.from('reservation_bundle_items').insert(itemRows)
+  if (itemsError) {
+    return NextResponse.json({ error: 'Items create error: ' + itemsError.message }, { status: 500 })
+  }
+
+  // Audit
+  await supabase.from('bundle_audit_log').insert({
+    bundle_id: bundle.id,
+    tenant_id: tenant.id,
+    actor_type: 'guest',
+    actor_id: body.guest.email,
+    event_type: 'bundle.created',
+    event_data: { item_count: body.items.length, total_cents: totalCents },
+    ip_address: clientIp,
+  })
+
+  // If total > 0 create Stripe checkout session; altrimenti confirm direct
+  let checkoutUrl: string | null = null
+  if (totalCents > 0) {
+    try {
+      const stripe = getStripe()
+
+      // Build transfer_data array for Connect split (TODO: per Stripe richiede destination single + separate transfers - v1 basic)
+      const session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        currency: 'eur',
+        customer_email: body.guest.email,
+        line_items: body.items.map((i) => {
+          const e = entityMap.get(i.entityId)!
+          return {
+            quantity: i.quantity,
+            price_data: {
+              currency: 'eur',
+              unit_amount: i.unitPriceCents,
+              product_data: {
+                name: `${e.name}: ${i.description}`,
+                metadata: { entity_id: i.entityId, item_type: i.itemType },
+              },
+            },
+          } satisfies Stripe.Checkout.SessionCreateParams.LineItem
+        }),
+        metadata: {
+          type: 'bundle',
+          bundle_id: bundle.id,
+          tenant_id: tenant.id,
+          tenant_slug: body.tenantSlug,
+          guest_profile_id: String(guestId),
+        },
+        success_url: `${process.env.NEXT_PUBLIC_APP_URL ?? request.nextUrl.origin}/book/tenant/${body.tenantSlug}/success?bundle=${bundle.id}`,
+        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL ?? request.nextUrl.origin}/book/tenant/${body.tenantSlug}?cancelled=1`,
+      })
+
+      await supabase
+        .from('reservation_bundles')
+        .update({
+          status: 'payment_processing',
+          stripe_payment_intent_id: (session.payment_intent as string) ?? session.id,
+        })
+        .eq('id', bundle.id)
+
+      checkoutUrl = session.url
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Stripe error'
+      await supabase
+        .from('reservation_bundles')
+        .update({ status: 'failed', last_saga_error: msg })
+        .eq('id', bundle.id)
+      return NextResponse.json({ error: 'Stripe checkout error: ' + msg }, { status: 500 })
+    }
+  } else {
+    // Bundle gratuito (es. solo prenotazioni tavolo) → confirm diretto, saga fulfillment
+    await supabase
+      .from('reservation_bundles')
+      .update({ status: 'paid', paid_at: new Date().toISOString() })
+      .eq('id', bundle.id)
+
+    // TODO: trigger saga fulfillment async (edge fn o queue)
+  }
+
+  return NextResponse.json({
+    bundleId: bundle.id,
+    checkoutUrl,
+    totalCents,
+  })
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _router = defaultFiscalRouter  // import side-effect to validate package link

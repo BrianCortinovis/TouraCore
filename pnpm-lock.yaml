@@ -81,6 +81,9 @@ importers:
       '@touracore/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@touracore/fiscal':
+        specifier: workspace:*
+        version: link:../../packages/core/fiscal
       '@touracore/hospitality':
         specifier: workspace:*
         version: link:../../verticals/hospitality
@@ -297,6 +300,12 @@ importers:
       zod:
         specifier: ^3.22.0
         version: 3.25.76
+
+  packages/core/fiscal:
+    devDependencies:
+      typescript:
+        specifier: 5.6.3
+        version: 5.6.3
 
   packages/core/hospitality-config:
     dependencies:

@@ -1,0 +1,6 @@
+export { LocazioneTuristicaEmitter } from './locazione-turistica'
+export { RestaurantRTEmitter } from './restaurant-rt'
+export { SDIInvoiceEmitter } from './sdi-invoice'
+export { SDIForfettarioEmitter } from './sdi-forfettario'
+export { PrestazioneOccasionaleEmitter } from './prestazione-occasionale'
+export { CortesiaEmitter } from './cortesia'

@@ -23,6 +23,7 @@
     "@touracore/channels": "workspace:*",
     "@touracore/config": "workspace:*",
     "@touracore/db": "workspace:*",
+    "@touracore/fiscal": "workspace:*",
     "@touracore/hospitality": "workspace:*",
     "@touracore/hospitality-config": "workspace:*",
     "@touracore/integrations": "workspace:*",
