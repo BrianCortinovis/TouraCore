@@ -186,7 +186,7 @@ export async function getPublicBookingContextAction(slug: string): Promise<Publi
 
   const { data: entity } = await supabase
     .from('entities')
-    .select('id, slug, name, default_currency, default_language, short_description, pet_policy, is_active')
+    .select('id, slug, name, short_description, is_active, accommodation:accommodations(default_currency, default_language, pet_policy)')
     .eq('slug', slug)
     .eq('is_active', true)
     .single()
@@ -201,15 +201,16 @@ export async function getPublicBookingContextAction(slug: string): Promise<Publi
     }
   }
 
+  const accRaw = (entity as unknown as { accommodation?: Record<string, unknown> | Array<Record<string, unknown>> | null }).accommodation
+  const acc = Array.isArray(accRaw) ? (accRaw[0] ?? null) : accRaw
   const property = {
-    ...(entity as Record<string, unknown>),
     id: entity.id,
     slug: entity.slug,
     name: entity.name,
-    default_currency: entity.default_currency,
-    default_language: entity.default_language,
+    default_currency: (acc?.default_currency as string | null) ?? 'EUR',
+    default_language: (acc?.default_language as string | null) ?? 'it',
     short_description: entity.short_description,
-    pet_policy: normalizePetPolicy(entity.pet_policy),
+    pet_policy: normalizePetPolicy(acc?.pet_policy),
   } satisfies PublicPropertyRow
 
   const [ratePlans, upsells] = await Promise.all([
@@ -219,7 +220,7 @@ export async function getPublicBookingContextAction(slug: string): Promise<Publi
 
   const firstPublicRatePlan = ratePlans[0] ?? null
   const cancellationPolicyText = firstPublicRatePlan
-    ? generatePolicyText(firstPublicRatePlan.cancellation_policy, (entity.default_language ?? 'it') as 'it' | 'en' | 'de')
+    ? generatePolicyText(firstPublicRatePlan.cancellation_policy, ((acc?.default_language as string | undefined) ?? 'it') as 'it' | 'en' | 'de')
     : null
 
   return {
@@ -343,7 +344,7 @@ export async function createPublicBookingAction(input: {
 
   const { data: entity } = await supabase
     .from('entities')
-    .select('id, tenant_id, default_currency')
+    .select('id, tenant_id, accommodation:accommodations(default_currency)')
     .eq('id', input.entityId)
     .eq('is_active', true)
     .maybeSingle()
@@ -351,6 +352,11 @@ export async function createPublicBookingAction(input: {
   if (!entity) {
     return { success: false, error: 'Struttura non trovata.' }
   }
+
+  const entityAcc = Array.isArray((entity as { accommodation?: unknown }).accommodation)
+    ? ((entity as { accommodation: Array<{ default_currency?: string }> }).accommodation[0] ?? null)
+    : (entity as { accommodation?: { default_currency?: string } | null }).accommodation
+  const entityCurrency = entityAcc?.default_currency ?? 'EUR'
 
   const availability = await checkAvailability({
     entityId: input.entityId,
@@ -631,7 +637,7 @@ export async function createPublicBookingAction(input: {
       meal_plan: ratePlan.meal_plan,
       total_amount: bookingTotal,
       paid_amount: 0,
-      currency: entity.default_currency ?? 'EUR',
+      currency: entityCurrency,
       special_requests: specialRequests || null,
     })
     .select('id, reservation_code, check_in, check_out, total_amount')
@@ -666,7 +672,7 @@ export async function createPublicBookingAction(input: {
       checkIn: reservation.check_in,
       checkOut: reservation.check_out,
       totalAmount: reservation.total_amount,
-      currency: entity.default_currency ?? 'EUR',
+      currency: entityCurrency,
       ratePlanId: ratePlan.id,
       upsellTotal,
     },

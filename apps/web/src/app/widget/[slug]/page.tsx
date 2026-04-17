@@ -11,7 +11,7 @@ export default async function WidgetPage({ params }: Props) {
 
   const { data: property } = await supabase
     .from('entities')
-    .select('id, name, slug, primary_color')
+    .select('id, name, slug')
     .eq('slug', slug)
     .eq('is_active', true)
     .single()
@@ -28,7 +28,7 @@ export default async function WidgetPage({ params }: Props) {
     <WidgetEmbed
       propertySlug={property.slug || slug}
       propertyName={property.name}
-      accentColor={property.primary_color || 'blue'}
+      accentColor={'blue'}
     />
   )
 }
