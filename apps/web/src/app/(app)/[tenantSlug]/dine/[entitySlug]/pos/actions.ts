@@ -34,6 +34,7 @@ const SendKitchenSchema = z.object({
 const CloseOrderSchema = z.object({
   orderId: z.string().uuid(),
   paymentMethod: z.enum(['cash', 'card', 'charge_to_room']),
+  chargeToRoomReservationId: z.string().uuid().optional(),
   serviceChargePct: z.number().min(0).max(30).default(0),
   coverChargePerGuest: z.number().min(0).default(0),
   tipAmount: z.number().min(0).default(0),
@@ -170,13 +171,85 @@ export async function closeOrder(input: z.infer<typeof CloseOrderSchema>) {
       tip_amount: parsed.tipAmount,
       payment_method: parsed.paymentMethod,
       payment_status: 'paid',
+      charge_to_room_reservation_id: parsed.chargeToRoomReservationId ?? null,
       closed_at: new Date().toISOString(),
     })
     .eq('id', parsed.orderId)
 
-  // Trigger ricalcolo total via update di un order_item dummy? No, recalc func aggiunge cover/service automatici via update next call
-  // Esegui ricalcolo manuale
   await admin.rpc('recalc_restaurant_order_totals', { p_order_id: parsed.orderId })
 
+  // Charge to room: crea folio_charge sulla reservation hospitality
+  if (parsed.paymentMethod === 'charge_to_room' && parsed.chargeToRoomReservationId) {
+    const { data: orderFinal } = await admin
+      .from('restaurant_orders')
+      .select('total, vat_total')
+      .eq('id', parsed.orderId)
+      .single()
+
+    if (orderFinal) {
+      await admin.from('folio_charges').insert({
+        reservation_id: parsed.chargeToRoomReservationId,
+        source: 'restaurant_order',
+        source_id: parsed.orderId,
+        description: `Ristorante · ordine ${parsed.orderId.slice(0, 8)}`,
+        amount: orderFinal.total,
+        vat_amount: orderFinal.vat_total,
+      })
+    }
+  }
+
   revalidatePath(pathFor(parsed))
+}
+
+// Helper: cerca reservations hospitality in-house oggi
+export async function findInHouseStays(restaurantId: string): Promise<Array<{
+  id: string
+  reservationCode: string
+  guestName: string
+  checkIn: string
+  checkOut: string
+}>> {
+  const admin = await createServiceRoleClient()
+
+  // Restaurant -> entity tenant
+  const { data: rest } = await admin
+    .from('restaurants')
+    .select('tenant_id, parent_entity_id')
+    .eq('id', restaurantId)
+    .maybeSingle()
+  if (!rest) return []
+
+  const today = new Date().toISOString().slice(0, 10)
+  let q = admin
+    .from('reservations')
+    .select('id, reservation_code, guest_id, check_in, check_out, entity_id, status, guests(first_name, last_name)')
+    .lte('check_in', today)
+    .gte('check_out', today)
+    .in('status', ['checked_in', 'confirmed'])
+
+  if (rest.parent_entity_id) {
+    q = q.eq('entity_id', rest.parent_entity_id)
+  } else {
+    // Filter via entities tenant chain
+    const { data: tenantEntities } = await admin
+      .from('entities')
+      .select('id')
+      .eq('tenant_id', rest.tenant_id)
+      .eq('kind', 'accommodation')
+    const ids = (tenantEntities ?? []).map((e) => e.id as string)
+    if (ids.length === 0) return []
+    q = q.in('entity_id', ids)
+  }
+
+  const { data } = await q.limit(50)
+  return (data ?? []).map((r) => {
+    const g = Array.isArray(r.guests) ? r.guests[0] : r.guests
+    return {
+      id: r.id as string,
+      reservationCode: r.reservation_code as string,
+      guestName: g ? `${g.first_name ?? ''} ${g.last_name ?? ''}`.trim() : 'Ospite',
+      checkIn: r.check_in as string,
+      checkOut: r.check_out as string,
+    }
+  })
 }
