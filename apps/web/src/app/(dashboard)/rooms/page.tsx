@@ -54,8 +54,9 @@ const emptyForm = {
   size_sqm: '', bed_configuration: '',
 }
 
-export default function RoomsPage() {
+export default function RoomsPage({ propertyType }: { propertyType?: string | null } = {}) {
   const { property } = useAuthStore()
+  const effectivePropertyType = propertyType ?? property?.property_type
   const [rooms, setRooms] = useState<Room[]>([])
   const [roomTypeOptions, setRoomTypeOptions] = useState<{ value: string; label: string }[]>([])
   const [loading, setLoading] = useState(true)
@@ -64,7 +65,7 @@ export default function RoomsPage() {
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const terms = getStructureTerms(property?.property_type)
+  const terms = getStructureTerms(effectivePropertyType)
 
   const load = useCallback(async () => {
     setLoading(true)

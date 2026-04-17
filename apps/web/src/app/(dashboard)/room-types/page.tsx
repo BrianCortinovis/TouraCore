@@ -38,8 +38,9 @@ const emptyForm = {
   sort_order: '0',
 }
 
-export default function RoomTypesPage() {
+export default function RoomTypesPage({ propertyType }: { propertyType?: string | null } = {}) {
   const { property } = useAuthStore()
+  const effectivePropertyType = propertyType ?? property?.property_type
   const [types, setTypes] = useState<RoomType[]>([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
@@ -47,7 +48,7 @@ export default function RoomTypesPage() {
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const terms = getStructureTerms(property?.property_type)
+  const terms = getStructureTerms(effectivePropertyType)
 
   const load = useCallback(async () => {
     setLoading(true)
