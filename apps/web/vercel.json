@@ -7,6 +7,8 @@
     { "path": "/api/cron/lock-pins", "schedule": "0 * * * *" },
     { "path": "/api/cron/accounting-sync", "schedule": "0 2 * * *" },
     { "path": "/api/cron/channel-sync", "schedule": "*/10 * * * *" },
-    { "path": "/api/cron/restaurant-ade-daily", "schedule": "55 23 * * *" }
+    { "path": "/api/cron/restaurant-ade-daily", "schedule": "55 23 * * *" },
+    { "path": "/api/cron/message-trigger", "schedule": "0 9 * * *" },
+    { "path": "/api/cron/message-send", "schedule": "*/5 * * * *" }
   ]
 }
