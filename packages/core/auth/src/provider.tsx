@@ -71,10 +71,31 @@ export function AuthProvider({ children, initialData }: AuthProviderProps) {
       if (entityIds.length > 0) {
         const { data: props } = await supabase
           .from('entities')
-          .select('*, tenant:tenants(*)')
+          .select('*, tenant:tenants(*), accommodation:accommodations(property_type, city, province, country)')
           .in('id', entityIds)
 
-        properties = (props ?? []) as Entity[]
+        properties = (props ?? []).map((p) => {
+          const acc = Array.isArray((p as { accommodation?: unknown }).accommodation)
+            ? ((p as { accommodation: Array<{ property_type?: string }> }).accommodation[0] ?? null)
+            : (p as { accommodation?: { property_type?: string } | null }).accommodation
+          return { ...p, property_type: acc?.property_type ?? null } as Entity
+        })
+      } else if (memberships.length > 0) {
+        // Fallback: tenant owner without staff_members entries
+        const tenantIds = memberships.map((m) => m.tenant_id).filter(Boolean)
+        if (tenantIds.length > 0) {
+          const { data: fallback } = await supabase
+            .from('entities')
+            .select('*, tenant:tenants(*), accommodation:accommodations(property_type, city, province, country)')
+            .in('tenant_id', tenantIds)
+            .eq('is_active', true)
+          properties = (fallback ?? []).map((p) => {
+            const acc = Array.isArray((p as { accommodation?: unknown }).accommodation)
+              ? ((p as { accommodation: Array<{ property_type?: string }> }).accommodation[0] ?? null)
+              : (p as { accommodation?: { property_type?: string } | null }).accommodation
+            return { ...p, property_type: acc?.property_type ?? null } as Entity
+          })
+        }
       }
 
       const tenants = [
