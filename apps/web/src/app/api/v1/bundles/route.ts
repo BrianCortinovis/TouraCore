@@ -208,8 +208,8 @@ export async function POST(request: NextRequest) {
           tenant_slug: body.tenantSlug,
           guest_profile_id: String(guestId),
         },
-        success_url: `${process.env.NEXT_PUBLIC_APP_URL ?? request.nextUrl.origin}/book/tenant/${body.tenantSlug}/success?bundle=${bundle.id}`,
-        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL ?? request.nextUrl.origin}/book/tenant/${body.tenantSlug}?cancelled=1`,
+        success_url: `${process.env.NEXT_PUBLIC_APP_URL ?? request.nextUrl.origin}/book/multi/${body.tenantSlug}/success?bundle=${bundle.id}`,
+        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL ?? request.nextUrl.origin}/book/multi/${body.tenantSlug}?cancelled=1`,
       })
 
       await supabase

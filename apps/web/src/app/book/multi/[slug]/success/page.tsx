@@ -81,7 +81,7 @@ export default async function BundleSuccessPage({ params, searchParams }: Props)
           </div>
         </div>
 
-        <Link href={`/book/tenant/${slug}`} className="mt-6 block text-center text-sm text-blue-600 hover:underline">
+        <Link href={`/book/multi/${slug}`} className="mt-6 block text-center text-sm text-blue-600 hover:underline">
           ← Torna alla prenotazione
         </Link>
       </div>
