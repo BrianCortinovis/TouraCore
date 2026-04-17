@@ -91,7 +91,7 @@ export default function InboxPage() {
     }
   }
 
-  if (!property) return <div className="py-20 text-center text-gray-500">Seleziona una struttura.</div>
+  if (!property) return <div className="py-20 text-center text-gray-500">Caricamento struttura...</div>
 
   return (
     <div className="space-y-4">

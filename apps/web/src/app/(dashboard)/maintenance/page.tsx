@@ -69,7 +69,7 @@ export default function MaintenancePage() {
     await load()
   }
 
-  if (!property) return <div className="py-20 text-center text-gray-500">Seleziona una struttura.</div>
+  if (!property) return <div className="py-20 text-center text-gray-500">Caricamento struttura...</div>
 
   const columns = [
     { key: 'ticket_code', header: 'Codice', render: (t: Ticket) => <span className="font-mono text-xs">{t.ticket_code}</span> },

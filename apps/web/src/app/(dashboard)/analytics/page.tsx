@@ -63,7 +63,7 @@ export default function AnalyticsPage() {
 
   useEffect(() => { load() }, [load])
 
-  if (!property) return <div className="py-20 text-center text-gray-500">Seleziona una struttura.</div>
+  if (!property) return <div className="py-20 text-center text-gray-500">Caricamento struttura...</div>
 
   const maxRev = Math.max(1, ...daily.map((d) => Number(d.daily_revenue)))
   const maxForecast = Math.max(1, ...forecast.map((f) => f.forecast_occupancy_pct))
