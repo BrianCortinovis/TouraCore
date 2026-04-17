@@ -3,6 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { z } from 'zod'
+import { assertUserOwnsRestaurant } from '@/lib/restaurant-guard'
+import { encryptConfig } from '@/lib/integration-crypto'
 
 const ConfigureSchema = z.object({
   restaurantId: z.string().uuid(),
@@ -25,16 +27,18 @@ function pathFor(p: { tenantSlug: string; entitySlug: string }) {
 
 export async function configureIntegration(input: z.infer<typeof ConfigureSchema>) {
   const parsed = ConfigureSchema.parse(input)
+  await assertUserOwnsRestaurant(parsed.restaurantId)
   const admin = await createServiceRoleClient()
 
-  // Encrypt config (placeholder: in produzione AES-256-GCM via @touracore/security)
-  const configEncrypted = Buffer.from(JSON.stringify(parsed.config)).toString('base64')
+  // AES-256-GCM real encryption
+  const { ciphertext, iv } = encryptConfig(JSON.stringify(parsed.config))
 
   await admin.from('restaurant_integrations').upsert(
     {
       restaurant_id: parsed.restaurantId,
       provider: parsed.provider,
-      config_encrypted: configEncrypted,
+      config_encrypted: ciphertext,
+      config_meta: { iv, version: 'aes-256-gcm/v1' },
       is_active: parsed.isActive,
     },
     { onConflict: 'restaurant_id,provider' },
@@ -46,6 +50,9 @@ export async function configureIntegration(input: z.infer<typeof ConfigureSchema
 export async function testIntegration(input: z.infer<typeof TestSchema>) {
   const parsed = TestSchema.parse(input)
   const admin = await createServiceRoleClient()
+  const { data: integ } = await admin.from('restaurant_integrations').select('restaurant_id').eq('id', parsed.integrationId).maybeSingle()
+  if (!integ) throw new Error('Integration not found')
+  await assertUserOwnsRestaurant(integ.restaurant_id as string)
 
   const { data: integration } = await admin
     .from('restaurant_integrations')

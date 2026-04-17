@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { z } from 'zod'
+import { assertUserOwnsRestaurant } from '@/lib/restaurant-guard'
 
 const StationSchema = z.object({
   restaurantId: z.string().uuid(),
@@ -22,6 +23,7 @@ const StatusSchema = z.object({
 
 export async function createStation(input: z.infer<typeof StationSchema>) {
   const parsed = StationSchema.parse(input)
+  await assertUserOwnsRestaurant(parsed.restaurantId)
   const admin = await createServiceRoleClient()
   const { error } = await admin.from('kitchen_stations').insert({
     restaurant_id: parsed.restaurantId,
@@ -36,6 +38,9 @@ export async function createStation(input: z.infer<typeof StationSchema>) {
 export async function updateOrderItemStatus(input: z.infer<typeof StatusSchema>) {
   const parsed = StatusSchema.parse(input)
   const admin = await createServiceRoleClient()
+  const { data: oi } = await admin.from('order_items').select('restaurant_id').eq('id', parsed.itemId).maybeSingle()
+  if (!oi) throw new Error('Order item not found')
+  await assertUserOwnsRestaurant(oi.restaurant_id as string)
   const update: Record<string, unknown> = {
     status: parsed.status,
     updated_at: new Date().toISOString(),

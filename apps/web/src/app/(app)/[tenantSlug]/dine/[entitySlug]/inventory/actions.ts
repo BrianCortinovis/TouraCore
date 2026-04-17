@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { z } from 'zod'
+import { assertUserOwnsRestaurant, assertIngredientInRestaurant } from '@/lib/restaurant-guard'
 
 const IngredientSchema = z.object({
   restaurantId: z.string().uuid(),
@@ -32,6 +33,7 @@ function pathFor(p: { tenantSlug: string; entitySlug: string }) {
 
 export async function createIngredient(input: z.infer<typeof IngredientSchema>) {
   const parsed = IngredientSchema.parse(input)
+  await assertUserOwnsRestaurant(parsed.restaurantId)
   const admin = await createServiceRoleClient()
   const { error } = await admin.from('ingredients').insert({
     restaurant_id: parsed.restaurantId,
@@ -49,6 +51,9 @@ export async function createIngredient(input: z.infer<typeof IngredientSchema>) 
 export async function recordStockMovement(input: z.infer<typeof StockMovementSchema>) {
   const parsed = StockMovementSchema.parse(input)
   const admin = await createServiceRoleClient()
+  const { data: ing } = await admin.from('ingredients').select('restaurant_id').eq('id', parsed.ingredientId).maybeSingle()
+  if (!ing) throw new Error('Ingredient not found')
+  await assertUserOwnsRestaurant(ing.restaurant_id as string)
 
   const sign = parsed.movementType === 'IN' ? 1 : -1
   const delta = parsed.movementType === 'ADJUST' ? parsed.qty : sign * Math.abs(parsed.qty)

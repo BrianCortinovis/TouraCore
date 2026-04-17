@@ -3,6 +3,17 @@
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { z } from 'zod'
+import { assertUserOwnsRestaurant } from '@/lib/restaurant-guard'
+
+// XML safe escape per SDI invoice
+function xmlEscape(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+}
 
 const ADESchema = z.object({
   restaurantId: z.string().uuid(),
@@ -39,6 +50,7 @@ function pathFor(p: { tenantSlug: string; entitySlug: string }) {
 
 export async function triggerADESubmission(input: z.infer<typeof ADESchema>) {
   const parsed = ADESchema.parse(input)
+  await assertUserOwnsRestaurant(parsed.restaurantId)
   const admin = await createServiceRoleClient()
 
   const today = new Date().toISOString().slice(0, 10)
@@ -78,37 +90,38 @@ export async function triggerADESubmission(input: z.infer<typeof ADESchema>) {
 
 export async function createB2BInvoice(input: z.infer<typeof InvoiceSchema>) {
   const parsed = InvoiceSchema.parse(input)
+  await assertUserOwnsRestaurant(parsed.restaurantId)
   const admin = await createServiceRoleClient()
 
   const vatAmount = +(parsed.amountSubtotal * (parsed.vatPct / 100)).toFixed(2)
   const total = +(parsed.amountSubtotal + vatAmount).toFixed(2)
 
-  // XML SDI 1.2.1 placeholder
+  // XML SDI 1.2.1 con escape proprio (XML injection prevention)
   const xmlSdi = `<?xml version="1.0" encoding="UTF-8"?>
 <p:FatturaElettronica versione="FPR12" xmlns:p="http://ivaservizi.agenziaentrate.gov.it/docs/xsd/fatture/v1.2">
   <FatturaElettronicaHeader>
     <DatiTrasmissione>
-      <CodiceDestinatario>${parsed.customerSdiCode ?? '0000000'}</CodiceDestinatario>
+      <CodiceDestinatario>${xmlEscape(parsed.customerSdiCode ?? '0000000')}</CodiceDestinatario>
     </DatiTrasmissione>
     <CessionarioCommittente>
       <DatiAnagrafici>
-        <IdFiscaleIVA>${parsed.customerVatNumber ?? ''}</IdFiscaleIVA>
-        <Anagrafica><Denominazione>${parsed.customerName}</Denominazione></Anagrafica>
+        <IdFiscaleIVA>${xmlEscape(parsed.customerVatNumber ?? '')}</IdFiscaleIVA>
+        <Anagrafica><Denominazione>${xmlEscape(parsed.customerName)}</Denominazione></Anagrafica>
       </DatiAnagrafici>
     </CessionarioCommittente>
   </FatturaElettronicaHeader>
   <FatturaElettronicaBody>
     <DatiGenerali>
       <DatiGeneraliDocumento>
-        <Numero>${parsed.invoiceNumber}</Numero>
-        <Data>${parsed.invoiceDate}</Data>
+        <Numero>${xmlEscape(parsed.invoiceNumber)}</Numero>
+        <Data>${xmlEscape(parsed.invoiceDate)}</Data>
         <ImportoTotaleDocumento>${total.toFixed(2)}</ImportoTotaleDocumento>
       </DatiGeneraliDocumento>
     </DatiGenerali>
     <DatiBeniServizi>
       <DettaglioLinee>
         <NumeroLinea>1</NumeroLinea>
-        <Descrizione>${parsed.description ?? 'Servizi ristorazione'}</Descrizione>
+        <Descrizione>${xmlEscape(parsed.description ?? 'Servizi ristorazione')}</Descrizione>
         <PrezzoUnitario>${parsed.amountSubtotal.toFixed(2)}</PrezzoUnitario>
         <PrezzoTotale>${parsed.amountSubtotal.toFixed(2)}</PrezzoTotale>
         <AliquotaIVA>${parsed.vatPct.toFixed(2)}</AliquotaIVA>
@@ -139,6 +152,7 @@ export async function createB2BInvoice(input: z.infer<typeof InvoiceSchema>) {
 
 export async function savRetentionPolicy(input: z.infer<typeof RetentionSchema>) {
   const parsed = RetentionSchema.parse(input)
+  await assertUserOwnsRestaurant(parsed.restaurantId)
   const admin = await createServiceRoleClient()
   await admin.from('gdpr_retention_policy').upsert(
     {

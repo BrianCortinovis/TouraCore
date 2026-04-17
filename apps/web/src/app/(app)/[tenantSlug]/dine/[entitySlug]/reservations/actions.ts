@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { z } from 'zod'
 import { autoAssignTables } from './auto-assign'
+import { assertUserOwnsRestaurant } from '@/lib/restaurant-guard'
 
 const CreateReservationSchema = z.object({
   restaurantId: z.string().uuid(),
@@ -43,6 +44,7 @@ function pathFor(p: { tenantSlug: string; entitySlug: string }) {
 
 export async function createReservation(input: z.infer<typeof CreateReservationSchema>) {
   const parsed = CreateReservationSchema.parse(input)
+  await assertUserOwnsRestaurant(parsed.restaurantId)
   const admin = await createServiceRoleClient()
 
   let tableIds = parsed.tableIds ?? []
@@ -115,6 +117,15 @@ export async function createReservation(input: z.infer<typeof CreateReservationS
 export async function updateReservationStatus(input: z.infer<typeof UpdateStatusSchema>) {
   const parsed = UpdateStatusSchema.parse(input)
   const admin = await createServiceRoleClient()
+  const { data: res } = await admin.from('restaurant_reservations').select('restaurant_id, status').eq('id', parsed.reservationId).maybeSingle()
+  if (!res) throw new Error('Reservation not found')
+  await assertUserOwnsRestaurant(res.restaurant_id as string)
+  // Reservation state machine: previene rollback finished/cancelled/no_show
+  const currentStatus = res.status as string
+  const terminalStates = ['finished', 'cancelled', 'no_show']
+  if (terminalStates.includes(currentStatus) && currentStatus !== parsed.status) {
+    throw new Error(`Cannot transition from terminal state ${currentStatus}`)
+  }
   const update: Record<string, unknown> = {
     status: parsed.status,
     updated_at: new Date().toISOString(),
@@ -133,6 +144,12 @@ export async function updateReservationStatus(input: z.infer<typeof UpdateStatus
 export async function moveReservation(input: z.infer<typeof MoveReservationSchema>) {
   const parsed = MoveReservationSchema.parse(input)
   const admin = await createServiceRoleClient()
+  const { data: res } = await admin.from('restaurant_reservations').select('restaurant_id').eq('id', parsed.reservationId).maybeSingle()
+  if (!res) throw new Error('Reservation not found')
+  await assertUserOwnsRestaurant(res.restaurant_id as string)
+  // Verifica tutti i nuovi table_ids appartengono al restaurant
+  const { data: tables } = await admin.from('restaurant_tables').select('id').in('id', parsed.tableIds).eq('restaurant_id', res.restaurant_id)
+  if (!tables || tables.length !== parsed.tableIds.length) throw new Error('Some tables do not belong to this restaurant')
   const { error } = await admin
     .from('restaurant_reservations')
     .update({ table_ids: parsed.tableIds, updated_at: new Date().toISOString() })

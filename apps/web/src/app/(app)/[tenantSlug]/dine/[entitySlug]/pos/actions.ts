@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { z } from 'zod'
+import { assertUserOwnsRestaurant, assertUserOwnsOrder, assertSameTenantReservation, assertTableInRestaurant } from '@/lib/restaurant-guard'
 
 const OpenOrderSchema = z.object({
   restaurantId: z.string().uuid(),
@@ -55,6 +56,8 @@ function pathFor(p: { tenantSlug: string; entitySlug: string }) {
 
 export async function openOrder(input: z.infer<typeof OpenOrderSchema>) {
   const parsed = OpenOrderSchema.parse(input)
+  await assertUserOwnsRestaurant(parsed.restaurantId)
+  if (parsed.tableId) await assertTableInRestaurant(parsed.restaurantId, parsed.tableId)
   const admin = await createServiceRoleClient()
 
   // Cerca order già open su questo tavolo
@@ -89,7 +92,11 @@ export async function openOrder(input: z.infer<typeof OpenOrderSchema>) {
 
 export async function addItemToOrder(input: z.infer<typeof AddItemSchema>) {
   const parsed = AddItemSchema.parse(input)
+  const { restaurantId } = await assertUserOwnsOrder(parsed.orderId)
   const admin = await createServiceRoleClient()
+  // Verifica menu_item appartiene allo stesso restaurant
+  const { data: mi } = await admin.from('menu_items').select('restaurant_id').eq('id', parsed.menuItemId).maybeSingle()
+  if (!mi || mi.restaurant_id !== restaurantId) throw new Error('Menu item not in this restaurant')
 
   const { data: menuItem } = await admin
     .from('menu_items')
@@ -122,6 +129,7 @@ export async function addItemToOrder(input: z.infer<typeof AddItemSchema>) {
 
 export async function sendOrderToKitchen(input: z.infer<typeof SendKitchenSchema>) {
   const parsed = SendKitchenSchema.parse(input)
+  await assertUserOwnsOrder(parsed.orderId)
   const admin = await createServiceRoleClient()
 
   const now = new Date().toISOString()
@@ -143,12 +151,20 @@ export async function sendOrderToKitchen(input: z.infer<typeof SendKitchenSchema
 export async function voidOrderItem(input: z.infer<typeof VoidItemSchema>) {
   const parsed = VoidItemSchema.parse(input)
   const admin = await createServiceRoleClient()
+  const { data: oi } = await admin.from('order_items').select('order_id').eq('id', parsed.itemId).maybeSingle()
+  if (!oi) throw new Error('Order item not found')
+  await assertUserOwnsOrder(oi.order_id as string)
   await admin.from('order_items').update({ status: 'voided' }).eq('id', parsed.itemId)
   revalidatePath(pathFor(parsed))
 }
 
 export async function closeOrder(input: z.infer<typeof CloseOrderSchema>) {
   const parsed = CloseOrderSchema.parse(input)
+  const { restaurantId } = await assertUserOwnsOrder(parsed.orderId)
+  // Verifica charge-to-room reservation appartiene stesso tenant
+  if (parsed.paymentMethod === 'charge_to_room' && parsed.chargeToRoomReservationId) {
+    await assertSameTenantReservation(restaurantId, parsed.chargeToRoomReservationId)
+  }
   const admin = await createServiceRoleClient()
 
   const { data: order } = await admin
@@ -209,6 +225,7 @@ export async function findInHouseStays(restaurantId: string): Promise<Array<{
   checkIn: string
   checkOut: string
 }>> {
+  await assertUserOwnsRestaurant(restaurantId)
   const admin = await createServiceRoleClient()
 
   // Restaurant -> entity tenant

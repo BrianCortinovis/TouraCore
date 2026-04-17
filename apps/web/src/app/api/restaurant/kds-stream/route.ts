@@ -1,10 +1,20 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerSupabaseClient } from '@touracore/db/server'
+import { assertUserOwnsRestaurant, RestaurantAccessError } from '@/lib/restaurant-guard'
 
 export async function GET(req: NextRequest) {
   const restaurantId = req.nextUrl.searchParams.get('restaurantId')
   const station = req.nextUrl.searchParams.get('station')
   if (!restaurantId) return NextResponse.json({ error: 'restaurantId required' }, { status: 400 })
+
+  try {
+    await assertUserOwnsRestaurant(restaurantId)
+  } catch (e) {
+    if (e instanceof RestaurantAccessError) {
+      return NextResponse.json({ error: e.message }, { status: 403 })
+    }
+    throw e
+  }
 
   const supabase = await createServerSupabaseClient()
 

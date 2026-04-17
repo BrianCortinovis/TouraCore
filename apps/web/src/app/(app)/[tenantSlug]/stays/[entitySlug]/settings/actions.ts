@@ -135,6 +135,19 @@ export async function updateEntitySettingsAction(
     return { success: false, error: accError.message }
   }
 
-  revalidatePath('/', 'layout')
+  // Recupera slug per tenant-scoped revalidate (no global cache invalidation)
+  const supabaseRevalidate = await createServerSupabaseClient()
+  const { data: ent } = await supabaseRevalidate
+    .from('entities')
+    .select('slug, tenants(slug)')
+    .eq('id', entityId)
+    .maybeSingle()
+  if (ent) {
+    const tnt = Array.isArray(ent.tenants) ? ent.tenants[0] : ent.tenants
+    const tSlug = (tnt as { slug?: string } | null)?.slug
+    if (tSlug && ent.slug) {
+      revalidatePath(`/${tSlug}/stays/${ent.slug}`, 'layout')
+    }
+  }
   return { success: true }
 }

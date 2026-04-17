@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { z } from 'zod'
+import { assertUserOwnsRestaurant, assertRoomInRestaurant, assertTableInRestaurant } from '@/lib/restaurant-guard'
 
 const PositionSchema = z.object({
   x: z.number(),
@@ -80,6 +81,7 @@ function pathFor(slugPair: { tenantSlug: string; entitySlug: string }): string {
 
 export async function createRoom(input: z.infer<typeof CreateRoomSchema>) {
   const parsed = CreateRoomSchema.parse(input)
+  await assertUserOwnsRestaurant(parsed.restaurantId)
   const admin = await createServiceRoleClient()
   const { data, error } = await admin
     .from('restaurant_rooms')
@@ -98,6 +100,9 @@ export async function createRoom(input: z.infer<typeof CreateRoomSchema>) {
 export async function updateRoom(input: z.infer<typeof UpdateRoomSchema>) {
   const parsed = UpdateRoomSchema.parse(input)
   const admin = await createServiceRoleClient()
+  const { data: room } = await admin.from('restaurant_rooms').select('restaurant_id').eq('id', parsed.roomId).maybeSingle()
+  if (!room) throw new Error('Room not found')
+  await assertUserOwnsRestaurant(room.restaurant_id as string)
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
   if (parsed.name !== undefined) update.name = parsed.name
   if (parsed.layout !== undefined) update.layout = parsed.layout
@@ -109,6 +114,9 @@ export async function updateRoom(input: z.infer<typeof UpdateRoomSchema>) {
 export async function deleteRoom(input: z.infer<typeof DeleteRoomSchema>) {
   const parsed = DeleteRoomSchema.parse(input)
   const admin = await createServiceRoleClient()
+  const { data: room } = await admin.from('restaurant_rooms').select('restaurant_id').eq('id', parsed.roomId).maybeSingle()
+  if (!room) throw new Error('Room not found')
+  await assertUserOwnsRestaurant(room.restaurant_id as string)
   const { error } = await admin.from('restaurant_rooms').update({ active: false }).eq('id', parsed.roomId)
   if (error) throw new Error(error.message)
   revalidatePath(pathFor(parsed))
@@ -116,6 +124,8 @@ export async function deleteRoom(input: z.infer<typeof DeleteRoomSchema>) {
 
 export async function createTable(input: z.infer<typeof CreateTableSchema>) {
   const parsed = CreateTableSchema.parse(input)
+  await assertUserOwnsRestaurant(parsed.restaurantId)
+  await assertRoomInRestaurant(parsed.restaurantId, parsed.roomId)
   const admin = await createServiceRoleClient()
   const { data, error } = await admin
     .from('restaurant_tables')
@@ -139,6 +149,9 @@ export async function createTable(input: z.infer<typeof CreateTableSchema>) {
 export async function updateTablePosition(input: z.infer<typeof UpdateTablePositionSchema>) {
   const parsed = UpdateTablePositionSchema.parse(input)
   const admin = await createServiceRoleClient()
+  const { data: table } = await admin.from('restaurant_tables').select('restaurant_id').eq('id', parsed.tableId).maybeSingle()
+  if (!table) throw new Error('Table not found')
+  await assertUserOwnsRestaurant(table.restaurant_id as string)
   const { error } = await admin
     .from('restaurant_tables')
     .update({ position: parsed.position, updated_at: new Date().toISOString() })
@@ -150,6 +163,9 @@ export async function updateTablePosition(input: z.infer<typeof UpdateTablePosit
 export async function updateTable(input: z.infer<typeof UpdateTableSchema>) {
   const parsed = UpdateTableSchema.parse(input)
   const admin = await createServiceRoleClient()
+  const { data: table } = await admin.from('restaurant_tables').select('restaurant_id').eq('id', parsed.tableId).maybeSingle()
+  if (!table) throw new Error('Table not found')
+  await assertUserOwnsRestaurant(table.restaurant_id as string)
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
   if (parsed.code !== undefined) update.code = parsed.code
   if (parsed.seatsMin !== undefined) update.seats_min = parsed.seatsMin
@@ -165,6 +181,9 @@ export async function updateTable(input: z.infer<typeof UpdateTableSchema>) {
 export async function deleteTable(input: z.infer<typeof DeleteTableSchema>) {
   const parsed = DeleteTableSchema.parse(input)
   const admin = await createServiceRoleClient()
+  const { data: table } = await admin.from('restaurant_tables').select('restaurant_id').eq('id', parsed.tableId).maybeSingle()
+  if (!table) throw new Error('Table not found')
+  await assertUserOwnsRestaurant(table.restaurant_id as string)
   const { error } = await admin.from('restaurant_tables').update({ active: false }).eq('id', parsed.tableId)
   if (error) throw new Error(error.message)
   revalidatePath(pathFor(parsed))

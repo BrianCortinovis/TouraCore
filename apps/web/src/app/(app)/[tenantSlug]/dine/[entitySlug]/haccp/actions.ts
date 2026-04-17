@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { z } from 'zod'
+import { assertUserOwnsRestaurant } from '@/lib/restaurant-guard'
 
 const Schema = z.object({
   restaurantId: z.string().uuid(),
@@ -16,6 +17,7 @@ const Schema = z.object({
 
 export async function recordTemperature(input: z.infer<typeof Schema>) {
   const parsed = Schema.parse(input)
+  await assertUserOwnsRestaurant(parsed.restaurantId)
   const admin = await createServiceRoleClient()
   await admin.from('haccp_temperature_log').insert({
     restaurant_id: parsed.restaurantId,

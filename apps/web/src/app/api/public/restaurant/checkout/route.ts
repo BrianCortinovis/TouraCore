@@ -14,6 +14,19 @@ const Body = z.object({
   cancelUrl: z.string().url(),
 })
 
+function isSafeRedirectUrl(url: string, allowedOrigin: string | null): boolean {
+  try {
+    const parsed = new URL(url)
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL
+    if (baseUrl && parsed.origin === new URL(baseUrl).origin) return true
+    if (allowedOrigin && parsed.origin === allowedOrigin) return true
+    const allowed = (process.env.PUBLIC_BOOKING_ALLOWED_ORIGINS ?? '').split(',').filter(Boolean)
+    return allowed.includes(parsed.origin)
+  } catch {
+    return false
+  }
+}
+
 export async function POST(req: NextRequest) {
   const origin = req.headers.get('origin')
 
@@ -25,6 +38,11 @@ export async function POST(req: NextRequest) {
       { error: e instanceof Error ? e.message : 'Invalid body' },
       { status: 400, origin },
     )
+  }
+
+  // Open redirect protection: validate URLs match allowed origins
+  if (!isSafeRedirectUrl(parsed.successUrl, origin) || !isSafeRedirectUrl(parsed.cancelUrl, origin)) {
+    return jsonWithCors({ error: 'Invalid redirect URL' }, { status: 400, origin })
   }
 
   const admin = await createServiceRoleClient()

@@ -17,7 +17,8 @@ interface IcalFeedRow {
 
 function authorize(request: NextRequest): boolean {
   const cronSecret = process.env.CRON_SECRET
-  if (!cronSecret) return true
+  if (!cronSecret) return false
+  if (request.headers.get('x-vercel-cron')) return true
   const header = request.headers.get('authorization')
   return header === `Bearer ${cronSecret}`
 }

@@ -7,7 +7,8 @@ export const maxDuration = 300
 
 function authorize(request: NextRequest): boolean {
   const cronSecret = process.env.CRON_SECRET
-  if (!cronSecret) return true
+  if (!cronSecret) return false
+  if (request.headers.get('x-vercel-cron')) return true
   return request.headers.get('authorization') === `Bearer ${cronSecret}`
 }
 

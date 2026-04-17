@@ -8,6 +8,7 @@ import {
   addLedgerEntry,
 } from '@touracore/billing/server'
 import type Stripe from 'stripe'
+import { isWebhookEventProcessed, recordWebhookEvent } from '@/lib/webhook-dedup'
 
 export async function POST(request: NextRequest) {
   const body = await request.text()
@@ -26,6 +27,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: message }, { status: 400 })
   }
 
+  // Idempotency: dedup tramite stripe event.id
+  if (await isWebhookEventProcessed('stripe', event.id)) {
+    return NextResponse.json({ received: true, idempotent: true })
+  }
+
   const supabase = await createServiceRoleClient()
 
   switch (event.type) {
@@ -39,15 +45,22 @@ export async function POST(request: NextRequest) {
       if (session.metadata?.type === 'restaurant_deposit') {
         const restaurantReservationId = session.metadata?.restaurant_reservation_id
         if (restaurantReservationId) {
-          await supabase
+          // Verifica reservation esiste + match payment_intent_id (anti-tampering metadata)
+          const { data: reservation } = await supabase
             .from('restaurant_reservations')
-            .update({
-              status: 'confirmed',
-              deposit_status: 'held',
-              deposit_stripe_intent_id: session.payment_intent as string,
-              updated_at: new Date().toISOString(),
-            })
+            .select('id, deposit_stripe_intent_id, restaurant_id')
             .eq('id', restaurantReservationId)
+            .maybeSingle()
+          if (reservation && reservation.deposit_stripe_intent_id === session.payment_intent) {
+            await supabase
+              .from('restaurant_reservations')
+              .update({
+                status: 'confirmed',
+                deposit_status: 'held',
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', restaurantReservationId)
+          }
         }
         break
       }
@@ -90,12 +103,23 @@ export async function POST(request: NextRequest) {
       }
 
       if (tenantId && plan) {
-        await upsertSubscription(supabase, tenantId, {
-          stripe_customer_id: session.customer as string,
-          stripe_subscription_id: session.subscription as string,
-          plan: plan as 'starter' | 'professional' | 'enterprise',
-          status: 'active',
-        })
+        // Verifica tenant matcha customer (anti-metadata-tampering)
+        const { data: tenant } = await supabase
+          .from('tenants')
+          .select('id, stripe_customer_id')
+          .eq('id', tenantId)
+          .maybeSingle()
+        const customerOk = tenant && (
+          !tenant.stripe_customer_id || tenant.stripe_customer_id === session.customer
+        )
+        if (customerOk) {
+          await upsertSubscription(supabase, tenantId, {
+            stripe_customer_id: session.customer as string,
+            stripe_subscription_id: session.subscription as string,
+            plan: plan as 'starter' | 'professional' | 'enterprise',
+            status: 'active',
+          })
+        }
       }
       break
     }
@@ -256,6 +280,9 @@ export async function POST(request: NextRequest) {
       break
     }
   }
+
+  // Record event come processed (idempotency)
+  await recordWebhookEvent('stripe', event.id, event.type)
 
   return NextResponse.json({ received: true })
 }

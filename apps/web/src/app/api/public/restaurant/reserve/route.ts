@@ -27,6 +27,11 @@ export async function POST(req: NextRequest) {
   const origin = req.headers.get('origin')
   const idempotencyKey = req.headers.get('idempotency-key')
 
+  // Validate idempotency key length (prevent oversized header attack)
+  if (idempotencyKey && (idempotencyKey.length > 200 || idempotencyKey.length < 8)) {
+    return jsonWithCors({ error: 'Invalid idempotency-key length' }, { status: 400, origin })
+  }
+
   let parsed: z.infer<typeof Body>
   try {
     const body = await req.json()
@@ -41,15 +46,20 @@ export async function POST(req: NextRequest) {
   const ctx = await loadRestaurantBySlug(parsed.slug)
   if (!ctx) return jsonWithCors({ error: 'Restaurant not found' }, { status: 404, origin })
 
+  // Validate party size vs restaurant capacity
+  if (ctx.capacity_total > 0 && parsed.partySize > ctx.capacity_total) {
+    return jsonWithCors({ error: 'Party size exceeds restaurant capacity' }, { status: 400, origin })
+  }
+
   const admin = await createServiceRoleClient()
 
-  // Idempotency check
+  // Idempotency check (campo dedicato, no più notes_staff hack)
   if (idempotencyKey) {
     const { data: existing } = await admin
       .from('restaurant_reservations')
       .select('id, status, table_ids, deposit_amount')
       .eq('restaurant_id', ctx.id)
-      .eq('notes_staff', `idemp:${idempotencyKey}`)
+      .eq('idempotency_key', `widget:${idempotencyKey}`)
       .maybeSingle()
     if (existing) {
       return jsonWithCors(
@@ -132,7 +142,7 @@ export async function POST(req: NextRequest) {
       occasion: parsed.occasion ?? null,
       deposit_amount: depositAmount,
       deposit_status: depositRequired ? 'held' : null,
-      notes_staff: idempotencyKey ? `idemp:${idempotencyKey}` : null,
+      idempotency_key: idempotencyKey ? `widget:${idempotencyKey}` : null,
     })
     .select('id')
     .single()

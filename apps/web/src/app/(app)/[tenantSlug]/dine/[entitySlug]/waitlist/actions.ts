@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { z } from 'zod'
 import { autoAssignTables } from '../reservations/auto-assign'
+import { assertUserOwnsRestaurant } from '@/lib/restaurant-guard'
 
 const AddSchema = z.object({
   restaurantId: z.string().uuid(),
@@ -37,6 +38,7 @@ function pathFor(p: { tenantSlug: string; entitySlug: string }) {
 
 export async function addWaitlistEntry(input: z.infer<typeof AddSchema>) {
   const parsed = AddSchema.parse(input)
+  await assertUserOwnsRestaurant(parsed.restaurantId)
   const admin = await createServiceRoleClient()
   const { error } = await admin.from('restaurant_waitlist').insert({
     restaurant_id: parsed.restaurantId,
@@ -53,6 +55,9 @@ export async function addWaitlistEntry(input: z.infer<typeof AddSchema>) {
 export async function updateWaitlistStatus(input: z.infer<typeof UpdateStatusSchema>) {
   const parsed = UpdateStatusSchema.parse(input)
   const admin = await createServiceRoleClient()
+  const { data: w } = await admin.from('restaurant_waitlist').select('restaurant_id').eq('id', parsed.waitlistId).maybeSingle()
+  if (!w) throw new Error('Waitlist entry not found')
+  await assertUserOwnsRestaurant(w.restaurant_id as string)
   const update: Record<string, unknown> = { status: parsed.status, updated_at: new Date().toISOString() }
   if (parsed.status === 'notified') update.notified_at = new Date().toISOString()
   const { error } = await admin.from('restaurant_waitlist').update(update).eq('id', parsed.waitlistId)
@@ -62,6 +67,7 @@ export async function updateWaitlistStatus(input: z.infer<typeof UpdateStatusSch
 
 export async function seatWaitlistNow(input: z.infer<typeof SeatNowSchema>) {
   const parsed = SeatNowSchema.parse(input)
+  await assertUserOwnsRestaurant(parsed.restaurantId)
   const admin = await createServiceRoleClient()
 
   const { data: entry } = await admin

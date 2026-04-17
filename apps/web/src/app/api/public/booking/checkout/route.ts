@@ -49,10 +49,27 @@ export async function POST(req: NextRequest) {
 
   // Determina base url: prod (req.nextUrl.origin) o var envs
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? req.nextUrl.origin
-  const successUrl = body.returnUrl
-    ? body.returnUrl
+
+  // Open redirect protection: returnUrl/cancelUrl whitelist
+  function isSafeReturnUrl(url: string | undefined): boolean {
+    if (!url) return false
+    try {
+      const parsed = new URL(url)
+      if (parsed.origin === new URL(baseUrl).origin) return true
+      if (origin && parsed.origin === origin) return true
+      const allowed = (process.env.PUBLIC_BOOKING_ALLOWED_ORIGINS ?? '').split(',').filter(Boolean)
+      return allowed.includes(parsed.origin)
+    } catch {
+      return false
+    }
+  }
+
+  const successUrl = isSafeReturnUrl(body.returnUrl)
+    ? body.returnUrl!
     : `${baseUrl}/book/${entity.slug}/success?code=${encodeURIComponent(res.reservation_code)}`
-  const cancelUrl = body.cancelUrl ?? `${baseUrl}/book/${entity.slug}?cancelled=${encodeURIComponent(res.reservation_code)}`
+  const cancelUrl = isSafeReturnUrl(body.cancelUrl)
+    ? body.cancelUrl!
+    : `${baseUrl}/book/${entity.slug}?cancelled=${encodeURIComponent(res.reservation_code)}`
 
   try {
     const stripe = getStripe()

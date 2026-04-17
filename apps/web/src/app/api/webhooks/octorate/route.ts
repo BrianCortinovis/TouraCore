@@ -53,8 +53,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unknown property' }, { status: 404 })
   }
 
+  // Fail closed: webhook_api_key MUST be configured per channel_connection
   const storedKey = (connection.settings as Record<string, unknown>)?.webhook_api_key
-  if (storedKey && storedKey !== apiKey) {
+  if (!storedKey) {
+    return NextResponse.json({ error: 'Webhook API key not configured for this property' }, { status: 401 })
+  }
+  if (storedKey !== apiKey) {
     return NextResponse.json({ error: 'Invalid API key' }, { status: 401 })
   }
 

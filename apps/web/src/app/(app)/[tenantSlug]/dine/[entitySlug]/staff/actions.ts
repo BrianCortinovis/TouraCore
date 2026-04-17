@@ -3,6 +3,24 @@
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { z } from 'zod'
+import { assertUserOwnsRestaurant } from '@/lib/restaurant-guard'
+
+// PIN brute-force protection: in-memory rate limit per restaurant (use Redis in production)
+const PIN_ATTEMPTS = new Map<string, { count: number; resetAt: number }>()
+const PIN_RATE_LIMIT_MAX = 5
+const PIN_RATE_LIMIT_WINDOW_MS = 60_000
+
+function checkPinRateLimit(restaurantId: string): boolean {
+  const now = Date.now()
+  const entry = PIN_ATTEMPTS.get(restaurantId)
+  if (!entry || entry.resetAt < now) {
+    PIN_ATTEMPTS.set(restaurantId, { count: 1, resetAt: now + PIN_RATE_LIMIT_WINDOW_MS })
+    return true
+  }
+  if (entry.count >= PIN_RATE_LIMIT_MAX) return false
+  entry.count++
+  return true
+}
 
 const StaffSchema = z.object({
   restaurantId: z.string().uuid(),
@@ -52,21 +70,28 @@ function pathFor(p: { tenantSlug: string; entitySlug: string }) {
 
 export async function createStaff(input: z.infer<typeof StaffSchema>) {
   const parsed = StaffSchema.parse(input)
+  await assertUserOwnsRestaurant(parsed.restaurantId)
   const admin = await createServiceRoleClient()
-  const { error } = await admin.from('restaurant_staff').insert({
-    restaurant_id: parsed.restaurantId,
-    full_name: parsed.fullName,
-    role: parsed.role,
-    pin_code: parsed.pinCode ?? null,
-    hourly_rate: parsed.hourlyRate ?? null,
-  })
+
+  // RPC create_staff_with_pin: hash PIN bcrypt server-side, atomic
+  const { error } = await admin.rpc('create_staff_with_pin' as never, {
+    p_restaurant_id: parsed.restaurantId,
+    p_full_name: parsed.fullName,
+    p_role: parsed.role,
+    p_pin: parsed.pinCode ?? null,
+    p_hourly_rate: parsed.hourlyRate ?? null,
+  } as never)
   if (error) throw new Error(error.message)
   revalidatePath(pathFor(parsed))
 }
 
 export async function createShift(input: z.infer<typeof ShiftSchema>) {
   const parsed = ShiftSchema.parse(input)
+  await assertUserOwnsRestaurant(parsed.restaurantId)
   const admin = await createServiceRoleClient()
+  // Verifica staff appartiene al restaurant
+  const { data: staff } = await admin.from('restaurant_staff').select('restaurant_id').eq('id', parsed.staffId).maybeSingle()
+  if (!staff || staff.restaurant_id !== parsed.restaurantId) throw new Error('Staff not in this restaurant')
   const { error } = await admin.from('staff_shifts').insert({
     restaurant_id: parsed.restaurantId,
     staff_id: parsed.staffId,
@@ -81,14 +106,26 @@ export async function createShift(input: z.infer<typeof ShiftSchema>) {
 
 export async function clockInOut(input: z.infer<typeof ClockSchema>) {
   const parsed = ClockSchema.parse(input)
+  await assertUserOwnsRestaurant(parsed.restaurantId)
+
+  // Rate limit brute-force
+  if (!checkPinRateLimit(parsed.restaurantId)) {
+    throw new Error('Troppi tentativi PIN. Riprova tra 1 minuto.')
+  }
+
   const admin = await createServiceRoleClient()
+
+  // Use RPC verify_staff_pin (bcrypt safe compare)
+  const { data: staffId, error: rpcErr } = await admin.rpc('verify_staff_pin' as never, {
+    p_restaurant_id: parsed.restaurantId,
+    p_pin: parsed.pinCode,
+  } as never)
+  if (rpcErr || !staffId) throw new Error('PIN errato')
 
   const { data: staff } = await admin
     .from('restaurant_staff')
     .select('id, full_name')
-    .eq('restaurant_id', parsed.restaurantId)
-    .eq('pin_code', parsed.pinCode)
-    .eq('active', true)
+    .eq('id', staffId as unknown as string)
     .maybeSingle()
 
   if (!staff) throw new Error('PIN errato')
@@ -124,6 +161,7 @@ export async function clockInOut(input: z.infer<typeof ClockSchema>) {
 
 export async function createTipPool(input: z.infer<typeof TipPoolSchema>) {
   const parsed = TipPoolSchema.parse(input)
+  await assertUserOwnsRestaurant(parsed.restaurantId)
   const admin = await createServiceRoleClient()
 
   const { data: pool, error } = await admin

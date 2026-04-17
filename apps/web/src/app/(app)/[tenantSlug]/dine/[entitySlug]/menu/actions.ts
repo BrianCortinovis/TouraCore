@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { z } from 'zod'
+import { assertUserOwnsRestaurant } from '@/lib/restaurant-guard'
 
 const ALLERGENS_UE = [
   'gluten', 'crustaceans', 'eggs', 'fish', 'peanuts', 'soybeans', 'milk',
@@ -45,6 +46,7 @@ function pathFor(p: { tenantSlug: string; entitySlug: string }) {
 
 export async function createCategory(input: z.infer<typeof CategorySchema>) {
   const parsed = CategorySchema.parse(input)
+  await assertUserOwnsRestaurant(parsed.restaurantId)
   const admin = await createServiceRoleClient()
   const { error } = await admin.from('menu_categories').insert({
     restaurant_id: parsed.restaurantId,
@@ -58,13 +60,20 @@ export async function createCategory(input: z.infer<typeof CategorySchema>) {
 
 export async function deleteCategory(input: { categoryId: string; tenantSlug: string; entitySlug: string }) {
   const admin = await createServiceRoleClient()
+  const { data: cat } = await admin.from('menu_categories').select('restaurant_id').eq('id', input.categoryId).maybeSingle()
+  if (!cat) throw new Error('Category not found')
+  await assertUserOwnsRestaurant(cat.restaurant_id as string)
   await admin.from('menu_categories').update({ active: false }).eq('id', input.categoryId)
   revalidatePath(pathFor(input))
 }
 
 export async function createItem(input: z.infer<typeof ItemSchema>) {
   const parsed = ItemSchema.parse(input)
+  await assertUserOwnsRestaurant(parsed.restaurantId)
   const admin = await createServiceRoleClient()
+  // Verifica categoria appartiene
+  const { data: cat } = await admin.from('menu_categories').select('restaurant_id').eq('id', parsed.categoryId).maybeSingle()
+  if (!cat || cat.restaurant_id !== parsed.restaurantId) throw new Error('Category not in restaurant')
   const { error } = await admin.from('menu_items').insert({
     restaurant_id: parsed.restaurantId,
     category_id: parsed.categoryId,
@@ -84,6 +93,9 @@ export async function createItem(input: z.infer<typeof ItemSchema>) {
 export async function updateItem(input: z.infer<typeof UpdateItemSchema>) {
   const parsed = UpdateItemSchema.parse(input)
   const admin = await createServiceRoleClient()
+  const { data: item } = await admin.from('menu_items').select('restaurant_id').eq('id', parsed.itemId).maybeSingle()
+  if (!item) throw new Error('Item not found')
+  await assertUserOwnsRestaurant(item.restaurant_id as string)
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
   if (parsed.name !== undefined) update.name = parsed.name
   if (parsed.description !== undefined) update.description = parsed.description
@@ -98,6 +110,9 @@ export async function updateItem(input: z.infer<typeof UpdateItemSchema>) {
 
 export async function deleteItem(input: { itemId: string; tenantSlug: string; entitySlug: string }) {
   const admin = await createServiceRoleClient()
+  const { data: item } = await admin.from('menu_items').select('restaurant_id').eq('id', input.itemId).maybeSingle()
+  if (!item) throw new Error('Item not found')
+  await assertUserOwnsRestaurant(item.restaurant_id as string)
   await admin.from('menu_items').update({ active: false }).eq('id', input.itemId)
   revalidatePath(pathFor(input))
 }

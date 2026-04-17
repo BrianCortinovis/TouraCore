@@ -1,5 +1,6 @@
-import { redirect } from 'next/navigation'
+import { redirect, notFound } from 'next/navigation'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { getCurrentUser } from '@touracore/auth'
 
 export type ModuleCode =
   | 'hospitality'
@@ -45,6 +46,52 @@ export async function assertTenantModuleActive(params: {
   moduleCode: ModuleCode
 }): Promise<void> {
   const { supabase, tenantId, tenantSlug, moduleCode } = params
+
+  // Ownership check: utente deve avere membership attiva sul tenant (o agency link, o platform admin)
+  const user = await getCurrentUser()
+  if (!user) redirect('/login')
+
+  const { data: membership } = await supabase
+    .from('memberships')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('tenant_id', tenantId)
+    .eq('is_active', true)
+    .maybeSingle()
+
+  if (!membership) {
+    // Verifica se è agency-managed
+    const { data: agencyLinks } = await supabase
+      .from('agency_memberships')
+      .select('agency_id')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+    if (agencyLinks && agencyLinks.length > 0) {
+      const { data: tenantAgency } = await supabase
+        .from('agency_tenant_links')
+        .select('id')
+        .eq('tenant_id', tenantId)
+        .in('agency_id', agencyLinks.map((a) => a.agency_id as string))
+        .eq('status', 'active')
+        .maybeSingle()
+      if (!tenantAgency) {
+        // Verifica platform admin come last resort
+        const { data: platformAdmin } = await supabase
+          .from('platform_admins')
+          .select('user_id')
+          .eq('user_id', user.id)
+          .maybeSingle()
+        if (!platformAdmin) notFound()
+      }
+    } else {
+      const { data: platformAdmin } = await supabase
+        .from('platform_admins')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+      if (!platformAdmin) notFound()
+    }
+  }
 
   const { data: tenant } = await supabase
     .from('tenants')

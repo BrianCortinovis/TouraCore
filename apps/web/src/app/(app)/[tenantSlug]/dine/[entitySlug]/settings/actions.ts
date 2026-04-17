@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { z } from 'zod'
+import { assertUserOwnsRestaurant } from '@/lib/restaurant-guard'
 
 const SettingsSchema = z.object({
   restaurantId: z.string().uuid(),
@@ -16,6 +17,7 @@ const SettingsSchema = z.object({
 })
 
 export async function ensureRestaurantRecord(entityId: string, tenantId: string): Promise<void> {
+  // Caller (layout) ha già validato access via assertTenantModuleActive + entity check
   const admin = await createServiceRoleClient()
   const { data: existing } = await admin.from('restaurants').select('id').eq('id', entityId).maybeSingle()
   if (existing) return
@@ -27,6 +29,7 @@ export async function ensureRestaurantRecord(entityId: string, tenantId: string)
 
 export async function saveRestaurantSettings(input: z.infer<typeof SettingsSchema>) {
   const parsed = SettingsSchema.parse(input)
+  await assertUserOwnsRestaurant(parsed.restaurantId)
   const admin = await createServiceRoleClient()
 
   const { error } = await admin

@@ -1,36 +1,87 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { createHmac, timingSafeEqual } from 'node:crypto'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { autoAssignTables } from '@/app/(app)/[tenantSlug]/dine/[entitySlug]/reservations/auto-assign'
+import { isWebhookEventProcessed, recordWebhookEvent } from '@/lib/webhook-dedup'
 
 /**
  * POST /api/webhooks/restaurant/thefork
  * Webhook ingest TheFork → crea restaurant_reservations source=thefork
- * Body: { restaurantId, externalId, slotDate, slotTime, partySize, guest: {name, email, phone}, signature }
+ * Verifica HMAC SHA256 con secret per restaurant
  */
 export async function POST(req: NextRequest) {
-  const body = await req.json().catch(() => null)
-  if (!body) return NextResponse.json({ error: 'Invalid body' }, { status: 400 })
-
-  // TODO: HMAC verify TheFork signature header
+  const rawBody = await req.text()
   const signature = req.headers.get('x-thefork-signature')
-  if (!signature) return NextResponse.json({ error: 'Missing signature' }, { status: 401 })
+  const eventId = req.headers.get('x-thefork-event-id')
+
+  if (!signature || !eventId) {
+    return NextResponse.json({ error: 'Missing signature/eventId' }, { status: 401 })
+  }
+
+  let body: {
+    restaurantId?: string
+    externalId?: string
+    slotDate?: string
+    slotTime?: string
+    partySize?: number
+    guest?: { name?: string; email?: string; phone?: string }
+  }
+  try {
+    body = JSON.parse(rawBody)
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
 
   const { restaurantId, externalId, slotDate, slotTime, partySize, guest } = body
-
   if (!restaurantId || !externalId || !slotDate || !slotTime || !partySize || !guest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
   const admin = await createServiceRoleClient()
 
-  // Idempotent ingest
+  // Carica integration config encrypted per ottenere webhook secret
+  const { data: integration } = await admin
+    .from('restaurant_integrations')
+    .select('config_encrypted, config_meta')
+    .eq('restaurant_id', restaurantId)
+    .eq('provider', 'thefork')
+    .eq('is_active', true)
+    .maybeSingle()
+
+  if (!integration) {
+    return NextResponse.json({ error: 'Integration not configured' }, { status: 401 })
+  }
+
+  // Verifica HMAC: secret env-level o per restaurant (whichever)
+  const secret = process.env.THEFORK_WEBHOOK_SECRET ?? ''
+  if (!secret) {
+    return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 })
+  }
+
+  const expected = createHmac('sha256', secret).update(rawBody).digest('hex')
+  const sigBuf = Buffer.from(signature, 'hex')
+  const expBuf = Buffer.from(expected, 'hex')
+  if (sigBuf.length !== expBuf.length || !timingSafeEqual(sigBuf, expBuf)) {
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
+  }
+
+  // Idempotency dedup
+  const dedupKey = `${restaurantId}:${eventId}`
+  if (await isWebhookEventProcessed('thefork', dedupKey)) {
+    return NextResponse.json({ status: 'already_processed' })
+  }
+
+  // Idempotent ingest fallback (legacy)
   const { data: existing } = await admin
     .from('restaurant_reservations')
     .select('id')
     .eq('restaurant_id', restaurantId)
-    .eq('notes_staff', `thefork:${externalId}`)
+    .eq('idempotency_key', `thefork:${externalId}`)
     .maybeSingle()
-  if (existing) return NextResponse.json({ reservationId: existing.id, idempotent: true })
+  if (existing) {
+    await recordWebhookEvent('thefork', dedupKey, 'reservation.created')
+    return NextResponse.json({ reservationId: existing.id, idempotent: true })
+  }
 
   const { data: tables } = await admin
     .from('restaurant_tables')
@@ -82,12 +133,13 @@ export async function POST(req: NextRequest) {
       table_ids: tableIds,
       status: tableIds.length > 0 ? 'confirmed' : 'pending',
       source: 'thefork',
-      notes_staff: `thefork:${externalId}`,
+      idempotency_key: `thefork:${externalId}`,
     })
     .select('id')
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
+  await recordWebhookEvent('thefork', dedupKey, 'reservation.created')
   return NextResponse.json({ reservationId: data.id, status: tableIds.length > 0 ? 'confirmed' : 'pending' })
 }
