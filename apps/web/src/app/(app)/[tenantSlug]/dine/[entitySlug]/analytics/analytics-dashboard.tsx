@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { TrendingUp, Users, Receipt, Star, AlertCircle } from 'lucide-react'
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Legend } from 'recharts'
 
 interface KpiDaily {
   serviceDate: string
@@ -159,26 +160,20 @@ function KpiCard({ label, value, icon: Icon, color }: { label: string; value: st
 function SimpleSparkline({ data, label }: { data: Array<{ x: string; y: number }>; label: string }) {
   if (data.length === 0) return <p className="text-center text-xs text-gray-400">Nessun dato</p>
 
-  const maxY = Math.max(...data.map((d) => d.y), 1)
-  const w = 800
-  const h = 120
-  const stepX = w / Math.max(data.length - 1, 1)
-
-  const points = data.map((d, i) => `${i * stepX},${h - (d.y / maxY) * h}`).join(' ')
+  const chartData = data.map((d) => ({ date: d.x, value: d.y }))
 
   return (
     <div>
-      <p className="mb-1 text-xs text-gray-500">{label} · max € {maxY.toFixed(2)}</p>
-      <svg viewBox={`0 0 ${w} ${h}`} className="w-full">
-        <polyline fill="none" stroke="#3b82f6" strokeWidth="2" points={points} />
-        {data.map((d, i) => (
-          <circle key={i} cx={i * stepX} cy={h - (d.y / maxY) * h} r="3" fill="#3b82f6" />
-        ))}
-      </svg>
-      <div className="mt-1 flex justify-between text-[10px] text-gray-400">
-        <span>{data[0]?.x}</span>
-        <span>{data[data.length - 1]?.x}</span>
-      </div>
+      <p className="mb-2 text-xs text-gray-500">{label}</p>
+      <ResponsiveContainer width="100%" height={200}>
+        <LineChart data={chartData}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+          <YAxis tick={{ fontSize: 10 }} />
+          <Tooltip />
+          <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   )
 }
@@ -214,33 +209,22 @@ function SourceMixChart({ resKpi }: { resKpi: ResKpi[] }) {
   const total = totals.widget + totals.thefork + totals.walkin + totals.other
   if (total === 0) return <p className="text-center text-xs text-gray-400">Nessun dato</p>
 
-  const sources = [
-    { label: 'Widget', value: totals.widget, color: 'bg-blue-500' },
-    { label: 'TheFork', value: totals.thefork, color: 'bg-amber-500' },
-    { label: 'Walk-in', value: totals.walkin, color: 'bg-green-500' },
-    { label: 'Altri', value: totals.other, color: 'bg-gray-400' },
-  ]
+  const data = [
+    { name: 'Widget', value: totals.widget, color: '#3b82f6' },
+    { name: 'TheFork', value: totals.thefork, color: '#f59e0b' },
+    { name: 'Walk-in', value: totals.walkin, color: '#10b981' },
+    { name: 'Altri', value: totals.other, color: '#9ca3af' },
+  ].filter((d) => d.value > 0)
 
   return (
-    <div className="space-y-2">
-      <div className="flex h-8 overflow-hidden rounded">
-        {sources.map((s, i) => (
-          <div
-            key={i}
-            className={s.color}
-            style={{ width: `${(s.value / total) * 100}%` }}
-            title={`${s.label}: ${s.value}`}
-          />
-        ))}
-      </div>
-      <div className="flex flex-wrap gap-3 text-xs">
-        {sources.map((s) => (
-          <div key={s.label} className="flex items-center gap-1">
-            <span className={`h-3 w-3 rounded ${s.color}`} />
-            <span>{s.label}: <strong>{s.value}</strong> ({((s.value / total) * 100).toFixed(0)}%)</span>
-          </div>
-        ))}
-      </div>
-    </div>
+    <ResponsiveContainer width="100%" height={250}>
+      <PieChart>
+        <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+          {data.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+        </Pie>
+        <Tooltip />
+        <Legend />
+      </PieChart>
+    </ResponsiveContainer>
   )
 }
