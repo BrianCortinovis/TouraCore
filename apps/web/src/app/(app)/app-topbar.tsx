@@ -135,16 +135,14 @@ export function AppTopBar() {
               <User className="h-4 w-4" />
               <span>{user?.email}</span>
             </div>
-            {currentTenant && (
-              <Link
-                href={`/${currentTenant.slug}`}
-                className="flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 hover:border-gray-300 hover:bg-gray-50"
-                title="Torna alla home account"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span className="hidden sm:inline">Account</span>
-              </Link>
-            )}
+            <Link
+              href="/account/profile"
+              className="flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+              title="Profilo utente platform"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Account</span>
+            </Link>
           </div>
         </div>
       </header>
