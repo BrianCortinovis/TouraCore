@@ -11,6 +11,7 @@ import {
   Settings,
   ShoppingCart,
   Receipt,
+  ChefHat,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -41,6 +42,7 @@ export function RestaurantSidebar({ tenantSlug, entitySlug, entityName, hasResta
     { href: `${base}/waitlist`, label: 'Lista attesa', icon: Users },
     { href: `${base}/menu`, label: 'Menu', icon: UtensilsCrossed },
     { href: `${base}/pos`, label: 'POS', icon: ShoppingCart },
+    { href: `${base}/kds`, label: 'KDS Cucina', icon: ChefHat },
     { href: `${base}/orders`, label: 'Ordini', icon: Receipt },
     { href: `${base}/settings`, label: 'Impostazioni', icon: Settings },
   ]
