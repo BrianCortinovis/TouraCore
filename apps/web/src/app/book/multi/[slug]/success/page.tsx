@@ -1,6 +1,8 @@
-import { createServerSupabaseClient } from '@touracore/db/server'
+import { createServiceRoleClient } from '@touracore/db/server'
 import { CheckCircle2, FileText, Mail } from 'lucide-react'
 import Link from 'next/link'
+
+export const dynamic = 'force-dynamic'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -10,7 +12,7 @@ interface Props {
 export default async function BundleSuccessPage({ params, searchParams }: Props) {
   const { slug } = await params
   const { bundle: bundleId } = await searchParams
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createServiceRoleClient()
 
   let bundle: { id: string; total_amount_cents: number; status: string } | null = null
   let items: Array<{ id: string; item_type: string; config: any; total_cents: number }> = []

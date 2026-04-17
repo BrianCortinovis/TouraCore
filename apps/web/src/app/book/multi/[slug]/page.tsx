@@ -1,6 +1,8 @@
-import { createServerSupabaseClient } from '@touracore/db/server'
+import { createServiceRoleClient } from '@touracore/db/server'
 import { notFound } from 'next/navigation'
 import { UnifiedBookingClient } from './unified-booking-client'
+
+export const dynamic = 'force-dynamic'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -15,7 +17,7 @@ function isActive(m: ModuleState | undefined): boolean {
 
 export default async function UnifiedBookingPage({ params }: Props) {
   const { slug } = await params
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createServiceRoleClient()
 
   const { data: tenant } = await supabase
     .from('tenants')

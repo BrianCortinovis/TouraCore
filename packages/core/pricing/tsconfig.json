@@ -1,7 +1,11 @@
 {
-  "extends": "@touracore/config/tsconfig.base.json",
-  "include": ["src/**/*"],
+  "extends": "../../config/tsconfig/base.json",
   "compilerOptions": {
-    "outDir": "dist"
-  }
+    "rootDir": "src",
+    "outDir": "dist",
+    "module": "ESNext",
+    "moduleResolution": "Bundler"
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
 }
