@@ -1,8 +1,8 @@
-import { type NextRequest } from 'next/server'
+import { type NextRequest, type NextResponse } from 'next/server'
 import { updateSession } from '@touracore/auth/middleware'
 
-export async function proxy(request: NextRequest) {
-  return updateSession(request)
+export async function proxy(request: NextRequest): Promise<NextResponse> {
+  return updateSession(request as unknown as Parameters<typeof updateSession>[0]) as unknown as Promise<NextResponse>
 }
 
 export const config = {

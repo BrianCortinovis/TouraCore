@@ -10,7 +10,7 @@ export default async function OnboardingPage() {
     redirect('/login')
   }
 
-  // Verifica se ha già un tenant attivo
+  // 1. Ha tenant attivo?
   const { data: memberships } = await supabase
     .from('memberships')
     .select('tenant_id')
@@ -22,30 +22,43 @@ export default async function OnboardingPage() {
     redirect('/onboarding/step-1')
   }
 
-  // Ha un tenant — verifica se legal_details è configurato
   const tenantId = memberships[0]!.tenant_id
   const admin = await createServiceRoleClient()
   const { data: tenant } = await admin
     .from('tenants')
-    .select('legal_details, country')
+    .select('legal_details, country, modules, slug')
     .eq('id', tenantId)
     .single()
 
+  // 2. Legal details?
   if (!tenant || !tenant.legal_details || Object.keys(tenant.legal_details as Record<string, unknown>).length === 0) {
     redirect('/onboarding/step-2')
   }
 
-  // Ha legal_details — verifica se ha almeno una property
-  const { data: properties } = await supabase
+  // 3. Moduli selezionati?
+  const modules = (tenant.modules ?? {}) as Record<string, { active: boolean; source: string }>
+  const hasAnyModule = Object.keys(modules).length > 0
+  if (!hasAnyModule) {
+    redirect('/onboarding/step-modules')
+  }
+
+  // 4. Piano confermato? (se pending → step-plan, se attivo → procedi)
+  const pendingCodes = Object.keys(modules).filter((k) => modules[k]?.source === 'onboarding_pending')
+  if (pendingCodes.length > 0) {
+    redirect('/onboarding/step-plan')
+  }
+
+  // 5. Prima entity?
+  const { data: entities } = await supabase
     .from('entities')
     .select('id')
     .eq('tenant_id', tenantId)
     .limit(1)
 
-  if (!properties || properties.length === 0) {
+  if (!entities || entities.length === 0) {
     redirect('/onboarding/step-3')
   }
 
   // Tutto configurato
-  redirect('/account/overview')
+  redirect(`/${tenant.slug}`)
 }

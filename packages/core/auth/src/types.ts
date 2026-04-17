@@ -15,6 +15,18 @@ export interface Profile {
   updated_at: string
 }
 
+export interface TenantModuleState {
+  active: boolean
+  source: 'subscription' | 'override_free' | 'legacy' | 'trial' | 'onboarding_pending'
+  since?: string
+  trial_until?: string
+}
+
+export type TenantModules = Partial<Record<
+  'hospitality' | 'restaurant' | 'wellness' | 'experiences' | 'bike_rental' | 'moto_rental' | 'ski_school',
+  TenantModuleState
+>>
+
 export interface TenantAccount {
   id: string
   name: string
@@ -22,6 +34,7 @@ export interface TenantAccount {
   legal_name: string | null
   billing_email: string | null
   settings: Record<string, unknown> | null
+  modules: TenantModules
   is_active: boolean
   created_at: string
   updated_at: string
@@ -41,7 +54,7 @@ export interface TenantMembership {
 export interface Entity {
   id: string
   tenant_id: string
-  kind: 'accommodation' | 'activity'
+  kind: 'accommodation' | 'activity' | 'restaurant' | 'wellness' | 'bike_rental' | 'moto_rental' | 'ski_school'
   slug: string
   name: string
   property_type?: string | null

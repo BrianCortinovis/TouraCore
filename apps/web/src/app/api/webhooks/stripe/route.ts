@@ -94,6 +94,70 @@ export async function POST(request: NextRequest) {
         current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
         current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
       })
+
+      // Sync subscription_items: 1 riga per line item Stripe (ognuno è un modulo)
+      for (const item of sub.items.data) {
+        const moduleCode = item.metadata?.module_code ?? item.price.metadata?.module_code
+        if (!moduleCode) continue
+        const { data: subRow } = await supabase
+          .from('subscriptions')
+          .select('id')
+          .eq('tenant_id', tenantId)
+          .maybeSingle()
+        if (!subRow) continue
+        await supabase.from('subscription_items').upsert(
+          {
+            subscription_id: subRow.id,
+            tenant_id: tenantId,
+            module_code: moduleCode,
+            stripe_subscription_item_id: item.id,
+            quantity: item.quantity ?? 1,
+            unit_amount_eur: (item.price.unit_amount ?? 0) / 100,
+            status: sub.status as 'trialing' | 'active' | 'paused' | 'past_due' | 'canceled',
+            trial_end: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
+            current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
+            current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+          },
+          { onConflict: 'tenant_id,module_code' }
+        )
+
+        // Se status active o trialing → modulo attivo su tenant.modules
+        if (sub.status === 'active' || sub.status === 'trialing') {
+          const { data: tenantRow } = await supabase
+            .from('tenants')
+            .select('modules')
+            .eq('id', tenantId)
+            .single()
+          const modules =
+            (tenantRow?.modules ?? {}) as Record<string, { active: boolean; source: string; since?: string; trial_until?: string }>
+          modules[moduleCode] = {
+            active: true,
+            source: sub.status === 'trialing' ? 'trial' : 'subscription',
+            since: new Date().toISOString(),
+            ...(sub.trial_end
+              ? { trial_until: new Date(sub.trial_end * 1000).toISOString() }
+              : {}),
+          }
+          await supabase.from('tenants').update({ modules }).eq('id', tenantId)
+        }
+      }
+      break
+    }
+
+    case 'invoice.payment_failed': {
+      const invoice = event.data.object as Stripe.Invoice
+      const tenantId = invoice.metadata?.tenant_id
+      if (!tenantId) break
+      // Segna past_due — dopo 7gg grace deactivation avverrà via cron (non implementato MVP)
+      await upsertSubscription(supabase, tenantId, { status: 'past_due' })
+      await supabase.from('module_activation_log').insert({
+        tenant_id: tenantId,
+        module_code: 'all',
+        action: 'payment_failed',
+        actor_scope: 'system',
+        stripe_event_id: event.id,
+        notes: `Invoice ${invoice.id} failed`,
+      })
       break
     }
 

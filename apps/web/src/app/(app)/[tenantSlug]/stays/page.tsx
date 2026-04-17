@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Plus, Building2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, Badge } from '@touracore/ui'
+import { assertTenantModuleActive } from '@/lib/module-guard'
 
 interface StaysListProps {
   params: Promise<{ tenantSlug: string }>
@@ -29,6 +30,13 @@ export default async function StaysList({ params }: StaysListProps) {
     .single()
 
   if (!tenant) notFound()
+
+  await assertTenantModuleActive({
+    supabase,
+    tenantId: tenant.id as string,
+    tenantSlug,
+    moduleCode: 'hospitality',
+  })
 
   const { data: entities } = await supabase
     .from('entities')

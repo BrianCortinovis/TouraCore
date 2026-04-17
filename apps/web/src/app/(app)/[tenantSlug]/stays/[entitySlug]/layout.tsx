@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createServerSupabaseClient } from '@touracore/db/server'
+import { assertTenantModuleActive } from '@/lib/module-guard'
 import { EntitySidebar } from './entity-sidebar'
 
 interface EntityLayoutProps {
@@ -18,6 +19,13 @@ export default async function EntityLayout({ children, params }: EntityLayoutPro
     .single()
 
   if (!tenant) notFound()
+
+  await assertTenantModuleActive({
+    supabase,
+    tenantId: tenant.id as string,
+    tenantSlug,
+    moduleCode: 'hospitality',
+  })
 
   const { data: entity } = await supabase
     .from('entities')

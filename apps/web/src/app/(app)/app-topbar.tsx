@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@touracore/auth/store'
@@ -12,6 +12,36 @@ import {
   User,
   Shield,
 } from 'lucide-react'
+import { VerticalSwitcher } from './vertical-switcher'
+
+type ModuleCode =
+  | 'hospitality'
+  | 'restaurant'
+  | 'wellness'
+  | 'experiences'
+  | 'bike_rental'
+  | 'moto_rental'
+  | 'ski_school'
+
+const VERTICAL_TO_KIND: Record<string, string> = {
+  stays: 'accommodation',
+  dine: 'restaurant',
+  wellness: 'wellness',
+  activities: 'activity',
+  bike: 'bike_rental',
+  moto: 'moto_rental',
+  ski: 'ski_school',
+}
+
+const VERTICAL_LABEL: Record<string, string> = {
+  stays: 'stays',
+  dine: 'dine',
+  wellness: 'wellness',
+  activities: 'activities',
+  bike: 'bike',
+  moto: 'moto',
+  ski: 'ski',
+}
 
 export function AppTopBar() {
   const { user, tenant, tenants, properties } = useAuthStore()
@@ -25,13 +55,48 @@ export function AppTopBar() {
   const currentTenant = tenants.find((t) => t.slug === tenantSlug) ?? tenant
 
   const pathParts = pathname.split('/')
-  const entitySlug = pathParts[2] === 'stays' && pathParts[3] ? pathParts[3] : null
+  const verticalSegment = pathParts[2] ?? null
+  const entitySlug = verticalSegment && pathParts[3] ? pathParts[3] : null
+  const currentKind = verticalSegment ? VERTICAL_TO_KIND[verticalSegment] : null
+
+  const filteredProperties = useMemo(() => {
+    if (!currentKind) return properties
+    return properties.filter((p) => p.kind === currentKind)
+  }, [properties, currentKind])
+
   const currentEntity = entitySlug
-    ? properties.find((p) => p.slug === entitySlug)
+    ? filteredProperties.find((p) => p.slug === entitySlug)
     : null
+
+  const activeModules = useMemo<ModuleCode[]>(() => {
+    const modules = (currentTenant?.modules ?? {}) as Record<string, { active?: boolean }>
+    return (Object.keys(modules) as ModuleCode[]).filter((k) => modules[k]?.active === true)
+  }, [currentTenant])
 
   const isAgencyRoute = pathname.startsWith('/agency')
   const isAgencyManaged = currentEntity?.management_mode === 'agency_managed'
+
+  // Persist last-visited entity per vertical
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!tenantSlug || !verticalSegment || !entitySlug) return
+    const kindCode = Object.keys(VERTICAL_TO_KIND).find((k) => k === verticalSegment)
+    const moduleCode = kindCode === 'stays'
+      ? 'hospitality'
+      : kindCode === 'dine'
+        ? 'restaurant'
+        : kindCode === 'activities'
+          ? 'experiences'
+          : kindCode === 'bike'
+            ? 'bike_rental'
+            : kindCode === 'moto'
+              ? 'moto_rental'
+              : kindCode === 'ski'
+                ? 'ski_school'
+                : kindCode
+    if (!moduleCode) return
+    window.localStorage.setItem(`tc.last-entity.${tenantSlug}.${moduleCode}`, entitySlug)
+  }, [tenantSlug, verticalSegment, entitySlug])
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -50,7 +115,7 @@ export function AppTopBar() {
     <>
       <header className="sticky top-0 z-40 border-b border-gray-200 bg-white">
         <div className="flex h-14 w-full items-center justify-between px-3 sm:px-4 lg:px-6">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Link href="/" className="text-lg font-bold text-blue-600">
               TouraCore
             </Link>
@@ -59,7 +124,10 @@ export function AppTopBar() {
             {currentTenant && (
               <div ref={tenantRef} className="relative">
                 <button
-                  onClick={() => { setTenantOpen(!tenantOpen); setEntityOpen(false) }}
+                  onClick={() => {
+                    setTenantOpen(!tenantOpen)
+                    setEntityOpen(false)
+                  }}
                   className="flex items-center gap-2 rounded-md border border-gray-200 px-3 py-1.5 text-sm hover:bg-gray-50"
                 >
                   <Building2 className="h-4 w-4 text-gray-400" />
@@ -67,7 +135,9 @@ export function AppTopBar() {
                     {currentTenant.name}
                   </span>
                   {tenants.length > 1 && (
-                    <ChevronDown className={`h-3 w-3 text-gray-400 transition-transform ${tenantOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown
+                      className={`h-3 w-3 text-gray-400 transition-transform ${tenantOpen ? 'rotate-180' : ''}`}
+                    />
                   )}
                 </button>
 
@@ -89,27 +159,37 @@ export function AppTopBar() {
               </div>
             )}
 
-            {/* Entity switcher */}
-            {currentEntity && properties.length > 0 && (
+            {/* Vertical switcher (solo se tenant ha >1 modulo attivo) */}
+            {currentTenant && activeModules.length > 0 && (
+              <VerticalSwitcher tenantSlug={tenantSlug} activeModules={activeModules} />
+            )}
+
+            {/* Entity switcher (filtra per kind del vertical corrente) */}
+            {currentEntity && filteredProperties.length > 0 && (
               <div ref={entityRef} className="relative">
                 <button
-                  onClick={() => { setEntityOpen(!entityOpen); setTenantOpen(false) }}
+                  onClick={() => {
+                    setEntityOpen(!entityOpen)
+                    setTenantOpen(false)
+                  }}
                   className="flex items-center gap-2 rounded-md border border-gray-200 px-3 py-1.5 text-sm hover:bg-gray-50"
                 >
                   <span className="max-w-[150px] truncate font-medium text-gray-700">
                     {currentEntity.name}
                   </span>
-                  {properties.length > 1 && (
-                    <ChevronDown className={`h-3 w-3 text-gray-400 transition-transform ${entityOpen ? 'rotate-180' : ''}`} />
+                  {filteredProperties.length > 1 && (
+                    <ChevronDown
+                      className={`h-3 w-3 text-gray-400 transition-transform ${entityOpen ? 'rotate-180' : ''}`}
+                    />
                   )}
                 </button>
 
-                {entityOpen && properties.length > 1 && (
+                {entityOpen && filteredProperties.length > 1 && (
                   <div className="absolute left-0 top-full z-50 mt-1 w-64 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
-                    {properties.map((p) => (
+                    {filteredProperties.map((p) => (
                       <Link
                         key={p.id}
-                        href={`/${tenantSlug}/stays/${p.slug}`}
+                        href={`/${tenantSlug}/${verticalSegment ?? VERTICAL_LABEL.stays}/${p.slug}`}
                         onClick={() => setEntityOpen(false)}
                         className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50"
                       >

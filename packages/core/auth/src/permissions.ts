@@ -179,3 +179,53 @@ export function assertPermission(
     )
   }
 }
+
+// ============================================================================
+// Module / vertical access control
+// ============================================================================
+
+export type ModuleCode =
+  | 'hospitality'
+  | 'restaurant'
+  | 'wellness'
+  | 'experiences'
+  | 'bike_rental'
+  | 'moto_rental'
+  | 'ski_school'
+
+interface TenantModulesShape {
+  [code: string]: { active?: boolean; source?: string } | undefined
+}
+
+/**
+ * Verifica se un tenant può accedere al modulo richiesto.
+ * Controlla:
+ * 1. tenant.modules[code].active === true
+ * 2. super_admin → bypass sempre
+ */
+export function canAccessVertical(
+  userRole: PlatformRole,
+  tenantModules: TenantModulesShape | null | undefined,
+  moduleCode: ModuleCode
+): boolean {
+  if (userRole === 'super_admin') return true
+  if (!tenantModules) return false
+  return tenantModules[moduleCode]?.active === true
+}
+
+/**
+ * Verifica se l'utente può concedere free override su un tenant.
+ * - super_admin: sempre
+ * - agency_owner/agency_admin: solo se agency.can_grant_free è true e tenant è sotto agency
+ * (check effettivo di agency_tenant_links va fatto lato query DB, qui solo role-check base)
+ */
+export function canGrantFreeOverride(
+  userRole: PlatformRole,
+  opts: { isAgencyOwner?: boolean; agencyCanGrantFree?: boolean } = {}
+): boolean {
+  if (userRole === 'super_admin') return true
+  if (userRole === 'agency_owner' || userRole === 'agency_member') {
+    return Boolean(opts.agencyCanGrantFree)
+  }
+  return false
+}

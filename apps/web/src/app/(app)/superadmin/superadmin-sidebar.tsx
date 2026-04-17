@@ -14,6 +14,8 @@ import {
   SearchCheck,
   Shield,
   LogOut,
+  Gift,
+  Package,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -36,6 +38,8 @@ const navGroups: { title: string; items: NavItem[] }[] = [
     items: [
       { href: '/superadmin/security', label: 'Sicurezza', icon: Shield },
       { href: '/superadmin/billing', label: 'Billing', icon: CreditCard },
+      { href: '/superadmin/billing/catalog', label: 'Catalogo moduli', icon: Package },
+      { href: '/superadmin/billing/overrides', label: 'Override free', icon: Gift },
       { href: '/superadmin/integrations', label: 'Integrazioni', icon: Network },
     ],
   },

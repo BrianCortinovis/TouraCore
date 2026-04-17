@@ -132,19 +132,156 @@ export async function createTenantWithLegalAction(input: Step2Input): Promise<Ac
     return { success: false, error: 'Non siamo riusciti a completare la configurazione. Riprova.' }
   }
 
-  // Attiva modulo hospitality
-  const { error: moduleError } = await admin
-    .from('module_activations')
-    .insert({
-      tenant_id: tenant.id,
-      module: 'hospitality',
-      is_active: true,
-    })
+  return { success: true }
+}
 
-  if (moduleError) {
-    console.error('[onboarding/step-2] Errore attivazione modulo hospitality:', moduleError)
+// --- Step Modules: selezione moduli e persistenza in tenants.modules ---
+
+const ModuleSelectionSchema = z.object({
+  modules: z.array(z.enum([
+    'hospitality',
+    'restaurant',
+    'wellness',
+    'experiences',
+    'bike_rental',
+    'moto_rental',
+    'ski_school',
+  ])).min(1, 'Seleziona almeno un modulo'),
+})
+
+export type ModuleSelectionInput = z.infer<typeof ModuleSelectionSchema>
+
+export async function selectModulesAction(input: ModuleSelectionInput): Promise<ActionResult> {
+  const supabase = await createServerSupabaseClient()
+  const user = await getCurrentUser()
+  if (!user) return { success: false, error: 'Sessione scaduta.' }
+
+  const parsed = ModuleSelectionSchema.safeParse(input)
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Dati non validi' }
   }
 
+  const { data: memberships } = await supabase
+    .from('memberships')
+    .select('tenant_id')
+    .eq('user_id', user.id)
+    .eq('is_active', true)
+    .limit(1)
+
+  if (!memberships || memberships.length === 0) {
+    return { success: false, error: 'Completa prima la configurazione dell\'attività.' }
+  }
+
+  const tenantId = memberships[0]!.tenant_id
+  const admin = await createServiceRoleClient()
+
+  // Costruisce modules JSONB: { [code]: { active: false (pending), source: 'onboarding', since: NOW } }
+  // active=false finché non conferma il piano a step successivo
+  const now = new Date().toISOString()
+  const modules: Record<string, { active: boolean; source: string; since: string }> = {}
+  for (const code of parsed.data.modules) {
+    modules[code] = { active: false, source: 'onboarding_pending', since: now }
+  }
+
+  const { error } = await admin
+    .from('tenants')
+    .update({ modules })
+    .eq('id', tenantId)
+
+  if (error) {
+    console.error('[onboarding/modules] Errore salvataggio modules:', error)
+    return { success: false, error: 'Non siamo riusciti a salvare la selezione.' }
+  }
+
+  return { success: true }
+}
+
+// --- Step Plan: conferma piano + attivazione moduli (trial o paga subito) ---
+
+const PlanConfirmSchema = z.object({
+  mode: z.enum(['trial', 'paid_now']),
+  trial_days: z.number().min(0).max(90).optional(),
+})
+
+export type PlanConfirmInput = z.infer<typeof PlanConfirmSchema>
+
+export async function confirmPlanAction(input: PlanConfirmInput): Promise<ActionResult & { stripeCheckoutUrl?: string }> {
+  const supabase = await createServerSupabaseClient()
+  const user = await getCurrentUser()
+  if (!user) return { success: false, error: 'Sessione scaduta.' }
+
+  const parsed = PlanConfirmSchema.safeParse(input)
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Dati non validi' }
+  }
+
+  const { data: memberships } = await supabase
+    .from('memberships')
+    .select('tenant_id')
+    .eq('user_id', user.id)
+    .eq('is_active', true)
+    .limit(1)
+
+  if (!memberships || memberships.length === 0) {
+    return { success: false, error: 'Completa prima la configurazione dell\'attività.' }
+  }
+
+  const tenantId = memberships[0]!.tenant_id
+  const admin = await createServiceRoleClient()
+
+  // Leggi tenant.modules pending
+  const { data: tenant } = await admin
+    .from('tenants')
+    .select('modules')
+    .eq('id', tenantId)
+    .single()
+
+  const currentModules = (tenant?.modules ?? {}) as Record<string, { active: boolean; source: string; since: string; trial_until?: string }>
+  const pendingCodes = Object.keys(currentModules).filter((k) => currentModules[k]?.source === 'onboarding_pending')
+
+  if (pendingCodes.length === 0) {
+    return { success: false, error: 'Nessun modulo da attivare. Seleziona prima i moduli.' }
+  }
+
+  const now = new Date()
+  const trialDays = parsed.data.trial_days ?? 14
+  const trialUntil = new Date(now.getTime() + trialDays * 24 * 60 * 60 * 1000).toISOString()
+
+  // Attiva moduli in trial (attivi immediatamente, charge a scadenza trial via Stripe)
+  const updatedModules: Record<string, { active: boolean; source: string; since: string; trial_until?: string }> = { ...currentModules }
+  for (const code of pendingCodes) {
+    updatedModules[code] = {
+      active: true,
+      source: parsed.data.mode === 'trial' ? 'trial' : 'subscription',
+      since: now.toISOString(),
+      ...(parsed.data.mode === 'trial' ? { trial_until: trialUntil } : {}),
+    }
+  }
+
+  const { error: upErr } = await admin
+    .from('tenants')
+    .update({ modules: updatedModules })
+    .eq('id', tenantId)
+
+  if (upErr) {
+    console.error('[onboarding/plan] Errore attivazione moduli:', upErr)
+    return { success: false, error: 'Non siamo riusciti ad attivare i moduli.' }
+  }
+
+  // Log activation
+  for (const code of pendingCodes) {
+    await admin.from('module_activation_log').insert({
+      tenant_id: tenantId,
+      module_code: code,
+      action: parsed.data.mode === 'trial' ? 'trial_started' : 'activated',
+      actor_user_id: user.id,
+      actor_scope: 'tenant_owner',
+      notes: `Onboarding: mode=${parsed.data.mode}, trial_days=${trialDays}`,
+    })
+  }
+
+  // TODO: creare Stripe SetupIntent o Checkout Session qui e restituire URL
+  // Per ora onboarding attiva direttamente trial senza carta (MVP); Stripe integration F9.
   return { success: true }
 }
 

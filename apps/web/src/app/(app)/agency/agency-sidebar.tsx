@@ -7,6 +7,7 @@ import {
   Building2,
   Settings,
   Plug,
+  Gift,
 } from 'lucide-react'
 
 interface AgencySidebarProps {
@@ -19,6 +20,7 @@ export function AgencySidebar({ agencyName }: AgencySidebarProps) {
   const navItems = [
     { href: '/agency', label: 'Dashboard', icon: LayoutDashboard, exact: true },
     { href: '/agency/clients', label: 'Clienti', icon: Building2 },
+    { href: '/agency/billing', label: 'Billing', icon: Gift },
     { href: '/agency/settings/integrations', label: 'Integrazioni', icon: Plug },
     { href: '/agency/settings', label: 'Impostazioni', icon: Settings },
   ]

@@ -99,7 +99,7 @@ export default function Step3Form() {
           </div>
 
           <div className="mb-6">
-            <p className="text-xs font-medium uppercase text-gray-400">Passo 3 di 3</p>
+            <p className="text-xs font-medium uppercase text-gray-400">Passo 5 di 5</p>
             <h2 className="mt-1 text-2xl font-bold text-gray-900">La tua prima struttura</h2>
             <p className="mt-2 text-sm text-gray-500">
               Puoi creare la tua prima struttura ora o farlo dopo.

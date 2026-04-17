@@ -91,7 +91,7 @@ export default function Step2Form() {
 
     const result = await createTenantWithLegalAction(input)
     if (result.success) {
-      router.push('/onboarding/step-3')
+      router.push('/onboarding/step-modules')
     } else {
       setError(result.error ?? 'Errore durante la configurazione.')
       setIsLoading(false)

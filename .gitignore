@@ -30,3 +30,6 @@ coverage/
 .cache/
 tmp/
 .vercel
+*.tsbuildinfo
+test-results/
+playwright-report/
