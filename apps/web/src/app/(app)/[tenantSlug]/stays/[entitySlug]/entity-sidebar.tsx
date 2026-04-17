@@ -96,7 +96,7 @@ function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
-const GLOBAL_SECTIONS: Set<SidebarSection> = new Set([
+const TENANT_LEVEL_SECTIONS: Set<SidebarSection> = new Set([
   'inbox',
   'reviews',
   'analytics',
@@ -109,8 +109,8 @@ const GLOBAL_SECTIONS: Set<SidebarSection> = new Set([
   'ical',
 ])
 
-function sectionToHref(base: string, section: SidebarSection): string {
-  if (GLOBAL_SECTIONS.has(section)) return `/${section}`
+function sectionToHref(base: string, section: SidebarSection, tenantSlug: string): string {
+  if (TENANT_LEVEL_SECTIONS.has(section)) return `/${tenantSlug}/${section}`
   switch (section) {
     case 'overview': return base
     case 'compliance-alloggiati': return `${base}/compliance/alloggiati`
@@ -266,7 +266,7 @@ export function EntitySidebar({
             <div className="space-y-0.5">
               {items.map((section) => {
                 const meta = sectionMeta[section]
-                const href = sectionToHref(basePath, section)
+                const href = sectionToHref(basePath, section, tenantSlug)
                 const isActive =
                   pathname === href ||
                   (href !== basePath && pathname.startsWith(href))
