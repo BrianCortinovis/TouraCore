@@ -3,6 +3,7 @@
 import { createServerSupabaseClient } from '@touracore/db'
 import { requireCurrentEntity } from '@touracore/hospitality/src/auth/access'
 import type { PaymentMethod, InvoiceType, PaymentStatus } from '@touracore/hospitality/src/types/database'
+import { buildSDIXml, buildSDIFilename } from '@/lib/sdi-xml'
 
 interface ActionResult {
   success: boolean
@@ -231,6 +232,85 @@ export async function createInvoiceFromBookingAction(bookingId: string): Promise
         vat_rate: 10,
       }],
     })
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Errore' }
+  }
+}
+
+/**
+ * Generate SDI XML FatturaPA 1.2.1 per invoice esistente.
+ * Salva XML in invoice + ritorna filename + xml string per download.
+ */
+export async function generateSDIXmlAction(invoiceId: string): Promise<{ success: boolean; filename?: string; xml?: string; error?: string }> {
+  try {
+    const { property } = await requireCurrentEntity()
+    const supabase = await createServerSupabaseClient()
+
+    const { data: inv } = await supabase
+      .from('invoices')
+      .select('*, items:invoice_items(*)')
+      .eq('id', invoiceId)
+      .eq('entity_id', property.id)
+      .maybeSingle()
+    if (!inv) return { success: false, error: 'Fattura non trovata' }
+
+    const { data: acc } = await supabase
+      .from('accommodations')
+      .select('legal_name, vat_number, fiscal_code, address, city, zip, province, fiscal_regime')
+      .eq('entity_id', property.id)
+      .single()
+    if (!acc?.vat_number) return { success: false, error: 'Partita IVA mancante nelle impostazioni struttura' }
+
+    const year = new Date(inv.invoice_date as string).getFullYear()
+    const { count } = await supabase
+      .from('invoices')
+      .select('*', { count: 'exact', head: true })
+      .eq('entity_id', property.id)
+      .gte('invoice_date', `${year}-01-01`)
+    const progressivoInvio = String((count ?? 0)).padStart(5, '0')
+
+    const lines = (inv.items ?? []).map((it: { description: string; quantity: number; unit_price: number; vat_rate?: number }, idx: number) => ({
+      number: idx + 1,
+      description: it.description,
+      qty: Number(it.quantity),
+      unitPrice: Number(it.unit_price),
+      vatPct: Number(it.vat_rate ?? 10),
+    }))
+
+    const xml = buildSDIXml({
+      cedenteVatNumber: acc.vat_number as string,
+      cedenteFiscalCode: acc.fiscal_code as string | undefined,
+      cedenteName: (acc.legal_name as string) ?? property.name,
+      cedenteRegime: ((acc.fiscal_regime as string) ?? 'RF01') as 'RF01',
+      cedenteAddress: (acc.address as string) ?? '',
+      cedenteCity: (acc.city as string) ?? '',
+      cedenteZip: (acc.zip as string) ?? '00000',
+      cedenteProvince: (acc.province as string) ?? '',
+      customerVatNumber: (inv.customer_vat as string | null) ?? undefined,
+      customerFiscalCode: (inv.customer_fiscal_code as string | null) ?? undefined,
+      customerName: inv.customer_name as string,
+      customerAddress: (inv.customer_address as string | null) ?? undefined,
+      customerCity: (inv.customer_city as string | null) ?? undefined,
+      customerZip: (inv.customer_zip as string | null) ?? undefined,
+      customerCountry: 'IT',
+      customerSdiCode: (inv.customer_sdi_code as string | null) ?? undefined,
+      invoiceNumber: inv.invoice_number as string,
+      invoiceDate: inv.invoice_date as string,
+      invoiceType: 'TD01',
+      lines,
+    }, progressivoInvio)
+
+    // Persist XML on invoice
+    await supabase.from('invoices').update({
+      sdi_xml_payload: xml,
+      sdi_status: 'draft',
+    }).eq('id', invoiceId)
+
+    return {
+      success: true,
+      filename: buildSDIFilename(acc.vat_number as string, progressivoInvio),
+      xml,
+    }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : 'Errore' }
   }
