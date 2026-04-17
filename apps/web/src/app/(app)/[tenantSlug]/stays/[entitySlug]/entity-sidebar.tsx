@@ -96,21 +96,7 @@ function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
-const TENANT_LEVEL_SECTIONS: Set<SidebarSection> = new Set([
-  'inbox',
-  'reviews',
-  'analytics',
-  'maintenance',
-  'promotions',
-  'upsell-orders',
-  'locks',
-  'guidebooks',
-  'marketplace',
-  'ical',
-])
-
-function sectionToHref(base: string, section: SidebarSection, tenantSlug: string): string {
-  if (TENANT_LEVEL_SECTIONS.has(section)) return `/${tenantSlug}/${section}`
+function sectionToHref(base: string, section: SidebarSection, _tenantSlug: string): string {
   switch (section) {
     case 'overview': return base
     case 'compliance-alloggiati': return `${base}/compliance/alloggiati`
