@@ -87,8 +87,9 @@ export async function updateSession(request: NextRequest) {
   const rateLimitKey = getRateLimitKey(tier, ip)
   const rateLimitConfig = getRateLimitConfig(tier)
   const rateLimitResult = checkRateLimit(rateLimitKey, rateLimitConfig)
+  const bypassRateLimit = process.env.TESTSPRITE_BYPASS_RATE_LIMIT === '1'
 
-  if (!rateLimitResult.allowed) {
+  if (!rateLimitResult.allowed && !bypassRateLimit) {
     const blockedResponse = new NextResponse('Too Many Requests', { status: 429 })
     setRateLimitHeaders(blockedResponse.headers, rateLimitResult)
     applySecurityHeaders(blockedResponse.headers, {
@@ -153,7 +154,7 @@ export async function updateSession(request: NextRequest) {
   if (user && tier === 'authenticated') {
     const userKey = getRateLimitKey(tier, ip, user.id)
     const userResult = checkRateLimit(userKey, rateLimitConfig)
-    if (!userResult.allowed) {
+    if (!userResult.allowed && !bypassRateLimit) {
       const blockedResponse = new NextResponse('Too Many Requests', { status: 429 })
       setRateLimitHeaders(blockedResponse.headers, userResult)
       applySecurityHeaders(blockedResponse.headers, {

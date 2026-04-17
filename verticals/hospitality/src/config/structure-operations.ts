@@ -1041,7 +1041,7 @@ export const PROPERTY_TYPE_MODULE_DEFINITIONS: Partial<Record<StructurePropertyT
       ],
     },
   ],
-  apartment: [
+  casa_vacanze: [
     {
       key: 'apartment_stay_services',
       title: 'Servizi soggiorno casa vacanze',

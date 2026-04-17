@@ -6,7 +6,7 @@ import { Button, Input, Select } from '@touracore/ui'
 import { createPropertyAction } from '../../../../(dashboard)/properties/actions'
 
 const PROPERTY_TYPE_OPTIONS = [
-  { value: 'apartment', label: 'Casa vacanze' },
+  { value: 'casa_vacanze', label: 'Casa vacanze' },
   { value: 'hotel', label: 'Hotel' },
   { value: 'b_and_b', label: 'Bed & Breakfast' },
   { value: 'agriturismo', label: 'Agriturismo' },
@@ -45,7 +45,7 @@ export function NewStayForm({ tenantSlug, defaultCountry }: NewStayFormProps) {
 
     const result = await createPropertyAction({
       name,
-      type: type as 'hotel' | 'b_and_b' | 'apartment' | 'agriturismo' | 'residence' | 'affittacamere' | 'mixed',
+      type: type as 'hotel' | 'b_and_b' | 'casa_vacanze' | 'agriturismo' | 'residence' | 'affittacamere' | 'mixed',
       slug: slug || undefined,
       city: city || undefined,
       address: address || undefined,

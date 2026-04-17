@@ -24,7 +24,7 @@ export interface CreateReservationData {
   entity_id: string
   guest_id: string
   room_id?: string | null
-  room_type_id: string
+  room_type_id?: string
   rate_plan_id?: string | null
   check_in: string
   check_out: string
@@ -106,7 +106,6 @@ function revalidateReservationPaths() {
 export async function createReservation(data: CreateReservationData) {
   if (!data.entity_id) throw new Error('entity_id is required')
   if (!data.guest_id) throw new Error('guest_id is required')
-  if (!data.room_type_id) throw new Error('room_type_id is required')
   if (!data.check_in) throw new Error('check_in is required')
   if (!data.check_out) throw new Error('check_out is required')
   if (!data.adults || data.adults < 1) throw new Error('adults must be at least 1')
@@ -114,6 +113,14 @@ export async function createReservation(data: CreateReservationData) {
   await assertCurrentEntityAccess(data.entity_id)
 
   const supabase = await createServerSupabaseClient()
+
+  let roomTypeId = data.room_type_id
+  if (!roomTypeId) {
+    const { data: defaultType } = await supabase
+      .rpc('get_default_room_type_id', { p_entity_id: data.entity_id })
+    if (!defaultType) throw new Error('room_type_id is required')
+    roomTypeId = defaultType as string
+  }
 
   // Generate reservation code via DB function
   const { data: codeResult, error: codeError } = await supabase.rpc(
@@ -148,7 +155,7 @@ export async function createReservation(data: CreateReservationData) {
       reservation_code: codeResult as string,
       guest_id: data.guest_id,
       room_id: data.room_id ?? null,
-      room_type_id: data.room_type_id,
+      room_type_id: roomTypeId,
       rate_plan_id: data.rate_plan_id ?? null,
       check_in: data.check_in,
       check_out: data.check_out,

@@ -13,7 +13,7 @@ import type { RoomStatus, RoomCategory, Json } from '../types/database'
 
 export interface CreateRoomData {
   entity_id: string
-  room_type_id: string
+  room_type_id?: string
   room_number: string
   name?: string | null
   floor?: number | null
@@ -22,6 +22,15 @@ export interface CreateRoomData {
   is_active?: boolean
   notes?: string | null
   features?: Json
+  description?: string | null
+  base_price?: number | null
+  base_occupancy?: number | null
+  max_occupancy?: number | null
+  max_children?: number | null
+  size_sqm?: number | null
+  bed_configuration?: string | null
+  amenities?: Json
+  photos?: string[]
 }
 
 export interface UpdateRoomData {
@@ -34,6 +43,15 @@ export interface UpdateRoomData {
   is_active?: boolean
   notes?: string | null
   features?: Json
+  description?: string | null
+  base_price?: number | null
+  base_occupancy?: number | null
+  max_occupancy?: number | null
+  max_children?: number | null
+  size_sqm?: number | null
+  bed_configuration?: string | null
+  amenities?: Json
+  photos?: string[]
 }
 
 export interface CreateRoomTypeData {
@@ -94,16 +112,26 @@ function revalidateRoomPaths() {
  */
 export async function createRoom(data: CreateRoomData) {
   if (!data.entity_id) throw new Error('entity_id is required')
-  if (!data.room_type_id) throw new Error('room_type_id is required')
   if (!data.room_number) throw new Error('room_number is required')
 
   await assertCurrentEntityAccess(data.entity_id)
 
   const supabase = await createServerSupabaseClient()
+
+  let roomTypeId = data.room_type_id
+  if (!roomTypeId) {
+    const { data: defaultType } = await supabase
+      .rpc('get_default_room_type_id', { p_entity_id: data.entity_id })
+    if (!defaultType) {
+      throw new Error('room_type_id is required')
+    }
+    roomTypeId = defaultType as string
+  }
+
   const { data: roomType } = await supabase
     .from('room_types')
     .select('id')
-    .eq('id', data.room_type_id)
+    .eq('id', roomTypeId)
     .eq('entity_id', data.entity_id)
     .maybeSingle()
 
@@ -115,7 +143,7 @@ export async function createRoom(data: CreateRoomData) {
     .from('rooms')
     .insert({
       entity_id: data.entity_id,
-      room_type_id: data.room_type_id,
+      room_type_id: roomTypeId,
       room_number: data.room_number,
       name: data.name ?? null,
       floor: data.floor ?? null,
@@ -124,6 +152,15 @@ export async function createRoom(data: CreateRoomData) {
       is_active: data.is_active ?? true,
       notes: data.notes ?? null,
       features: data.features ?? {},
+      description: data.description ?? null,
+      base_price: data.base_price ?? null,
+      base_occupancy: data.base_occupancy ?? null,
+      max_occupancy: data.max_occupancy ?? null,
+      max_children: data.max_children ?? null,
+      size_sqm: data.size_sqm ?? null,
+      bed_configuration: data.bed_configuration ?? null,
+      amenities: data.amenities ?? [],
+      photos: data.photos ?? [],
     })
     .select()
     .single()

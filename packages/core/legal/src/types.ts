@@ -8,7 +8,7 @@ export type LegalType = typeof LEGAL_TYPES[number]
 
 export const PROPERTY_TYPES = [
   'hotel', 'residence', 'mixed', 'b_and_b',
-  'agriturismo', 'apartment', 'affittacamere',
+  'agriturismo', 'casa_vacanze', 'affittacamere',
 ] as const
 export type PropertyType = typeof PROPERTY_TYPES[number]
 

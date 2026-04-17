@@ -9,12 +9,13 @@ export function getStructureTerms(propertyType?: string | null) {
   const config = getPropertyTypeConfig(type)
   const unitLabel = config.unitLabel
   const unitLabelPlural = config.unitLabelPlural
-  const isApartment = type === 'apartment'
+  const isApartment = type === 'casa_vacanze'
   const unitLabelTitle = capitalize(unitLabel)
   const unitLabelPluralTitle = capitalize(unitLabelPlural)
 
   return {
     type,
+    hasRoomTypes: config.hasRoomTypes,
     unitLabel,
     unitLabelPlural,
     unitLabelTitle,

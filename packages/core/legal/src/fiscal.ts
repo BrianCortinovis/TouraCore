@@ -48,7 +48,7 @@ function getItalyFiscalConfig(
   }
 
   if (legalType === 'private') {
-    if (propertyType !== 'apartment' && propertyType !== 'b_and_b') {
+    if (propertyType !== 'casa_vacanze' && propertyType !== 'b_and_b') {
       return {
         ...base,
         fiscalRegime: 'unknown',
@@ -108,7 +108,7 @@ function getItalyFiscalConfig(
         atecoCode: '55.20',
       }
 
-    case 'apartment':
+    case 'casa_vacanze':
       if (!isImprenditoriale) {
         return {
           ...base,

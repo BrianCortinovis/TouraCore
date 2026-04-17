@@ -39,10 +39,19 @@ interface Room {
   room_type_id: string
   room_type: { id: string; name: string } | null
   notes: string | null
+  description: string | null
+  base_price: number | null
+  base_occupancy: number | null
+  max_occupancy: number | null
+  max_children: number | null
+  size_sqm: number | null
+  bed_configuration: string | null
 }
 
 const emptyForm = {
   room_number: '', name: '', room_type_id: '', floor: '', building: '', status: 'available', notes: '',
+  description: '', base_price: '', base_occupancy: '2', max_occupancy: '4', max_children: '0',
+  size_sqm: '', bed_configuration: '',
 }
 
 export default function RoomsPage() {
@@ -87,6 +96,13 @@ export default function RoomsPage() {
       building: room.building || '',
       status: room.status,
       notes: room.notes || '',
+      description: room.description || '',
+      base_price: room.base_price != null ? String(room.base_price) : '',
+      base_occupancy: room.base_occupancy != null ? String(room.base_occupancy) : '2',
+      max_occupancy: room.max_occupancy != null ? String(room.max_occupancy) : '4',
+      max_children: room.max_children != null ? String(room.max_children) : '0',
+      size_sqm: room.size_sqm != null ? String(room.size_sqm) : '',
+      bed_configuration: room.bed_configuration || '',
     })
     setError('')
     setModalOpen(true)
@@ -98,12 +114,21 @@ export default function RoomsPage() {
 
     const payload = {
       room_number: form.room_number,
-      room_type_id: form.room_type_id,
+      room_type_id: form.room_type_id || undefined,
       name: form.name || null,
       floor: form.floor ? Number(form.floor) : null,
       building: form.building || null,
       status: form.status as 'available' | 'occupied' | 'cleaning' | 'maintenance' | 'out_of_order',
       notes: form.notes || null,
+      ...(terms.hasRoomTypes ? {} : {
+        description: form.description || null,
+        base_price: form.base_price ? Number(form.base_price) : null,
+        base_occupancy: form.base_occupancy ? Number(form.base_occupancy) : null,
+        max_occupancy: form.max_occupancy ? Number(form.max_occupancy) : null,
+        max_children: form.max_children ? Number(form.max_children) : null,
+        size_sqm: form.size_sqm ? Number(form.size_sqm) : null,
+        bed_configuration: form.bed_configuration || null,
+      }),
     }
 
     const res = editing
@@ -131,10 +156,13 @@ export default function RoomsPage() {
   const columns = [
     { key: 'room_number', header: 'Numero' },
     { key: 'name', header: 'Nome', hideOnMobile: true },
-    {
+    ...(terms.hasRoomTypes ? [{
       key: 'room_type', header: 'Tipologia',
       render: (r: Room) => r.room_type?.name || '—',
-    },
+    }] : [{
+      key: 'base_price', header: 'Prezzo / notte',
+      render: (r: Room) => r.base_price != null ? `€ ${Number(r.base_price).toFixed(2)}` : '—',
+    }]),
     {
       key: 'floor', header: 'Piano',
       render: (r: Room) => r.floor != null ? String(r.floor) : '—',
@@ -168,7 +196,7 @@ export default function RoomsPage() {
         <Button onClick={openCreate} disabled={roomTypeOptions.length === 0}>{terms.newUnitLabel}</Button>
       </div>
 
-      {roomTypeOptions.length === 0 && !loading && (
+      {roomTypeOptions.length === 0 && !loading && terms.hasRoomTypes && (
         <div className="rounded-lg bg-yellow-50 px-4 py-3 text-sm text-yellow-700">
           Crea prima una tipologia {terms.unitLabel} nella sezione &quot;{terms.roomTypesLabel}&quot;.
         </div>
@@ -192,7 +220,9 @@ export default function RoomsPage() {
             <Input label="Nome (opzionale)" value={form.name} onChange={(e) => set('name', e.target.value)} />
           </div>
 
-          <Select label="Tipologia" options={roomTypeOptions} value={form.room_type_id} onChange={(e) => set('room_type_id', e.target.value)} />
+          {terms.hasRoomTypes && (
+            <Select label="Tipologia" options={roomTypeOptions} value={form.room_type_id} onChange={(e) => set('room_type_id', e.target.value)} />
+          )}
 
           <div className="grid grid-cols-3 gap-4">
             <Input label="Piano" type="number" value={form.floor} onChange={(e) => set('floor', e.target.value)} />
@@ -202,9 +232,28 @@ export default function RoomsPage() {
 
           <Input label="Note" value={form.notes} onChange={(e) => set('notes', e.target.value)} />
 
+          {!terms.hasRoomTypes && (
+            <>
+              <div className="border-t border-gray-200 pt-4">
+                <h4 className="text-sm font-semibold text-gray-900 mb-3">Prezzi e caratteristiche</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <Input label="Prezzo base / notte (€)" type="number" step="0.01" value={form.base_price} onChange={(e) => set('base_price', e.target.value)} />
+                  <Input label="Metri quadri" type="number" step="0.01" value={form.size_sqm} onChange={(e) => set('size_sqm', e.target.value)} />
+                </div>
+                <div className="grid grid-cols-3 gap-4 mt-4">
+                  <Input label="Ospiti base" type="number" value={form.base_occupancy} onChange={(e) => set('base_occupancy', e.target.value)} />
+                  <Input label="Ospiti max" type="number" value={form.max_occupancy} onChange={(e) => set('max_occupancy', e.target.value)} />
+                  <Input label="Bambini max" type="number" value={form.max_children} onChange={(e) => set('max_children', e.target.value)} />
+                </div>
+                <Input className="mt-4" label="Configurazione letti" value={form.bed_configuration} onChange={(e) => set('bed_configuration', e.target.value)} />
+                <Input className="mt-4" label="Descrizione" value={form.description} onChange={(e) => set('description', e.target.value)} />
+              </div>
+            </>
+          )}
+
           <div className="flex justify-end gap-3 pt-4">
             <Button variant="ghost" onClick={() => setModalOpen(false)}>Annulla</Button>
-            <Button onClick={handleSave} disabled={saving || !form.room_number || !form.room_type_id}>
+            <Button onClick={handleSave} disabled={saving || !form.room_number || (terms.hasRoomTypes && !form.room_type_id)}>
               {saving ? 'Salvataggio...' : editing ? 'Salva' : 'Crea'}
             </Button>
           </div>

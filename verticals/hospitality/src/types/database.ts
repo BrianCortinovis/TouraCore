@@ -1,7 +1,7 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 // Enums matching the database
-export type PropertyType = 'hotel' | 'residence' | 'mixed' | 'b_and_b' | 'agriturismo' | 'apartment' | 'affittacamere'
+export type PropertyType = 'hotel' | 'residence' | 'mixed' | 'b_and_b' | 'agriturismo' | 'casa_vacanze' | 'affittacamere'
 export type FiscalRegime = 'ordinario' | 'forfettario' | 'cedolare_secca' | 'agriturismo_special'
 export type SubscriptionPlan = 'trial' | 'starter' | 'professional' | 'enterprise'
 export type SubscriptionStatus = 'active' | 'past_due' | 'cancelled' | 'trialing'
@@ -483,6 +483,15 @@ export interface Room {
   is_active: boolean
   notes: string | null
   features: Json
+  description: string | null
+  base_price: number | null
+  base_occupancy: number | null
+  max_occupancy: number | null
+  max_children: number | null
+  size_sqm: number | null
+  bed_configuration: string | null
+  amenities: Json
+  photos: string[]
   created_at: string
   updated_at: string
   // Joined

@@ -58,6 +58,17 @@ export default function RoomTypesPage() {
 
   useEffect(() => { load() }, [load])
 
+  if (!terms.hasRoomTypes) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-2xl font-bold text-gray-900">{terms.roomTypesLabel}</h1>
+        <div className="rounded-lg bg-blue-50 border border-blue-200 px-4 py-3 text-sm text-blue-800">
+          La gestione tipologie non è necessaria per questa struttura. Gestisci direttamente i tuoi {terms.unitLabelPlural} nella sezione &quot;{terms.unitLabelPluralTitle}&quot;.
+        </div>
+      </div>
+    )
+  }
+
   function openCreate() {
     setEditing(null)
     setForm(emptyForm)

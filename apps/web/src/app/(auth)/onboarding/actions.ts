@@ -152,7 +152,7 @@ export async function createTenantWithLegalAction(input: Step2Input): Promise<Ac
 
 const Step3Schema = z.object({
   name: z.string().min(2, 'Il nome deve avere almeno 2 caratteri').max(100).trim(),
-  type: z.enum(['hotel', 'residence', 'mixed', 'b_and_b', 'agriturismo', 'apartment', 'affittacamere']),
+  type: z.enum(['hotel', 'residence', 'mixed', 'b_and_b', 'agriturismo', 'casa_vacanze', 'affittacamere']),
   country: z.enum(['IT', 'CH', 'FR', 'AT', 'DE']).optional(),
   address: z.string().optional().or(z.literal('')),
   city: z.string().optional().or(z.literal('')),

@@ -111,7 +111,7 @@ export function getRelevantUpsellCategories(propertyType: PropertyType): UpsellC
   const all = UPSELL_CATEGORIES.map((c) => c.key)
 
   switch (propertyType) {
-    case 'apartment':
+    case 'casa_vacanze':
       // Casa vacanze: self-service, no room_upgrade (unico alloggio)
       return all.filter((c) => c !== 'room_upgrade')
 
@@ -192,7 +192,7 @@ export function getRelevantTriggers(propertyType: PropertyType): CommunicationTr
         'restaurant_reservation',
       ]
 
-    case 'apartment':
+    case 'casa_vacanze':
     case 'b_and_b':
       return [
         ...COMMON_TRIGGERS,

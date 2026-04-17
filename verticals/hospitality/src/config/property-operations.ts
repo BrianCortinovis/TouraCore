@@ -73,7 +73,7 @@ export function getOperationsConfigRoot(settings: Json | null | undefined): Oper
     property_type_modules: {
       hotel: toPropertyTypeModuleRecord(settings, 'hotel'),
       residence: toPropertyTypeModuleRecord(settings, 'residence'),
-      apartment: toPropertyTypeModuleRecord(settings, 'apartment'),
+      casa_vacanze: toPropertyTypeModuleRecord(settings, 'casa_vacanze'),
       b_and_b: toPropertyTypeModuleRecord(settings, 'b_and_b'),
       agriturismo: toPropertyTypeModuleRecord(settings, 'agriturismo'),
       affittacamere: toPropertyTypeModuleRecord(settings, 'affittacamere'),
@@ -182,9 +182,9 @@ export const PROPERTY_TYPE_OPERATIONS_PROFILES: Record<PropertyType, PropertyTyp
       },
     },
   },
-  apartment: {
-    propertyType: 'apartment',
-    label: 'Appartamento',
+  casa_vacanze: {
+    propertyType: 'casa_vacanze',
+    label: 'Casa Vacanze',
     description: 'Gestione self-service o semi-assistita con cucina, biancheria e servizi extra della struttura.',
     serviceSummary: 'Biancheria, cucina, extra, self-service e servizi prenotabili.',
     operationalModel: 'residential',

@@ -5,7 +5,7 @@
 export type PropertyType =
   | 'hotel'
   | 'b_and_b'
-  | 'apartment'
+  | 'casa_vacanze'
   | 'agriturismo'
   | 'residence'
   | 'affittacamere'
@@ -305,7 +305,7 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
     icon: 'Home',
     unitLabel: 'camera',
     unitLabelPlural: 'camere',
-    hasRoomTypes: true,
+    hasRoomTypes: false,
     hasRooms: true,
     hasRatePlans: true,
     hasSeasons: true,
@@ -356,15 +356,15 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
     },
   },
 
-  apartment: {
-    value: 'apartment',
+  casa_vacanze: {
+    value: 'casa_vacanze',
     label: 'Casa Vacanze',
     labelPlural: 'Case Vacanze',
     description: 'Appartamento turistico / Locazione turistica',
     icon: 'DoorOpen',
     unitLabel: 'appartamento',
     unitLabelPlural: 'appartamenti',
-    hasRoomTypes: true,
+    hasRoomTypes: false,
     hasRooms: true,
     hasRatePlans: true,
     hasSeasons: true,
@@ -423,7 +423,7 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
     icon: 'BedDouble',
     unitLabel: 'camera',
     unitLabelPlural: 'camere',
-    hasRoomTypes: true,
+    hasRoomTypes: false,
     hasRooms: true,
     hasRatePlans: true,
     hasSeasons: true,
@@ -482,7 +482,7 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
     icon: 'Wheat',
     unitLabel: 'camera',
     unitLabelPlural: 'camere',
-    hasRoomTypes: true,
+    hasRoomTypes: false,
     hasRooms: true,
     hasRatePlans: true,
     hasSeasons: true,
@@ -576,7 +576,7 @@ export function getEffectiveFiscalConfig(
     }
   }
 
-  if (propertyType === 'apartment' && isImprenditoriale) {
+  if (propertyType === 'casa_vacanze' && isImprenditoriale) {
     return {
       ...base,
       defaultFiscalRegime: 'forfettario',
@@ -606,7 +606,7 @@ export function getEffectiveCompliance(
 ): PropertyCompliance {
   const base = PROPERTY_TYPE_CONFIGS[propertyType].compliance
 
-  if (isImprenditoriale && (propertyType === 'b_and_b' || propertyType === 'apartment')) {
+  if (isImprenditoriale && (propertyType === 'b_and_b' || propertyType === 'casa_vacanze')) {
     return {
       ...base,
       requiresSCIA: true,
@@ -629,7 +629,7 @@ export function getEffectiveInvoicing(
 ): PropertyInvoicing {
   const base = PROPERTY_TYPE_CONFIGS[propertyType].invoicing
 
-  if (isImprenditoriale && (propertyType === 'b_and_b' || propertyType === 'apartment')) {
+  if (isImprenditoriale && (propertyType === 'b_and_b' || propertyType === 'casa_vacanze')) {
     return {
       availableDocumentTypes: ['invoice', 'proforma', 'credit_note'],
       defaultDocumentType: 'invoice',
@@ -644,7 +644,7 @@ export function getEffectiveInvoicing(
 // ---------------------------------------------------------------------------
 
 export function canToggleImprenditoriale(propertyType: PropertyType): boolean {
-  return propertyType === 'b_and_b' || propertyType === 'apartment'
+  return propertyType === 'b_and_b' || propertyType === 'casa_vacanze'
 }
 
 // ---------------------------------------------------------------------------

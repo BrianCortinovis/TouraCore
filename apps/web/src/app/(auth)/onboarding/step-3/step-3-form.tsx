@@ -8,7 +8,7 @@ import { createFirstPropertyAction, type Step3Input } from '../actions'
 const PROPERTY_TYPE_OPTIONS = [
   { value: 'hotel', label: 'Hotel' },
   { value: 'b_and_b', label: 'Bed & Breakfast' },
-  { value: 'apartment', label: 'Casa Vacanze' },
+  { value: 'casa_vacanze', label: 'Casa Vacanze' },
   { value: 'agriturismo', label: 'Agriturismo' },
   { value: 'residence', label: 'Residence' },
   { value: 'affittacamere', label: 'Affittacamere' },

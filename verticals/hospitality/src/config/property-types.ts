@@ -337,8 +337,8 @@ export const PROPERTY_TYPE_CONFIGS: Record<PropertyType, PropertyTypeConfig> = {
     },
   },
 
-  apartment: {
-    key: 'apartment',
+  casa_vacanze: {
+    key: 'casa_vacanze',
     label: 'Casa Vacanze',
     labelPlural: 'Case Vacanze',
     description: 'Appartamento turistico / Locazione turistica',
@@ -538,7 +538,7 @@ export function getEffectiveFiscalConfig(
   }
 
   // Apartment imprenditoriale (casa vacanze imprenditoriale)
-  if (propertyType === 'apartment' && isImprenditoriale) {
+  if (propertyType === 'casa_vacanze' && isImprenditoriale) {
     return {
       ...base,
       defaultFiscalRegime: 'forfettario',
@@ -568,7 +568,7 @@ export function getEffectiveCompliance(
 ): PropertyCompliance {
   const base = PROPERTY_TYPE_CONFIGS[propertyType].compliance
 
-  if (isImprenditoriale && (propertyType === 'b_and_b' || propertyType === 'apartment')) {
+  if (isImprenditoriale && (propertyType === 'b_and_b' || propertyType === 'casa_vacanze')) {
     return {
       ...base,
       requiresSCIA: true,
@@ -591,7 +591,7 @@ export function getEffectiveInvoicing(
 ): PropertyInvoicing {
   const base = PROPERTY_TYPE_CONFIGS[propertyType].invoicing
 
-  if (isImprenditoriale && (propertyType === 'b_and_b' || propertyType === 'apartment')) {
+  if (isImprenditoriale && (propertyType === 'b_and_b' || propertyType === 'casa_vacanze')) {
     return {
       availableDocumentTypes: ['invoice', 'proforma', 'credit_note'],
       defaultDocumentType: 'invoice',

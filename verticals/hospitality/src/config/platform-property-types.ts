@@ -6,7 +6,7 @@ export const ALL_PROPERTY_TYPES: PropertyType[] = [
   'mixed',
   'b_and_b',
   'agriturismo',
-  'apartment',
+  'casa_vacanze',
   'affittacamere',
 ]
 
