@@ -1,14 +1,16 @@
 import { createServerSupabaseClient } from '@touracore/db/server'
 import { notFound } from 'next/navigation'
-import { buildPropertyServicePreviewData } from '@touracore/hospitality/src/config/property-service-preview'
-import { BookingEngineClient } from '../../../settings/booking-engine/booking-engine-client'
-import type { PropertyType } from '@touracore/hospitality/src/types/database'
+import { normalizeTheme } from '@touracore/hospitality/src/components/booking/core/theme'
+import type { BookingTemplate } from '@touracore/hospitality/src/components/booking'
+import { BookingEngineAdminClient } from './booking-engine-admin'
 
-interface BookingEnginePageProps {
+export const dynamic = 'force-dynamic'
+
+interface Props {
   params: Promise<{ tenantSlug: string; entitySlug: string }>
 }
 
-export default async function BookingEnginePage({ params }: BookingEnginePageProps) {
+export default async function BookingEngineAdminPage({ params }: Props) {
   const { tenantSlug, entitySlug } = await params
   const supabase = await createServerSupabaseClient()
 
@@ -17,46 +19,38 @@ export default async function BookingEnginePage({ params }: BookingEnginePagePro
     .select('id, name')
     .eq('slug', tenantSlug)
     .single()
-
   if (!tenant) notFound()
 
   const { data: entity } = await supabase
     .from('entities')
-    .select('id, slug, name, description, tenant_id')
+    .select('id, slug, name')
     .eq('tenant_id', tenant.id)
     .eq('slug', entitySlug)
     .single()
-
   if (!entity) notFound()
 
-  const { data: accommodation } = await supabase
+  const { data: acc } = await supabase
     .from('accommodations')
-    .select('property_type, settings, pet_policy, pets_allowed, short_description')
+    .select('booking_template, booking_theme')
     .eq('entity_id', entity.id)
     .maybeSingle()
 
-  const propertyType = (accommodation?.property_type ?? 'hotel') as PropertyType
-  const previewData = buildPropertyServicePreviewData({
-    propertyName: entity.name,
-    propertyType,
-    settings: accommodation?.settings ?? null,
-    petsAllowed: accommodation?.pets_allowed ?? false,
-    petPolicy: accommodation?.pet_policy ?? null,
-    visibility: 'all',
-  })
+  const { data: apiKeys } = await supabase
+    .from('public_booking_keys')
+    .select('id, key_prefix, name, allowed_domains, scopes, is_active, last_used_at, created_at, expires_at')
+    .eq('entity_id', entity.id)
+    .order('created_at', { ascending: false })
+
+  const template = (acc?.booking_template ?? 'minimal') as BookingTemplate
+  const theme = normalizeTheme(acc?.booking_theme)
 
   return (
-    <BookingEngineClient
+    <BookingEngineAdminClient
       tenantSlug={tenantSlug}
-      tenantName={tenant.name}
-      property={{
-        id: entity.id,
-        name: entity.name,
-        slug: entity.slug,
-        type: propertyType,
-        short_description: accommodation?.short_description ?? entity.description ?? null,
-      }}
-      previewData={previewData}
+      entity={{ id: entity.id, slug: entity.slug, name: entity.name }}
+      initialTemplate={template}
+      initialTheme={theme}
+      apiKeys={apiKeys ?? []}
     />
   )
 }

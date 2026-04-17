@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@touracore/db'
+import { createServerSupabaseClient, createServiceRoleClient } from '@touracore/db'
 import type { RoomType, RatePrice, Season } from '../types/database'
 
 export interface AvailabilityResult {
@@ -15,8 +15,12 @@ export async function checkAvailability(params: {
   checkOut: string
   guests: number
   ratePlanId?: string
+  /** Usa service role per public booking (no auth) */
+  usePublicClient?: boolean
 }): Promise<AvailabilityResult[]> {
-  const supabase = await createServerSupabaseClient()
+  const supabase = params.usePublicClient
+    ? await createServiceRoleClient()
+    : await createServerSupabaseClient()
   const { entityId, checkIn, checkOut, guests, ratePlanId } = params
 
   const { data: roomTypes, error: rtErr } = await supabase

@@ -3,8 +3,8 @@ import type { SecurityHeadersConfig } from './types'
 export function getSecurityHeaders(config: SecurityHeadersConfig): Record<string, string> {
   const { isDev, isWidgetRoute, allowedFrameAncestors } = config
 
-  const frameAncestors = isWidgetRoute && allowedFrameAncestors?.length
-    ? allowedFrameAncestors.join(' ')
+  const frameAncestors = isWidgetRoute
+    ? (allowedFrameAncestors?.length ? allowedFrameAncestors.join(' ') : '*')
     : "'none'"
 
   const cspDirectives = [

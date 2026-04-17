@@ -22,11 +22,13 @@ function isPublicRoute(pathname: string): boolean {
     pathname.startsWith('/auth/callback') ||
     pathname.startsWith('/auth/signout') ||
     pathname.startsWith('/book/') ||
+    pathname.startsWith('/embed/') ||
     pathname.startsWith('/portali/') ||
     pathname.startsWith('/property/') ||
     pathname.startsWith('/widget/') ||
     pathname.startsWith('/api/webhooks') ||
     pathname.startsWith('/api/v1') ||
+    pathname.startsWith('/api/public/') ||
     pathname.startsWith('/partner/')
   )
 }
@@ -116,7 +118,7 @@ export async function updateSession(request: NextRequest) {
     setRateLimitHeaders(response.headers, rateLimitResult)
     applySecurityHeaders(response.headers, {
       isDev: process.env.NODE_ENV === 'development',
-      isWidgetRoute: pathname.startsWith('/book/') || pathname.startsWith('/widget/'),
+      isWidgetRoute: pathname.startsWith('/book/') || pathname.startsWith('/widget/') || pathname.startsWith('/embed/'),
     })
     ensureCsrfCookie(request, response)
     cleanZombieCookies(request, response)

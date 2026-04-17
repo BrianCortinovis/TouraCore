@@ -274,7 +274,7 @@ export async function searchAvailabilityAction(
   guests: number,
   ratePlanId?: string
 ): Promise<AvailabilityItem[]> {
-  const results = await checkAvailability({ entityId, checkIn, checkOut, guests, ratePlanId })
+  const results = await checkAvailability({ entityId, checkIn, checkOut, guests, ratePlanId, usePublicClient: true })
 
   const nights = Math.max(
     1,
@@ -364,6 +364,7 @@ export async function createPublicBookingAction(input: {
     checkOut: input.checkOut,
     guests: input.adults + input.children,
     ratePlanId: input.ratePlanId ?? undefined,
+    usePublicClient: true,
   })
 
   const roomTypeAvail = availability.find((a) => a.roomType.id === input.roomTypeId)

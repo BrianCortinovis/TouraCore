@@ -33,6 +33,44 @@ export async function POST(request: NextRequest) {
       const session = event.data.object as Stripe.Checkout.Session
       const tenantId = session.metadata?.tenant_id
       const plan = session.metadata?.plan
+      const kind = session.metadata?.kind
+
+      // Booking engine payment → mark reservation paid + insert payment record
+      if (kind === 'booking_engine_payment') {
+        const reservationId = session.metadata?.reservation_id
+        if (reservationId && session.amount_total) {
+          const amount = session.amount_total / 100
+          const { data: reservation } = await supabase
+            .from('reservations')
+            .select('id, entity_id, guest_id, paid_amount, currency')
+            .eq('id', reservationId)
+            .maybeSingle()
+
+          if (reservation) {
+            const newPaid = Number(reservation.paid_amount ?? 0) + amount
+            await supabase
+              .from('reservations')
+              .update({ paid_amount: newPaid, updated_at: new Date().toISOString() })
+              .eq('id', reservationId)
+
+            await supabase.from('payments').insert({
+              entity_id: reservation.entity_id,
+              reservation_id: reservation.id,
+              guest_id: reservation.guest_id,
+              amount,
+              currency: (reservation.currency ?? 'EUR').toUpperCase(),
+              payment_method: 'online',
+              stripe_payment_id: session.payment_intent as string,
+              gateway_type: 'stripe',
+              gateway_payment_id: session.id,
+              gateway_metadata: { session_id: session.id, customer: session.customer },
+              description: `Booking engine payment ${session.metadata?.reservation_code ?? ''}`,
+              reference_number: session.metadata?.reservation_code ?? null,
+            })
+          }
+        }
+        break
+      }
 
       if (tenantId && plan) {
         await upsertSubscription(supabase, tenantId, {
