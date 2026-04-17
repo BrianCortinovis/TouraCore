@@ -3,6 +3,7 @@ import type { ChannelAdapter, ChannelReservation, SyncResult } from '../types'
 import { createBookingAdapter } from '../providers/booking'
 import { createAirbnbAdapter } from '../providers/airbnb'
 import { createExpediaAdapter } from '../providers/expedia'
+import { createOctorateAdapter } from '../providers/octorate'
 
 export interface ChannelConnection {
   id: string
@@ -27,6 +28,8 @@ export function buildAdapter(connection: ChannelConnection): ChannelAdapter | nu
       return createAirbnbAdapter(creds as never)
     case 'expedia':
       return createExpediaAdapter(creds as never)
+    case 'octorate':
+      return createOctorateAdapter(creds as never)
     default:
       return null
   }

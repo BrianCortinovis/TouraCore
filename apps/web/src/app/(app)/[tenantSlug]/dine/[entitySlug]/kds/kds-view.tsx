@@ -17,7 +17,7 @@ interface KDSItem {
   item_name: string
   qty: number
   notes: string | null
-  status: 'sent' | 'preparing' | 'ready'
+  status: 'open' | 'sent' | 'preparing' | 'ready' | 'served'
   course_number: number
   station_code: string | null
   fired_at: string | null
@@ -60,23 +60,28 @@ export function KDSView({
   }, [])
 
   useEffect(() => {
-    let mounted = true
-    async function load() {
-      const params = new URLSearchParams({ restaurantId })
-      if (activeStationCode) params.set('station', activeStationCode)
-      const res = await fetch(`/api/restaurant/kds-stream?${params.toString()}`)
-      const data = (await res.json()) as KDSItem[]
-      if (mounted) {
+    const params = new URLSearchParams({ restaurantId })
+    if (activeStationCode) params.set('station', activeStationCode)
+    const sseUrl = `/api/restaurant/kds-sse?${params.toString()}`
+
+    // Initial load via REST + SSE per delta updates
+    void fetch(`/api/restaurant/kds-stream?${params.toString()}`)
+      .then((r) => r.json())
+      .then((data: KDSItem[]) => { setItems(data); setLoading(false) })
+      .catch(() => setLoading(false))
+
+    const es = new EventSource(sseUrl)
+    es.addEventListener('items', (e) => {
+      try {
+        const data = JSON.parse((e as MessageEvent).data) as KDSItem[]
         setItems(data)
-        setLoading(false)
-      }
-    }
-    void load()
-    const poll = setInterval(load, 5000)
-    return () => {
-      mounted = false
-      clearInterval(poll)
-    }
+      } catch { /* ignore */ }
+    })
+    es.addEventListener('error', () => {
+      // Reconnect handled automatically by EventSource
+    })
+
+    return () => { es.close() }
   }, [restaurantId, activeStationCode])
 
   function handleAddStation() {

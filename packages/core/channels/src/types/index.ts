@@ -1,4 +1,4 @@
-export type ChannelProvider = 'booking' | 'airbnb' | 'expedia' | 'tripadvisor' | 'google' | 'other'
+export type ChannelProvider = 'booking' | 'airbnb' | 'expedia' | 'tripadvisor' | 'google' | 'octorate' | 'other'
 
 export interface ChannelCredentials {
   provider: ChannelProvider

@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import { Plus, Send, X, Receipt, AlertTriangle } from 'lucide-react'
-import { openOrder, addItemToOrder, sendOrderToKitchen, voidOrderItem, closeOrder } from './actions'
+import { openOrder, addItemToOrder, sendOrderToKitchen, voidOrderItem, closeOrder, findInHouseStays } from './actions'
 
 interface TableT {
   id: string
@@ -204,6 +204,7 @@ export function POSView(props: Props) {
           orderId={activeOrderId}
           partySize={activeOrder?.partySize ?? 1}
           subtotal={activeOrder?.subtotal ?? 0}
+          restaurantId={restaurantId}
           tenantSlug={tenantSlug}
           entitySlug={entitySlug}
           onClose={() => {
@@ -332,10 +333,28 @@ function BillPanel({
   )
 }
 
+interface OrderItemRow {
+  id: string
+  item_name: string
+  qty: number
+  unit_price: number
+  modifier_delta?: number
+  status: string
+}
+
+interface InHouseStay {
+  id: string
+  reservationCode: string
+  guestName: string
+  checkIn: string
+  checkOut: string
+}
+
 function CloseOrderDialog({
   orderId,
   partySize,
   subtotal,
+  restaurantId,
   tenantSlug,
   entitySlug,
   onClose,
@@ -343,6 +362,7 @@ function CloseOrderDialog({
   orderId: string
   partySize: number
   subtotal: number
+  restaurantId: string
   tenantSlug: string
   entitySlug: string
   onClose: () => void
@@ -353,30 +373,112 @@ function CloseOrderDialog({
   const [coverPerGuest, setCoverPerGuest] = useState(2)
   const [tip, setTip] = useState(0)
   const [splitMode, setSplitMode] = useState<'none' | 'item' | 'cover' | 'pct'>('none')
+  const [orderItems, setOrderItems] = useState<OrderItemRow[]>([])
+  const [splitGuests, setSplitGuests] = useState<Array<{ name: string; pct: number; itemIds: string[] }>>([
+    { name: 'Ospite 1', pct: 100, itemIds: [] },
+  ])
+  const [inHouseStays, setInHouseStays] = useState<InHouseStay[]>([])
+  const [chargeToReservationId, setChargeToReservationId] = useState<string>('')
+  const [error, setError] = useState<string | null>(null)
+
+  // Carica order items per split per-item
+  useEffect(() => {
+    void fetch(`/api/restaurant/order-items?orderId=${orderId}`)
+      .then((r) => r.json())
+      .then(setOrderItems)
+      .catch(() => setOrderItems([]))
+  }, [orderId])
+
+  // Carica in-house stays se charge_to_room
+  useEffect(() => {
+    if (paymentMethod === 'charge_to_room' && inHouseStays.length === 0) {
+      void findInHouseStays(restaurantId).then(setInHouseStays).catch(() => setInHouseStays([]))
+    }
+  }, [paymentMethod, restaurantId, inHouseStays.length])
 
   const serviceCharge = subtotal * (serviceChargePct / 100)
   const coverTotal = coverPerGuest * partySize
   const grandTotal = subtotal + serviceCharge + coverTotal + tip
 
-  function handleSubmit() {
-    startTransition(async () => {
-      await closeOrder({
-        orderId,
-        paymentMethod,
-        serviceChargePct,
-        coverChargePerGuest: coverPerGuest,
-        tipAmount: tip,
-        splitMode,
-        tenantSlug,
-        entitySlug,
+  // Split calculations
+  const splitTotals = (() => {
+    if (splitMode === 'none') return [{ name: 'Totale', amount: grandTotal }]
+    if (splitMode === 'cover') {
+      const each = +(grandTotal / partySize).toFixed(2)
+      return Array.from({ length: partySize }).map((_, i) => ({ name: `Coperto ${i + 1}`, amount: each }))
+    }
+    if (splitMode === 'pct') {
+      const totalPct = splitGuests.reduce((s, g) => s + g.pct, 0)
+      return splitGuests.map((g) => ({
+        name: g.name,
+        amount: +(grandTotal * (g.pct / Math.max(totalPct, 1))).toFixed(2),
+      }))
+    }
+    if (splitMode === 'item') {
+      // Per-item: ogni guest paga somma items assegnati + service/cover/tip pro-quota
+      const overhead = serviceCharge + coverTotal + tip
+      const overheadPerGuest = +(overhead / Math.max(splitGuests.length, 1)).toFixed(2)
+      return splitGuests.map((g) => {
+        const itemsSum = orderItems
+          .filter((i) => g.itemIds.includes(i.id) && i.status !== 'voided')
+          .reduce((s, i) => s + i.qty * (i.unit_price + (i.modifier_delta ?? 0)), 0)
+        return { name: g.name, amount: +(itemsSum + overheadPerGuest).toFixed(2) }
       })
-      onClose()
+    }
+    return []
+  })()
+
+  function handleSubmit() {
+    setError(null)
+    if (paymentMethod === 'charge_to_room' && !chargeToReservationId) {
+      setError('Seleziona prenotazione hospitality per charge-to-room')
+      return
+    }
+    startTransition(async () => {
+      try {
+        await closeOrder({
+          orderId,
+          paymentMethod,
+          chargeToRoomReservationId: chargeToReservationId || undefined,
+          serviceChargePct,
+          coverChargePerGuest: coverPerGuest,
+          tipAmount: tip,
+          splitMode,
+          tenantSlug,
+          entitySlug,
+        })
+        onClose()
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Errore')
+      }
     })
+  }
+
+  function addSplitGuest() {
+    setSplitGuests([...splitGuests, { name: `Ospite ${splitGuests.length + 1}`, pct: 0, itemIds: [] }])
+  }
+
+  function removeSplitGuest(i: number) {
+    setSplitGuests(splitGuests.filter((_, idx) => idx !== i))
+  }
+
+  function toggleItemForGuest(itemId: string, guestIdx: number) {
+    const next = [...splitGuests]
+    const target = next[guestIdx]
+    if (!target) return
+    if (target.itemIds.includes(itemId)) {
+      target.itemIds = target.itemIds.filter((id) => id !== itemId)
+    } else {
+      // Rimuovi item da altri ospiti
+      next.forEach((g) => { g.itemIds = g.itemIds.filter((id) => id !== itemId) })
+      target.itemIds.push(itemId)
+    }
+    setSplitGuests(next)
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md space-y-3 rounded-lg bg-white p-6">
+      <div className="max-h-[90vh] w-full max-w-2xl space-y-3 overflow-y-auto rounded-lg bg-white p-6">
         <h2 className="text-lg font-semibold">Chiudi conto</h2>
 
         <div className="space-y-2 rounded border border-gray-200 p-3 text-sm">
@@ -405,74 +507,130 @@ function CloseOrderDialog({
         <div className="grid grid-cols-2 gap-2 text-sm">
           <div>
             <label className="text-xs text-gray-600">Servizio %</label>
-            <input
-              type="number"
-              min={0}
-              max={30}
-              value={serviceChargePct}
+            <input type="number" min={0} max={30} value={serviceChargePct}
               onChange={(e) => setServiceChargePct(Number(e.target.value))}
-              className="mt-0.5 w-full rounded border border-gray-300 px-2 py-1"
-            />
+              className="mt-0.5 w-full rounded border border-gray-300 px-2 py-1"/>
           </div>
           <div>
             <label className="text-xs text-gray-600">Coperto €/persona</label>
-            <input
-              type="number"
-              step="0.5"
-              min={0}
-              value={coverPerGuest}
+            <input type="number" step="0.5" min={0} value={coverPerGuest}
               onChange={(e) => setCoverPerGuest(Number(e.target.value))}
-              className="mt-0.5 w-full rounded border border-gray-300 px-2 py-1"
-            />
+              className="mt-0.5 w-full rounded border border-gray-300 px-2 py-1"/>
           </div>
           <div>
             <label className="text-xs text-gray-600">Mancia €</label>
-            <input
-              type="number"
-              step="0.5"
-              min={0}
-              value={tip}
+            <input type="number" step="0.5" min={0} value={tip}
               onChange={(e) => setTip(Number(e.target.value))}
-              className="mt-0.5 w-full rounded border border-gray-300 px-2 py-1"
-            />
+              className="mt-0.5 w-full rounded border border-gray-300 px-2 py-1"/>
           </div>
           <div>
             <label className="text-xs text-gray-600">Pagamento</label>
-            <select
-              value={paymentMethod}
+            <select value={paymentMethod}
               onChange={(e) => setPaymentMethod(e.target.value as 'cash' | 'card' | 'charge_to_room')}
-              className="mt-0.5 w-full rounded border border-gray-300 px-2 py-1"
-            >
+              className="mt-0.5 w-full rounded border border-gray-300 px-2 py-1">
               <option value="card">Carta</option>
               <option value="cash">Contanti</option>
               <option value="charge_to_room">Charge to room</option>
             </select>
           </div>
-          <div className="col-span-2">
-            <label className="text-xs text-gray-600">Modalità split</label>
-            <select
-              value={splitMode}
-              onChange={(e) => setSplitMode(e.target.value as 'none' | 'item' | 'cover' | 'pct')}
-              className="mt-0.5 w-full rounded border border-gray-300 px-2 py-1"
-            >
-              <option value="none">Nessuno</option>
-              <option value="cover">Per coperto (€ {(grandTotal / partySize).toFixed(2)} cad)</option>
-              <option value="item">Per item</option>
-              <option value="pct">Custom %</option>
-            </select>
-          </div>
         </div>
 
+        {paymentMethod === 'charge_to_room' && (
+          <div className="rounded border border-amber-300 bg-amber-50 p-3">
+            <label className="text-xs font-medium text-amber-900">Prenotazione hospitality in-house</label>
+            {inHouseStays.length === 0 ? (
+              <p className="mt-1 text-xs text-amber-700">Nessuna prenotazione in-house oggi</p>
+            ) : (
+              <select value={chargeToReservationId}
+                onChange={(e) => setChargeToReservationId(e.target.value)}
+                className="mt-1 w-full rounded border border-amber-400 px-2 py-1 text-sm">
+                <option value="">— seleziona —</option>
+                {inHouseStays.map((s) => (
+                  <option key={s.id} value={s.id}>{s.reservationCode} · {s.guestName} ({s.checkIn} → {s.checkOut})</option>
+                ))}
+              </select>
+            )}
+          </div>
+        )}
+
+        <div className="rounded border border-gray-200 p-3">
+          <label className="text-xs font-medium text-gray-700">Modalità split bill</label>
+          <div className="mt-1 grid grid-cols-4 gap-1">
+            {(['none', 'cover', 'item', 'pct'] as const).map((m) => (
+              <button key={m} type="button" onClick={() => setSplitMode(m)}
+                className={`rounded border px-2 py-1 text-xs ${splitMode === m ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-300 text-gray-600'}`}>
+                {m === 'none' ? 'Nessuno' : m === 'cover' ? `Per coperto` : m === 'item' ? 'Per item' : 'Custom %'}
+              </button>
+            ))}
+          </div>
+
+          {splitMode !== 'none' && (
+            <div className="mt-2 space-y-1.5">
+              {(splitMode === 'pct' || splitMode === 'item') && (
+                <>
+                  {splitGuests.map((g, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs">
+                      <input value={g.name} onChange={(e) => {
+                        const next = [...splitGuests]; const target = next[i]; if (!target) return
+                        target.name = e.target.value; setSplitGuests(next)
+                      }} className="flex-1 rounded border border-gray-300 px-2 py-1"/>
+                      {splitMode === 'pct' && (
+                        <input type="number" min={0} max={100} value={g.pct} onChange={(e) => {
+                          const next = [...splitGuests]; const target = next[i]; if (!target) return
+                          target.pct = Number(e.target.value); setSplitGuests(next)
+                        }} className="w-16 rounded border border-gray-300 px-2 py-1"/>
+                      )}
+                      {splitMode === 'item' && (
+                        <span className="text-gray-500">{g.itemIds.length} items</span>
+                      )}
+                      {splitGuests.length > 1 && (
+                        <button onClick={() => removeSplitGuest(i)} className="text-red-600">✕</button>
+                      )}
+                    </div>
+                  ))}
+                  <button type="button" onClick={addSplitGuest}
+                    className="w-full rounded border border-dashed border-gray-300 py-1 text-xs text-gray-500 hover:border-blue-400">
+                    + Aggiungi ospite
+                  </button>
+                </>
+              )}
+
+              {splitMode === 'item' && orderItems.length > 0 && (
+                <div className="mt-2 max-h-40 overflow-y-auto border-t border-gray-200 pt-2">
+                  <p className="mb-1 text-[10px] font-bold uppercase text-gray-500">Assegna items</p>
+                  {orderItems.filter((i) => i.status !== 'voided').map((item) => {
+                    const assignedTo = splitGuests.findIndex((g) => g.itemIds.includes(item.id))
+                    return (
+                      <div key={item.id} className="flex items-center gap-1 py-0.5 text-xs">
+                        <span className="flex-1 truncate">{item.qty}× {item.item_name}</span>
+                        <span className="text-gray-500">€ {(item.qty * (item.unit_price + (item.modifier_delta ?? 0))).toFixed(2)}</span>
+                        <select value={assignedTo} onChange={(e) => toggleItemForGuest(item.id, Number(e.target.value))}
+                          className="rounded border border-gray-300 px-1 text-xs">
+                          <option value={-1}>—</option>
+                          {splitGuests.map((g, i) => (<option key={i} value={i}>{g.name}</option>))}
+                        </select>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              <div className="mt-2 border-t border-gray-200 pt-2">
+                {splitTotals.map((s, i) => (
+                  <div key={i} className="flex justify-between text-xs"><span>{s.name}</span><span className="font-medium">€ {s.amount.toFixed(2)}</span></div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {error && <p className="rounded bg-red-50 p-2 text-xs text-red-700">{error}</p>}
+
         <div className="flex justify-end gap-2 border-t border-gray-200 pt-3">
-          <button onClick={onClose} className="rounded border border-gray-300 px-3 py-1.5 text-sm">
-            Annulla
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={pending}
-            className="rounded bg-green-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
-          >
-            {pending ? 'Salvo…' : 'Conferma pagamento'}
+          <button onClick={onClose} className="rounded border border-gray-300 px-3 py-1.5 text-sm">Annulla</button>
+          <button onClick={handleSubmit} disabled={pending}
+            className="rounded bg-green-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50">
+            {pending ? 'Salvo…' : `Conferma € ${grandTotal.toFixed(2)}`}
           </button>
         </div>
       </div>

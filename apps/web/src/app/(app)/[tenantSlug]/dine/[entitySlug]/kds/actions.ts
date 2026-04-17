@@ -35,6 +35,31 @@ export async function createStation(input: z.infer<typeof StationSchema>) {
   revalidatePath(`/${parsed.tenantSlug}/dine/${parsed.entitySlug}/kds`)
 }
 
+const FireCourseSchema = z.object({
+  orderId: z.string().uuid(),
+  courseNumber: z.number().int().min(1).max(5),
+  tenantSlug: z.string(),
+  entitySlug: z.string(),
+})
+
+export async function fireCourse(input: z.infer<typeof FireCourseSchema>) {
+  const parsed = FireCourseSchema.parse(input)
+  const admin = await createServiceRoleClient()
+  const { data: order } = await admin.from('restaurant_orders').select('restaurant_id').eq('id', parsed.orderId).maybeSingle()
+  if (!order) throw new Error('Order not found')
+  await assertUserOwnsRestaurant(order.restaurant_id as string)
+
+  // Mark all items of course as 'sent' (fired)
+  await admin
+    .from('order_items')
+    .update({ status: 'sent', fired_at: new Date().toISOString() })
+    .eq('order_id', parsed.orderId)
+    .eq('course_number', parsed.courseNumber)
+    .eq('status', 'open')
+
+  revalidatePath(`/${parsed.tenantSlug}/dine/${parsed.entitySlug}/kds`)
+}
+
 export async function updateOrderItemStatus(input: z.infer<typeof StatusSchema>) {
   const parsed = StatusSchema.parse(input)
   const admin = await createServiceRoleClient()
