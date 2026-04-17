@@ -106,6 +106,7 @@ export async function createIcalFeedAction(input: {
   name: string
   url: string
   direction: 'import' | 'export'
+  roomId?: string
   roomTypeId?: string
 }): Promise<ActionResult> {
 
@@ -116,8 +117,9 @@ export async function createIcalFeedAction(input: {
     .insert({
       entity_id: input.entityId,
       name: input.name,
-      url: input.url,
+      url: input.url || '',
       direction: input.direction,
+      room_id: input.roomId || null,
       room_type_id: input.roomTypeId || null,
     })
     .select()
@@ -125,6 +127,17 @@ export async function createIcalFeedAction(input: {
 
   if (error) return { success: false, error: error.message }
   return { success: true, data }
+}
+
+export async function listRoomsForEntityAction(entityId: string) {
+  const supabase = await createServiceRoleClient()
+  const { data } = await supabase
+    .from('rooms')
+    .select('id, room_number, room_type_id, room_types(name)')
+    .eq('entity_id', entityId)
+    .eq('is_active', true)
+    .order('room_number')
+  return data ?? []
 }
 
 export async function deleteIcalFeedAction(id: string): Promise<ActionResult> {

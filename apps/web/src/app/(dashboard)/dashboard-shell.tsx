@@ -67,6 +67,21 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <Link href="/bookings" className="text-gray-600 hover:text-gray-900">
                 Prenotazioni
               </Link>
+              <Link href="/inbox" className="text-gray-600 hover:text-gray-900">
+                Inbox
+              </Link>
+              <Link href="/reviews" className="text-gray-600 hover:text-gray-900">
+                Recensioni
+              </Link>
+              <Link href="/analytics" className="text-gray-600 hover:text-gray-900">
+                Analytics
+              </Link>
+              <Link href="/maintenance" className="text-gray-600 hover:text-gray-900">
+                Manutenzione
+              </Link>
+              <Link href="/promotions" className="text-gray-600 hover:text-gray-900">
+                Promozioni
+              </Link>
               <Link href="/media" className="text-gray-600 hover:text-gray-900">
                 Media
               </Link>

@@ -1,0 +1,21 @@
+{
+  "name": "@touracore/channels",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types/index.ts",
+    "./providers/booking": "./src/providers/booking.ts",
+    "./providers/airbnb": "./src/providers/airbnb.ts",
+    "./providers/expedia": "./src/providers/expedia.ts",
+    "./sync": "./src/sync/engine.ts"
+  },
+  "scripts": { "build": "true" },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.103.0",
+    "@touracore/db": "workspace:*",
+    "zod": "^3.22.0"
+  }
+}
