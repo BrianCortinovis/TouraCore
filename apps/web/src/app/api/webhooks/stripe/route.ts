@@ -35,6 +35,23 @@ export async function POST(request: NextRequest) {
       const plan = session.metadata?.plan
       const kind = session.metadata?.kind
 
+      // Restaurant deposit hold via Stripe checkout
+      if (session.metadata?.type === 'restaurant_deposit') {
+        const restaurantReservationId = session.metadata?.restaurant_reservation_id
+        if (restaurantReservationId) {
+          await supabase
+            .from('restaurant_reservations')
+            .update({
+              status: 'confirmed',
+              deposit_status: 'held',
+              deposit_stripe_intent_id: session.payment_intent as string,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', restaurantReservationId)
+        }
+        break
+      }
+
       // Booking engine payment → mark reservation paid + insert payment record
       if (kind === 'booking_engine_payment') {
         const reservationId = session.metadata?.reservation_id
