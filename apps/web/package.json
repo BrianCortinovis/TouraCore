@@ -19,6 +19,7 @@
     "@touracore/auth": "workspace:*",
     "@touracore/billing": "workspace:*",
     "@touracore/booking": "workspace:*",
+    "@touracore/pricing": "workspace:*",
     "@touracore/channels": "workspace:*",
     "@touracore/config": "workspace:*",
     "@touracore/db": "workspace:*",

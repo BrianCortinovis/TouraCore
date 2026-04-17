@@ -11,6 +11,7 @@
     { "path": "/api/cron/message-trigger", "schedule": "0 9 * * *" },
     { "path": "/api/cron/message-send", "schedule": "*/5 * * * *" },
     { "path": "/api/cron/pricing-suggestions", "schedule": "0 4 * * *" },
-    { "path": "/api/cron/loyalty-recalc", "schedule": "0 2 * * *" }
+    { "path": "/api/cron/loyalty-recalc", "schedule": "0 2 * * *" },
+    { "path": "/api/cron/restaurant-pricing-suggestions", "schedule": "30 4 * * *" }
   ]
 }

@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
     "@touracore/roles",
     "@touracore/billing",
     "@touracore/booking",
+    "@touracore/pricing",
     "@touracore/portals",
     "@touracore/seo",
     "@touracore/media",
