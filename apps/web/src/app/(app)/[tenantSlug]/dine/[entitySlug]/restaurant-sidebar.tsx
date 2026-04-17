@@ -9,6 +9,8 @@ import {
   UtensilsCrossed,
   LayoutGrid,
   Settings,
+  ShoppingCart,
+  Receipt,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -37,7 +39,9 @@ export function RestaurantSidebar({ tenantSlug, entitySlug, entityName, hasResta
     { href: `${base}/floor-plan`, label: 'Pianta sala', icon: LayoutGrid },
     { href: `${base}/reservations`, label: 'Prenotazioni', icon: CalendarClock },
     { href: `${base}/waitlist`, label: 'Lista attesa', icon: Users },
-    { href: `${base}/menu`, label: 'Menu', icon: UtensilsCrossed, placeholder: true },
+    { href: `${base}/menu`, label: 'Menu', icon: UtensilsCrossed },
+    { href: `${base}/pos`, label: 'POS', icon: ShoppingCart },
+    { href: `${base}/orders`, label: 'Ordini', icon: Receipt },
     { href: `${base}/settings`, label: 'Impostazioni', icon: Settings },
   ]
 
