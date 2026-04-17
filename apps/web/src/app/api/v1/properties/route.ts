@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await supabase
     .from('entities')
-    .select('id, name, slug, type, city, province, country, is_active')
+    .select('id, name, slug, kind, is_active, accommodations(city, province, country, property_type)')
     .eq('tenant_id', ctx.tenantId)
 
   if (error) return createErrorResponse(error.message, 500)

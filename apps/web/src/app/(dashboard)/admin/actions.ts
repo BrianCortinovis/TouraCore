@@ -34,7 +34,7 @@ export async function listPropertiesAdminAction(page = 1, search?: string) {
 
   let query = supabase
     .from('entities')
-    .select('id, name, slug, type, city, province, is_active, tenant_id, created_at', { count: 'exact' })
+    .select('id, name, slug, kind, is_active, tenant_id, created_at', { count: 'exact' })
 
   if (search) {
     query = query.ilike('name', `%${search}%`)

@@ -113,7 +113,7 @@ export const getAuthBootstrapData = cache(async (): Promise<AuthBootstrapData> =
         supabase.from('profiles').select('*').eq('id', user.id).single(),
         supabase
           .from('staff_members')
-          .select('*, entity:entities(*, tenant:tenants(*))')
+          .select('*, entity:entities(*, tenant:tenants(*), accommodation:accommodations(property_type, city, province, country))')
           .eq('user_id', user.id)
           .eq('is_active', true),
         supabase
@@ -128,6 +128,30 @@ export const getAuthBootstrapData = cache(async (): Promise<AuthBootstrapData> =
     const typedMemberships = (membershipRows ?? []) as MembershipWithTenant[]
 
     if (typedStaff.length === 0) {
+      const tenantIds = typedMemberships.map((m) => m.tenant_id).filter(Boolean)
+      let fallbackEntities: Array<Entity & { accommodation?: { property_type?: string | null } | Array<{ property_type?: string | null }> | null }> = []
+      if (tenantIds.length > 0) {
+        const { data: entityRows } = await supabase
+          .from('entities')
+          .select('*, accommodation:accommodations(property_type, city, province, country)')
+          .in('tenant_id', tenantIds)
+          .eq('is_active', true)
+        fallbackEntities = (entityRows ?? []) as typeof fallbackEntities
+      }
+      const selectedFallback =
+        fallbackEntities.find((e) => e.id === selectedEntityId) ?? fallbackEntities[0] ?? null
+      const activeFallback = selectedFallback
+        ? (() => {
+            const acc = Array.isArray(selectedFallback.accommodation)
+              ? selectedFallback.accommodation[0]
+              : selectedFallback.accommodation
+            return {
+              ...selectedFallback,
+              accommodation: undefined,
+              property_type: acc?.property_type ?? selectedFallback.property_type ?? null,
+            }
+          })()
+        : null
       const result: AuthBootstrapData = {
         user,
         profile,
@@ -137,10 +161,14 @@ export const getAuthBootstrapData = cache(async (): Promise<AuthBootstrapData> =
           .filter((t): t is TenantAccount => Boolean(t))
           .filter((t, i, list) => list.findIndex((c) => c.id === t.id) === i),
         tenantMemberships: typedMemberships.map(({ tenant: _t, ...rest }) => rest),
-        property: null,
+        property: activeFallback as Entity | null,
         staff: null,
         staffMemberships: [],
-        properties: [],
+        properties: fallbackEntities.map((e) => {
+          const acc = Array.isArray(e.accommodation) ? e.accommodation[0] : e.accommodation
+          const { accommodation: _a, ...rest } = e
+          return { ...rest, property_type: acc?.property_type ?? e.property_type ?? null } as Entity
+        }),
       }
       setCachedBootstrap(user.id, result)
       return result
@@ -172,7 +200,19 @@ export const getAuthBootstrapData = cache(async (): Promise<AuthBootstrapData> =
 
     const { entity: _ent, ...staff } = activeStaff
     const activeEntity = activeStaff.entity
-      ? { ...activeStaff.entity, tenant: undefined }
+      ? (() => {
+          const e = activeStaff.entity as Entity & {
+            tenant?: TenantAccount | null
+            accommodation?: { property_type?: string | null; city?: string | null; province?: string | null; country?: string | null } | Array<{ property_type?: string | null }> | null
+          }
+          const acc = Array.isArray(e.accommodation) ? e.accommodation[0] : e.accommodation
+          return {
+            ...e,
+            tenant: undefined,
+            accommodation: undefined,
+            property_type: acc?.property_type ?? e.property_type ?? null,
+          }
+        })()
       : null
 
     const result: AuthBootstrapData = {
