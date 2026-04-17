@@ -362,7 +362,7 @@ export async function createPublicBookingAction(input: {
     entityId: input.entityId,
     checkIn: input.checkIn,
     checkOut: input.checkOut,
-    guests: input.adults + input.children,
+    guests: Number(input.adults) + Number(input.children ?? 0),
     ratePlanId: input.ratePlanId ?? undefined,
     usePublicClient: true,
   })
@@ -472,15 +472,14 @@ export async function createPublicBookingAction(input: {
       upsellOrdersToInsert.push({
         entity_id: input.entityId,
         reservation_id: '',
-        offer_id: offer.id,
-        guest_id: '',
+        upsell_offer_id: offer.id,
         quantity,
         unit_price: Number(offer.price),
-        total_price: totalPrice,
+        total: totalPrice,
+        currency: 'EUR',
         requested_date: input.checkIn,
         notes: null,
         status: offer.requires_request ? 'pending' : 'confirmed',
-        source: 'guest_portal',
       })
     }
   }
@@ -616,7 +615,7 @@ export async function createPublicBookingAction(input: {
     .filter(Boolean)
     .join(' | ')
 
-  const bookingTotal = Math.max(0, roomTotal + petSupplement + upsellTotal)
+  const bookingTotal = Math.max(0, (Number(roomTotal) || 0) + (Number(petSupplement) || 0) + (Number(upsellTotal) || 0))
 
   const { data: reservation, error: resErr } = await serviceClient
     .from('reservations')
@@ -653,7 +652,6 @@ export async function createPublicBookingAction(input: {
     const ordersWithReservation = upsellOrdersToInsert.map((order) => ({
       ...order,
       reservation_id: reservation.id,
-      guest_id: guestId,
     }))
 
     const { error: upsellInsertError } = await serviceClient
