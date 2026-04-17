@@ -1,18 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import ChannelsInner from './channels-inner'
-import IcalPage from '../../../../../(dashboard)/ical/page'
+import HousekeepingPage from '../housekeeping/page'
+import MaintenancePage from '../../../../../(dashboard)/maintenance/page'
 
-export default function ChannelsPage() {
-  const [tab, setTab] = useState<'ota' | 'ical'>('ota')
+export default function OperationsPage() {
+  const [tab, setTab] = useState<'housekeeping' | 'maintenance'>('housekeeping')
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 border-b border-gray-200">
-        <TabBtn active={tab === 'ota'} onClick={() => setTab('ota')}>OTA (Booking / Airbnb / Expedia)</TabBtn>
-        <TabBtn active={tab === 'ical'} onClick={() => setTab('ical')}>iCal feed</TabBtn>
+        <TabBtn active={tab === 'housekeeping'} onClick={() => setTab('housekeeping')}>Pulizie / Housekeeping</TabBtn>
+        <TabBtn active={tab === 'maintenance'} onClick={() => setTab('maintenance')}>Manutenzione</TabBtn>
       </div>
-      {tab === 'ota' ? <ChannelsInner /> : <IcalPage />}
+      {tab === 'housekeeping' ? <HousekeepingPage /> : <MaintenancePage />}
     </div>
   )
 }

@@ -80,16 +80,13 @@ const STATIC_SECTION_META: Record<SidebarSection, { label: string; icon: LucideI
   'restaurant': { label: 'Ristorante', icon: UtensilsCrossed, placeholder: true },
   'housekeeping': { label: 'Housekeeping', icon: Sparkles },
   'self-checkin': { label: 'Self check-in', icon: Smartphone },
-  'inbox': { label: 'Inbox', icon: Inbox },
+  'messaggi': { label: 'Messaggi', icon: Inbox },
   'reviews': { label: 'Recensioni', icon: Star },
-  'analytics': { label: 'Analytics', icon: BarChart3 },
-  'maintenance': { label: 'Manutenzione', icon: Wrench, agencyHidden: true },
+  'reportistica': { label: 'Reportistica', icon: BarChart3 },
+  'operations': { label: 'Operations', icon: Wrench, agencyHidden: true },
   'promotions': { label: 'Promozioni', icon: Tag, agencyHidden: true },
-  'upsell-orders': { label: 'Ordini extra', icon: ShoppingCart },
   'locks': { label: 'Smart lock', icon: KeyRound, agencyHidden: true },
   'guidebooks': { label: 'Guide locali', icon: MapPin },
-  'marketplace': { label: 'Marketplace', icon: Store, agencyHidden: true },
-  'ical': { label: 'iCal sync', icon: CalendarClock, agencyHidden: true },
 }
 
 function capitalize(value: string): string {

@@ -32,16 +32,13 @@ export type SidebarSection =
   | 'services'
   | 'channels'
   | 'reports'
-  | 'inbox'
+  | 'messaggi'
   | 'reviews'
-  | 'analytics'
-  | 'maintenance'
+  | 'reportistica'
+  | 'operations'
   | 'promotions'
-  | 'upsell-orders'
   | 'locks'
   | 'guidebooks'
-  | 'marketplace'
-  | 'ical'
 
 // ---------------------------------------------------------------------------
 // Gruppi navigazione (stile Gest)
@@ -77,7 +74,7 @@ export function getNavigation(
         'check-in',
         'check-out',
         'guests',
-        'inbox',
+        'messaggi',
         'reviews',
         ...(config.hasRoomTypes ? ['room-types' as SidebarSection] : []),
         ...(config.hasRooms ? ['rooms' as SidebarSection, 'room-blocks' as SidebarSection] : []),
@@ -93,10 +90,8 @@ export function getNavigation(
         ...(config.hasRatePlans ? ['rate-plans' as SidebarSection] : []),
         ...(config.hasSeasons ? ['seasons' as SidebarSection] : []),
         'promotions',
-        'communications',
         'booking-engine',
         'services',
-        'upsell-orders',
         ...(nav.showRestaurant ? ['restaurant' as SidebarSection] : []),
       ],
     },
@@ -104,11 +99,8 @@ export function getNavigation(
       key: 'amministrazione',
       label: 'Amministrazione',
       sections: [
-        'analytics',
-        'financials',
+        'reportistica',
         'invoices',
-        'reports',
-        'maintenance',
       ],
     },
   ]
@@ -129,15 +121,13 @@ export function getNavigation(
   }
 
   groups.push({
-    key: 'configurazione',
-    label: 'Configurazione',
+    key: 'operations',
+    label: 'Operations',
     sections: [
       'media',
       'channels',
-      'ical',
-      'marketplace',
+      ...(nav.showHousekeeping ? ['operations' as SidebarSection] : []),
       'settings',
-      ...(nav.showHousekeeping ? ['housekeeping' as SidebarSection] : []),
     ],
   })
 

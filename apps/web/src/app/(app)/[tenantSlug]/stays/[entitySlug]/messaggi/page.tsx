@@ -1,18 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import ChannelsInner from './channels-inner'
-import IcalPage from '../../../../../(dashboard)/ical/page'
+import InboxPage from '../../../../../(dashboard)/inbox/page'
+import CommunicationsPage from '../communications/page'
 
-export default function ChannelsPage() {
-  const [tab, setTab] = useState<'ota' | 'ical'>('ota')
+export default function MessaggiPage() {
+  const [tab, setTab] = useState<'inbox' | 'templates'>('inbox')
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 border-b border-gray-200">
-        <TabBtn active={tab === 'ota'} onClick={() => setTab('ota')}>OTA (Booking / Airbnb / Expedia)</TabBtn>
-        <TabBtn active={tab === 'ical'} onClick={() => setTab('ical')}>iCal feed</TabBtn>
+        <TabBtn active={tab === 'inbox'} onClick={() => setTab('inbox')}>Inbox 2-way</TabBtn>
+        <TabBtn active={tab === 'templates'} onClick={() => setTab('templates')}>Template + Automazioni</TabBtn>
       </div>
-      {tab === 'ota' ? <ChannelsInner /> : <IcalPage />}
+      {tab === 'inbox' ? <InboxPage /> : <CommunicationsPage />}
     </div>
   )
 }
