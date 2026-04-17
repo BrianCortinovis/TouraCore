@@ -35,11 +35,13 @@
     "@touracore/ui": "workspace:*",
     "date-fns": "^4.1.0",
     "ical-generator": "^10.1.0",
+    "konva": "^10.2.5",
     "lucide-react": "^0.460.0",
     "next": "^16",
     "node-ical": "^0.26.0",
     "react": "^19",
     "react-dom": "^19",
+    "react-konva": "^19.2.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
