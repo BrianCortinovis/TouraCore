@@ -35,6 +35,15 @@ import {
   ChevronsRight,
   Menu,
   X,
+  Inbox,
+  Star,
+  Wrench,
+  Tag,
+  ShoppingCart,
+  KeyRound,
+  MapPin,
+  Store,
+  CalendarClock,
   type LucideIcon,
 } from 'lucide-react'
 import {
@@ -71,13 +80,37 @@ const STATIC_SECTION_META: Record<SidebarSection, { label: string; icon: LucideI
   'restaurant': { label: 'Ristorante', icon: UtensilsCrossed, placeholder: true },
   'housekeeping': { label: 'Housekeeping', icon: Sparkles },
   'self-checkin': { label: 'Self check-in', icon: Smartphone },
+  'inbox': { label: 'Inbox', icon: Inbox },
+  'reviews': { label: 'Recensioni', icon: Star },
+  'analytics': { label: 'Analytics', icon: BarChart3 },
+  'maintenance': { label: 'Manutenzione', icon: Wrench, agencyHidden: true },
+  'promotions': { label: 'Promozioni', icon: Tag, agencyHidden: true },
+  'upsell-orders': { label: 'Ordini extra', icon: ShoppingCart },
+  'locks': { label: 'Smart lock', icon: KeyRound, agencyHidden: true },
+  'guidebooks': { label: 'Guide locali', icon: MapPin },
+  'marketplace': { label: 'Marketplace', icon: Store, agencyHidden: true },
+  'ical': { label: 'iCal sync', icon: CalendarClock, agencyHidden: true },
 }
 
 function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
+const GLOBAL_SECTIONS: Set<SidebarSection> = new Set([
+  'inbox',
+  'reviews',
+  'analytics',
+  'maintenance',
+  'promotions',
+  'upsell-orders',
+  'locks',
+  'guidebooks',
+  'marketplace',
+  'ical',
+])
+
 function sectionToHref(base: string, section: SidebarSection): string {
+  if (GLOBAL_SECTIONS.has(section)) return `/${section}`
   switch (section) {
     case 'overview': return base
     case 'compliance-alloggiati': return `${base}/compliance/alloggiati`
