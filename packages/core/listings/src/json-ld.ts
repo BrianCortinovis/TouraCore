@@ -1,6 +1,7 @@
 import type { PublicListing, EntityKind } from './types'
 import type { AccommodationDetails } from './accommodation'
 import type { RestaurantDetails } from './restaurant'
+import type { BikeRentalDetails } from './bike-rental'
 import { WEEKDAY_KEYS, getWeekdaySchemaOrg, formatPriceRange } from './restaurant'
 
 const SCHEMA_TYPE_BY_KIND: Record<EntityKind, string> = {
@@ -24,6 +25,7 @@ export function buildListingJsonLd(
     bookingUrl?: string
     accommodation?: AccommodationDetails | null
     restaurant?: RestaurantDetails | null
+    bikeRental?: BikeRentalDetails | null
   } = { baseUrl: '' }
 ): ListingJsonLd {
   const type = SCHEMA_TYPE_BY_KIND[listing.entity_kind]
@@ -115,6 +117,36 @@ export function buildListingJsonLd(
       }
     }
     if (spec.length > 0) payload.openingHoursSpecification = spec
+  }
+
+  // Bike rental-specific enrichment (BicycleStore)
+  if (opts.bikeRental) {
+    const b = opts.bikeRental
+    if (b.address || b.city || b.zip || b.country) {
+      const addr: Record<string, string> = { '@type': 'PostalAddress' }
+      if (b.address) addr.streetAddress = b.address
+      if (b.city) addr.addressLocality = b.city
+      if (b.zip) addr.postalCode = b.zip
+      if (b.country) addr.addressCountry = b.country
+      payload.address = addr
+    }
+    if (b.latitude != null && b.longitude != null) {
+      payload.geo = {
+        '@type': 'GeoCoordinates',
+        latitude: b.latitude,
+        longitude: b.longitude,
+      }
+    }
+    if (b.bike_types && b.bike_types.length > 0) {
+      payload.makesOffer = b.bike_types.map((t) => ({
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'Product',
+          category: 'Bicycle rental',
+          name: t,
+        },
+      }))
+    }
   }
 
   return payload

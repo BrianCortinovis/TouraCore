@@ -63,9 +63,27 @@ export type {
 export { RestaurantTemplate } from './restaurant-template'
 export type { RestaurantTemplateProps } from './restaurant-template'
 
-// Generic vertical template (activity/wellness/bike/moto/ski)
+// Generic vertical template (activity/wellness/moto/ski)
 export { GenericVerticalTemplate } from './generic-vertical-template'
 export type { GenericVerticalTemplateProps } from './generic-vertical-template'
+
+// Bike rental vertical data
+export {
+  getBikeRentalDetails,
+  getBikeTypesPublic,
+  getBikeLocationsPublic,
+  bikeRentalDetailsSchema,
+  bikeTypePublicSchema,
+  bikeLocationPublicSchema,
+} from './bike-rental'
+export type {
+  BikeRentalDetails,
+  BikeTypePublic,
+  BikeLocationPublic,
+  BikeRentalOpeningHours,
+} from './bike-rental'
+export { BikeRentalTemplate } from './bike-rental-template'
+export type { BikeRentalTemplateProps } from './bike-rental-template'
 
 // Photo gallery
 export { getListingPhotos, listingPhotoSchema } from './photos'

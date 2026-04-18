@@ -2,10 +2,14 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import {
+  BikeRentalTemplate,
   buildListingJsonLd,
   filterKnownAmenities,
   GenericVerticalTemplate,
   getAccommodationDetails,
+  getBikeLocationsPublic,
+  getBikeRentalDetails,
+  getBikeTypesPublic,
   getBookingUrl,
   getListingPhotos,
   getPublicListing,
@@ -66,18 +70,30 @@ export default async function PublicListingPage({ params }: PageProps) {
   if (!listing) notFound()
 
   // Parallel fetch kind-specific details + photo gallery
-  const [accommodation, restaurant, photos] = await Promise.all([
+  const [accommodation, restaurant, bikeRental, bikeTypes, bikeLocations, photos] = await Promise.all([
     listing.entity_kind === 'accommodation'
       ? getAccommodationDetails(supabase, listing.entity_id)
       : Promise.resolve(null),
     listing.entity_kind === 'restaurant'
       ? getRestaurantDetails(supabase, listing.entity_id)
       : Promise.resolve(null),
+    listing.entity_kind === 'bike_rental'
+      ? getBikeRentalDetails(supabase, listing.entity_id)
+      : Promise.resolve(null),
+    listing.entity_kind === 'bike_rental'
+      ? getBikeTypesPublic(supabase, listing.entity_id)
+      : Promise.resolve([]),
+    listing.entity_kind === 'bike_rental'
+      ? getBikeLocationsPublic(supabase, listing.entity_id)
+      : Promise.resolve([]),
     getListingPhotos(supabase, listing.listing_id),
   ])
 
   const featuredAmenities = filterKnownAmenities(listing.featured_amenities)
-  const bookingHref = getBookingUrl(tenantSlug)
+  const bookingHref =
+    listing.entity_kind === 'bike_rental'
+      ? `/book/bike/${entitySlug}?tenant=${tenantSlug}`
+      : getBookingUrl(tenantSlug)
   const shortId = listing.listing_id.slice(0, 8).toUpperCase()
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
@@ -86,6 +102,7 @@ export default async function PublicListingPage({ params }: PageProps) {
     bookingUrl: new URL(bookingHref, baseUrl).toString(),
     accommodation,
     restaurant,
+    bikeRental,
   })
 
   return (
@@ -124,6 +141,14 @@ export default async function PublicListingPage({ params }: PageProps) {
         <RestaurantTemplate
           listing={listing}
           restaurant={restaurant}
+          bookingHref={bookingHref}
+        />
+      ) : listing.entity_kind === 'bike_rental' ? (
+        <BikeRentalTemplate
+          listing={listing}
+          rental={bikeRental}
+          types={bikeTypes}
+          locations={bikeLocations}
           bookingHref={bookingHref}
         />
       ) : (
