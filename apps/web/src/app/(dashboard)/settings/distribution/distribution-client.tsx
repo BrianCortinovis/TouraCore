@@ -58,18 +58,26 @@ export function DistributionClient({ rows: initialRows, tenantSlug }: Props) {
         </p>
       </div>
 
-      <div className="flex items-center gap-4 rounded-md border border-gray-200 bg-gray-50 px-4 py-3 text-sm">
+      <div className="flex flex-wrap items-center gap-4 rounded-md border border-gray-200 bg-gray-50 px-4 py-3 text-sm">
         <div>
           <b>{publicCount}</b> / {rows.length} attività pubbliche
         </div>
-        <a
-          href="/sitemap-listings.xml"
-          target="_blank"
-          rel="noreferrer"
-          className="ml-auto text-[#003b95] hover:underline"
-        >
-          Vedi sitemap →
-        </a>
+        <div className="ml-auto flex gap-4">
+          <a
+            href="/settings/embed-studio"
+            className="font-semibold text-[#003b95] hover:underline"
+          >
+            Embed Studio →
+          </a>
+          <a
+            href="/sitemap-listings.xml"
+            target="_blank"
+            rel="noreferrer"
+            className="text-[#003b95] hover:underline"
+          >
+            Vedi sitemap →
+          </a>
+        </div>
       </div>
 
       {error ? (
