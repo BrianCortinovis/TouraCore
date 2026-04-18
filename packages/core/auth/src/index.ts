@@ -1,5 +1,13 @@
 export { updateSession } from './middleware'
 export { getCurrentUser, getCurrentAuthUser, getAuthBootstrapData, getCurrentOrg, invalidateBootstrapCache } from './bootstrap'
+export {
+  getVisibilityContext,
+  hasPermission,
+  canAccessTenant,
+  canAccessAgency,
+  type VisibilityContext,
+  type VisibilityMode,
+} from './visibility'
 export { validatePasswordPolicy, MIN_PASSWORD_LENGTH } from './password-policy'
 export { sanitizeNextPath } from './redirect'
 export {

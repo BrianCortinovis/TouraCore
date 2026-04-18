@@ -1,3 +1,5 @@
 export { logAudit } from './log-audit'
 export { getAuditContext } from './context'
 export type { AuditLogEntry, AuditContext } from './types'
+export { logAgencyAction } from './log-agency-action'
+export type { LogAgencyActionParams, AgencyAuditActorRole, AgencyAuditStatus } from './log-agency-action'

@@ -13,7 +13,8 @@
     "./bootstrap": "./src/bootstrap.ts",
     "./store": "./src/store.ts",
     "./provider": "./src/provider.tsx",
-    "./types": "./src/types.ts"
+    "./types": "./src/types.ts",
+    "./visibility": "./src/visibility.ts"
   },
   "scripts": {
     "build": "true"
