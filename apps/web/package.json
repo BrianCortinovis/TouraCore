@@ -15,6 +15,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@supabase/supabase-js": "^2.103.0",
     "@touracore/api": "workspace:*",
+    "@touracore/agency": "workspace:*",
     "@touracore/audit": "workspace:*",
     "@touracore/auth": "workspace:*",
     "@touracore/billing": "workspace:*",

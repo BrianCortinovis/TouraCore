@@ -25,3 +25,13 @@ export {
 export { canAccessEntityViaAgency, resolveAgencyContext, getUserAgencies } from './helpers'
 
 export { writeAgencyAuditEntry } from './audit'
+
+export {
+  accrueCommission,
+  reverseCommissionForReservation,
+  resolveCommissionRate,
+  DEFAULT_TIERS,
+  type ReservationType,
+  type CommissionTier,
+  type AccrueCommissionInput,
+} from './commissions'

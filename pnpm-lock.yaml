@@ -57,6 +57,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.103.0
         version: 2.103.0
+      '@touracore/agency':
+        specifier: workspace:*
+        version: link:../../packages/core/agency
       '@touracore/api':
         specifier: workspace:*
         version: link:../../packages/core/api
@@ -488,6 +491,9 @@ importers:
       lucide-react:
         specifier: ^0.460.0
         version: 0.460.0(react@19.2.5)
+      next:
+        specifier: '>=14'
+        version: 16.2.3(@babel/core@7.29.0)(@playwright/test@1.59.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       react:
         specifier: ^18 || ^19
         version: 19.2.5
