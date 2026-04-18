@@ -1,1 +1,2 @@
-export { default, dynamic } from '../../../../../(dashboard)/settings/distribution/[entityId]/page'
+export { default } from '../../../../../(dashboard)/settings/distribution/[entityId]/page'
+export const dynamic = 'force-dynamic'

@@ -1,1 +1,2 @@
-export { default, dynamic } from '../../../../(dashboard)/settings/credits/page'
+export { default } from '../../../../(dashboard)/settings/credits/page'
+export const dynamic = 'force-dynamic'

@@ -1,1 +1,2 @@
-export { default, dynamic } from '../../../../../../../(dashboard)/settings/partners/[id]/api-keys/docs/page'
+export { default } from '../../../../../../../(dashboard)/settings/partners/[id]/api-keys/docs/page'
+export const dynamic = 'force-dynamic'
