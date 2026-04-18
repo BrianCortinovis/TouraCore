@@ -46,6 +46,7 @@ export function EmbedStudioClient({ rows, tenantSlug }: Props) {
   const [height, setHeight] = useState(720)
   const [customOrigin, setCustomOrigin] = useState('')
   const [copied, setCopied] = useState<string | null>(null)
+  const [partnerRef, setPartnerRef] = useState('')
 
   const origin =
     customOrigin ||
@@ -63,19 +64,23 @@ export function EmbedStudioClient({ rows, tenantSlug }: Props) {
 
   const embedSrc = useMemo(() => {
     if (!tenantSlug) return ''
+    const refParam = partnerRef.trim() ? `ref=${encodeURIComponent(partnerRef.trim().toUpperCase())}` : ''
     if (mode === 'listing' && singleEntity) {
-      return `${origin}/embed/listing/${tenantSlug}/${singleEntity.entity_slug}`
+      return `${origin}/embed/listing/${tenantSlug}/${singleEntity.entity_slug}${refParam ? '?' + refParam : ''}`
     }
     if (mode === 'booking_single' && singleEntity) {
-      return `${origin}/embed/booking/${tenantSlug}/${singleEntity.entity_slug}`
+      return `${origin}/embed/booking/${tenantSlug}/${singleEntity.entity_slug}${refParam ? '?' + refParam : ''}`
     }
     if (mode === 'booking_multi') {
       const slugs = selectedEntities.map((e) => e.entity_slug).join(',')
-      const qs = slugs ? `?entities=${encodeURIComponent(slugs)}` : ''
+      const parts: string[] = []
+      if (slugs) parts.push(`entities=${encodeURIComponent(slugs)}`)
+      if (refParam) parts.push(refParam)
+      const qs = parts.length ? '?' + parts.join('&') : ''
       return `${origin}/embed/booking-multi/${tenantSlug}${qs}`
     }
     return ''
-  }, [mode, tenantSlug, singleEntity, selectedEntities, origin])
+  }, [mode, tenantSlug, singleEntity, selectedEntities, origin, partnerRef])
 
   const iframeSnippet = embedSrc
     ? `<iframe\n  src="${embedSrc}"\n  width="${width}"\n  height="${height}"\n  frameborder="0"\n  style="border:0;max-width:100%;"\n  title="Prenota online"\n></iframe>`
@@ -264,6 +269,20 @@ export function EmbedStudioClient({ rows, tenantSlug }: Props) {
               placeholder="https://touracore.vercel.app"
               className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
             />
+          </label>
+        </div>
+        <div className="mt-3">
+          <label className="text-xs">
+            <span className="text-gray-600">Partner referral code (opzionale)</span>
+            <input
+              value={partnerRef}
+              onChange={(e) => setPartnerRef(e.target.value)}
+              placeholder="HOTEL-BELVE-AB12"
+              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm uppercase"
+            />
+            <span className="mt-1 block text-[10px] text-gray-500">
+              Se presente, ogni booking dall'embed attribuisce commission al partner
+            </span>
           </label>
         </div>
       </section>

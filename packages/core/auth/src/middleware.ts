@@ -42,6 +42,7 @@ function isPublicRoute(pathname: string): boolean {
     pathname.startsWith('/api/webhooks') ||
     pathname.startsWith('/api/v1') ||
     pathname.startsWith('/api/public/') ||
+    pathname.startsWith('/api/partners/v1/') ||
     pathname.startsWith('/partner/')
   )
 }
