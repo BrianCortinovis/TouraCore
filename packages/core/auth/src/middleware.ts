@@ -33,6 +33,8 @@ function isPublicRoute(pathname: string): boolean {
     pathname.startsWith('/u/') ||
     pathname.startsWith('/portal') ||
     pathname.startsWith('/discover') ||
+    pathname.startsWith('/credits/') ||
+    pathname.startsWith('/gift-card/') ||
     pathname === '/sitemap-listings.xml' ||
     pathname === '/sitemap.xml' ||
     pathname === '/robots.txt' ||
