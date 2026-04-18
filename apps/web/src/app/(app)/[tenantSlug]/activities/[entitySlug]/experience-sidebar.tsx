@@ -3,33 +3,13 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard,
-  Package,
-  CalendarRange,
-  CalendarClock,
-  Users,
-  ClipboardList,
-  Printer,
-  QrCode,
-  FileCheck2,
-  Plug,
-  Settings,
+  LayoutDashboard, Package, CalendarRange, CalendarClock, Users,
+  ClipboardList, Printer, QrCode, FileCheck2, Plug, Settings,
   type LucideIcon,
 } from 'lucide-react'
 
-interface SidebarItem {
-  href: string
-  label: string
-  icon: LucideIcon
-  placeholder?: boolean
-  milestone?: string
-}
-
-interface Props {
-  tenantSlug: string
-  entitySlug: string
-  entityName: string
-}
+interface SidebarItem { href: string; label: string; icon: LucideIcon }
+interface Props { tenantSlug: string; entitySlug: string; entityName: string }
 
 export function ExperienceSidebar({ tenantSlug, entitySlug, entityName }: Props) {
   const pathname = usePathname()
@@ -37,16 +17,16 @@ export function ExperienceSidebar({ tenantSlug, entitySlug, entityName }: Props)
 
   const items: SidebarItem[] = [
     { href: base, label: 'Dashboard', icon: LayoutDashboard },
-    { href: `${base}/catalog`, label: 'Catalogo prodotti', icon: Package, placeholder: true, milestone: 'M052' },
-    { href: `${base}/schedule`, label: 'Schedule', icon: CalendarRange, placeholder: true, milestone: 'M053' },
-    { href: `${base}/slots`, label: 'Slot inventory', icon: CalendarClock, placeholder: true, milestone: 'M053' },
-    { href: `${base}/resources`, label: 'Risorse (guide/mezzi)', icon: Users, placeholder: true, milestone: 'M054' },
-    { href: `${base}/reservations`, label: 'Prenotazioni', icon: ClipboardList, placeholder: true, milestone: 'M055' },
-    { href: `${base}/manifest`, label: 'Manifest giorno', icon: Printer, placeholder: true, milestone: 'M057' },
-    { href: `${base}/checkin`, label: 'Check-in QR', icon: QrCode, placeholder: true, milestone: 'M057' },
-    { href: `${base}/waivers`, label: 'Waiver digitali', icon: FileCheck2, placeholder: true, milestone: 'M056' },
-    { href: `${base}/channels`, label: 'Channel Manager', icon: Plug, placeholder: true, milestone: 'M059' },
-    { href: `${base}/settings`, label: 'Impostazioni', icon: Settings, placeholder: true, milestone: 'M052' },
+    { href: `${base}/catalog`, label: 'Catalogo prodotti', icon: Package },
+    { href: `${base}/schedule`, label: 'Schedule', icon: CalendarRange },
+    { href: `${base}/slots`, label: 'Slot inventory', icon: CalendarClock },
+    { href: `${base}/resources`, label: 'Risorse (guide/mezzi)', icon: Users },
+    { href: `${base}/reservations`, label: 'Prenotazioni', icon: ClipboardList },
+    { href: `${base}/manifest`, label: 'Manifest giorno', icon: Printer },
+    { href: `${base}/checkin`, label: 'Check-in QR', icon: QrCode },
+    { href: `${base}/waivers`, label: 'Waiver digitali', icon: FileCheck2 },
+    { href: `${base}/channels`, label: 'Channel Manager', icon: Plug },
+    { href: `${base}/settings`, label: 'Impostazioni', icon: Settings },
   ]
 
   return (
@@ -62,22 +42,13 @@ export function ExperienceSidebar({ tenantSlug, entitySlug, entityName }: Props)
           return (
             <Link
               key={item.href}
-              href={item.placeholder ? '#' : item.href}
-              aria-disabled={item.placeholder}
-              onClick={(e) => item.placeholder && e.preventDefault()}
+              href={item.href}
               className={`group flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
-                active
-                  ? 'bg-blue-50 text-blue-700'
-                  : item.placeholder
-                    ? 'cursor-not-allowed text-gray-400'
-                    : 'text-gray-700 hover:bg-gray-100'
+                active ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
               }`}
             >
               <Icon className="h-5 w-5 shrink-0" />
               <span className="flex-1 truncate font-medium">{item.label}</span>
-              {item.placeholder && item.milestone && (
-                <span className="text-[9px] font-medium uppercase text-gray-400">{item.milestone}</span>
-              )}
             </Link>
           )
         })}
