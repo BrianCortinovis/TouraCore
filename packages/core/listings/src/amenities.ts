@@ -1,0 +1,121 @@
+import type { LucideIcon } from 'lucide-react'
+import {
+  Wifi,
+  Car,
+  MapPin,
+  BatteryCharging,
+  Plane,
+  Snowflake,
+  Flame,
+  ChefHat,
+  Utensils,
+  Coffee,
+  Croissant,
+  Leaf,
+  WheatOff,
+  ShieldAlert,
+  Soup,
+  Sofa,
+  Wine,
+  Tv,
+  Building2,
+  TreePalm,
+  Lock,
+  Shirt,
+  WashingMachine,
+  Wind,
+  Baby,
+  DoorOpen,
+  Mountain,
+  Waves,
+  Trees,
+  Fence,
+  Anchor,
+  Droplets,
+  Bath,
+  Sprout,
+  Dumbbell,
+  Sparkles,
+  Headphones,
+  Clock4,
+  Luggage,
+  Bike,
+  Footprints,
+  PawPrint,
+  CigaretteOff,
+  Accessibility,
+  ArrowUpDown,
+  Laptop,
+} from 'lucide-react'
+import type { AmenityKey } from './types'
+
+export type AmenityDescriptor = {
+  key: AmenityKey
+  label_it: string
+  label_en: string
+  icon: LucideIcon
+}
+
+export const AMENITIES: Record<AmenityKey, AmenityDescriptor> = {
+  wifi:                { key: 'wifi',                label_it: 'Wi-Fi',                  label_en: 'Wi-Fi',             icon: Wifi },
+  parking:             { key: 'parking',             label_it: 'Parcheggio',             label_en: 'Parking',           icon: Car },
+  parking_nearby:      { key: 'parking_nearby',      label_it: 'Parcheggio nelle vicinanze', label_en: 'Parking nearby', icon: MapPin },
+  ev_charger:          { key: 'ev_charger',          label_it: 'Colonnina elettrica',    label_en: 'EV charger',        icon: BatteryCharging },
+  airport_shuttle:     { key: 'airport_shuttle',     label_it: 'Navetta aeroporto',      label_en: 'Airport shuttle',   icon: Plane },
+  ac:                  { key: 'ac',                  label_it: 'Aria condizionata',      label_en: 'Air conditioning',  icon: Snowflake },
+  heating:             { key: 'heating',             label_it: 'Riscaldamento',          label_en: 'Heating',           icon: Flame },
+  fireplace:           { key: 'fireplace',           label_it: 'Camino',                 label_en: 'Fireplace',         icon: Flame },
+  kitchen:             { key: 'kitchen',             label_it: 'Cucina completa',        label_en: 'Full kitchen',      icon: ChefHat },
+  dishwasher:          { key: 'dishwasher',          label_it: 'Lavastoviglie',          label_en: 'Dishwasher',        icon: Utensils },
+  coffee_machine:      { key: 'coffee_machine',      label_it: 'Macchina caffè',         label_en: 'Coffee machine',    icon: Coffee },
+  breakfast:           { key: 'breakfast',           label_it: 'Colazione inclusa',      label_en: 'Breakfast included', icon: Croissant },
+  vegan_menu:          { key: 'vegan_menu',          label_it: 'Menu vegano',            label_en: 'Vegan menu',        icon: Leaf },
+  gluten_free:         { key: 'gluten_free',         label_it: 'Senza glutine',          label_en: 'Gluten free',       icon: WheatOff },
+  allergen_aware:      { key: 'allergen_aware',      label_it: 'Gestione allergeni',     label_en: 'Allergen-aware',    icon: ShieldAlert },
+  private_dining:      { key: 'private_dining',      label_it: 'Sala privata',           label_en: 'Private dining',    icon: Soup },
+  outdoor_seating:     { key: 'outdoor_seating',     label_it: 'Dehors',                 label_en: 'Outdoor seating',   icon: Sofa },
+  wine_cellar:         { key: 'wine_cellar',         label_it: 'Cantina vini',           label_en: 'Wine cellar',       icon: Wine },
+  tv:                  { key: 'tv',                  label_it: 'TV',                     label_en: 'TV',                icon: Tv },
+  balcony:             { key: 'balcony',             label_it: 'Balcone',                label_en: 'Balcony',           icon: Building2 },
+  terrace:             { key: 'terrace',             label_it: 'Terrazza',               label_en: 'Terrace',           icon: TreePalm },
+  safe:                { key: 'safe',                label_it: 'Cassaforte',             label_en: 'Safe',              icon: Lock },
+  iron:                { key: 'iron',                label_it: 'Ferro da stiro',         label_en: 'Iron',              icon: Shirt },
+  washing_machine:     { key: 'washing_machine',     label_it: 'Lavatrice',              label_en: 'Washing machine',   icon: WashingMachine },
+  dryer:               { key: 'dryer',               label_it: 'Asciugatrice',           label_en: 'Dryer',             icon: Wind },
+  highchair:           { key: 'highchair',           label_it: 'Seggiolone',             label_en: 'Highchair',         icon: Baby },
+  crib:                { key: 'crib',                label_it: 'Culla',                  label_en: 'Crib',              icon: Baby },
+  private_entrance:    { key: 'private_entrance',    label_it: 'Ingresso privato',       label_en: 'Private entrance',  icon: DoorOpen },
+  lake_view:           { key: 'lake_view',           label_it: 'Vista lago',             label_en: 'Lake view',         icon: Waves },
+  sea_view:            { key: 'sea_view',            label_it: 'Vista mare',             label_en: 'Sea view',          icon: Waves },
+  mountain_view:       { key: 'mountain_view',       label_it: 'Vista montagna',         label_en: 'Mountain view',     icon: Mountain },
+  garden:              { key: 'garden',              label_it: 'Giardino',               label_en: 'Garden',            icon: Trees },
+  bbq:                 { key: 'bbq',                 label_it: 'Barbecue',               label_en: 'BBQ',               icon: Flame },
+  beach_access:        { key: 'beach_access',        label_it: 'Accesso spiaggia',       label_en: 'Beach access',      icon: Fence },
+  private_dock:        { key: 'private_dock',        label_it: 'Pontile privato',        label_en: 'Private dock',      icon: Anchor },
+  pool:                { key: 'pool',                label_it: 'Piscina',                label_en: 'Pool',              icon: Droplets },
+  hot_tub:             { key: 'hot_tub',             label_it: 'Vasca idromassaggio',    label_en: 'Hot tub',           icon: Bath },
+  sauna:               { key: 'sauna',               label_it: 'Sauna',                  label_en: 'Sauna',             icon: Flame },
+  hammam:              { key: 'hammam',              label_it: 'Hammam',                 label_en: 'Hammam',            icon: Sprout },
+  spa_access:          { key: 'spa_access',          label_it: 'Accesso spa',            label_en: 'Spa access',        icon: Sparkles },
+  gym:                 { key: 'gym',                 label_it: 'Palestra',               label_en: 'Gym',               icon: Dumbbell },
+  concierge:           { key: 'concierge',           label_it: 'Concierge',              label_en: 'Concierge',         icon: Headphones },
+  '24h_reception':     { key: '24h_reception',       label_it: 'Reception 24h',          label_en: '24h reception',     icon: Clock4 },
+  luggage_storage:     { key: 'luggage_storage',     label_it: 'Deposito bagagli',       label_en: 'Luggage storage',   icon: Luggage },
+  bike_rental_onsite:  { key: 'bike_rental_onsite',  label_it: 'Noleggio bici in loco',  label_en: 'Bike rental onsite', icon: Bike },
+  hiking:              { key: 'hiking',              label_it: 'Escursionismo',          label_en: 'Hiking',            icon: Footprints },
+  skiing:              { key: 'skiing',              label_it: 'Sci',                    label_en: 'Skiing',            icon: Mountain },
+  pets:                { key: 'pets',                label_it: 'Animali ammessi',        label_en: 'Pets allowed',      icon: PawPrint },
+  smoke_free:          { key: 'smoke_free',          label_it: 'Non fumatori',           label_en: 'Non-smoking',       icon: CigaretteOff },
+  wheelchair:          { key: 'wheelchair',          label_it: 'Accesso disabili',       label_en: 'Wheelchair access', icon: Accessibility },
+  elevator:            { key: 'elevator',            label_it: 'Ascensore',              label_en: 'Elevator',          icon: ArrowUpDown },
+  coworking:           { key: 'coworking',           label_it: 'Spazio coworking',       label_en: 'Coworking space',   icon: Laptop },
+}
+
+export function getAmenity(key: AmenityKey): AmenityDescriptor {
+  return AMENITIES[key]
+}
+
+export function getAmenityLabel(key: AmenityKey, locale: 'it' | 'en' = 'it'): string {
+  const descriptor = AMENITIES[key]
+  return locale === 'en' ? descriptor.label_en : descriptor.label_it
+}

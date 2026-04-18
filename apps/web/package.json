@@ -28,6 +28,7 @@
     "@touracore/hospitality-config": "workspace:*",
     "@touracore/integrations": "workspace:*",
     "@touracore/legal": "workspace:*",
+    "@touracore/listings": "workspace:*",
     "@touracore/media": "workspace:*",
     "@touracore/notifications": "workspace:*",
     "@touracore/portals": "workspace:*",

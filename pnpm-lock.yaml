@@ -96,6 +96,9 @@ importers:
       '@touracore/legal':
         specifier: workspace:*
         version: link:../../packages/core/legal
+      '@touracore/listings':
+        specifier: workspace:*
+        version: link:../../packages/core/listings
       '@touracore/media':
         specifier: workspace:*
         version: link:../../packages/core/media
@@ -327,6 +330,28 @@ importers:
       zod:
         specifier: ^4.3.6
         version: 4.3.6
+
+  packages/core/listings:
+    dependencies:
+      '@supabase/supabase-js':
+        specifier: ^2.103.0
+        version: 2.103.0
+      lucide-react:
+        specifier: ^0.460.0
+        version: 0.460.0(react@19.2.5)
+      react:
+        specifier: ^18 || ^19
+        version: 19.2.5
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
+    devDependencies:
+      '@types/react':
+        specifier: ^19
+        version: 19.2.14
+      typescript:
+        specifier: ^5
+        version: 5.6.3
 
   packages/core/media:
     dependencies:

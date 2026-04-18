@@ -29,6 +29,10 @@ function isPublicRoute(pathname: string): boolean {
     pathname.startsWith('/portal/') ||
     pathname.startsWith('/portali/') ||
     pathname.startsWith('/property/') ||
+    pathname.startsWith('/s/') ||
+    pathname === '/sitemap-listings.xml' ||
+    pathname === '/sitemap.xml' ||
+    pathname === '/robots.txt' ||
     pathname.startsWith('/widget/') ||
     pathname.startsWith('/api/webhooks') ||
     pathname.startsWith('/api/v1') ||
