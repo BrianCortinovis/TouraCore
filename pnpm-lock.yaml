@@ -108,6 +108,9 @@ importers:
       '@touracore/notifications':
         specifier: workspace:*
         version: link:../../packages/core/notifications
+      '@touracore/partners':
+        specifier: workspace:*
+        version: link:../../packages/core/partners
       '@touracore/portals':
         specifier: workspace:*
         version: link:../../packages/core/portals
@@ -396,6 +399,28 @@ importers:
         specifier: ^4.3.6
         version: 4.3.6
 
+  packages/core/partners:
+    dependencies:
+      '@supabase/supabase-js':
+        specifier: ^2.49.1
+        version: 2.103.0
+      '@touracore/db':
+        specifier: workspace:*
+        version: link:../../db
+      bcryptjs:
+        specifier: ^2.4.3
+        version: 2.4.3
+      zod:
+        specifier: ^3.24.2
+        version: 3.25.76
+    devDependencies:
+      '@types/bcryptjs':
+        specifier: ^2.4.6
+        version: 2.4.6
+      typescript:
+        specifier: ^5.5.0
+        version: 5.6.3
+
   packages/core/portals:
     dependencies:
       '@supabase/supabase-js':
@@ -533,6 +558,9 @@ importers:
       '@touracore/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@touracore/partners':
+        specifier: workspace:*
+        version: link:../../packages/core/partners
       '@touracore/pricing':
         specifier: workspace:*
         version: link:../../packages/core/pricing

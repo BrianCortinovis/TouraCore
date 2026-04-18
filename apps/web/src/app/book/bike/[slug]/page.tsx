@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 interface Props {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ tenant?: string }>
+  searchParams: Promise<{ tenant?: string; ref?: string }>
 }
 
 /**
@@ -73,6 +73,7 @@ export default async function BikeBookingPage({ params, searchParams }: Props) {
           entityId={entityId}
           tenantId={entity.tenant_id as string}
           entityName={entity.name as string}
+          partnerRef={sp.ref ?? null}
           types={types.map((t) => ({
             id: t.id,
             typeKey: t.type_key,

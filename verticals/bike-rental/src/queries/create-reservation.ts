@@ -1,5 +1,6 @@
 import { createServiceRoleClient, createServerSupabaseClient } from '@touracore/db'
 import { redeemCredit } from '@touracore/vouchers/server'
+import { attributeCommission } from '@touracore/partners/server'
 import { computeQuote, type QuoteRequest } from './quote'
 import { findNextAvailableBike } from './availability'
 import type { BikeRentalReservationRow } from '../types/database'
@@ -24,6 +25,8 @@ export interface CreateReservationInput extends QuoteRequest {
   usePublicClient?: boolean
   /** Voucher / gift card / promo code — atomic redeem post-insert */
   voucherCode?: string
+  /** Partner referral code (URL ?ref=XXX or embed ref) — attribuisce commission */
+  partnerRef?: string
   /** Actor IP for rate limit + audit on voucher redeem */
   actorIp?: string
 }
@@ -181,6 +184,27 @@ export async function createReservation(
             total_amount: finalTotal,
           })
           .eq('id', reservationId)
+      }
+    }
+
+    // Partner commission attribution (se ref presente)
+    if (input.partnerRef) {
+      try {
+        await attributeCommission({
+          tenantId,
+          partnerCode: input.partnerRef,
+          reservationId,
+          reservationTable: 'bike_rental_reservations',
+          vertical: 'bike_rental',
+          bookingAmount: finalTotal,
+          currency: quote.currency ?? DEFAULT_CURRENCY,
+          sourceType: 'url',
+          idempotencyKey: `bike:${reservationId}`,
+          useServiceRole: Boolean(input.usePublicClient),
+        })
+      } catch (commErr) {
+        // Log silenzioso — non bloccare booking se attribution fail
+        console.error('partner commission attribution failed', commErr)
       }
     }
 

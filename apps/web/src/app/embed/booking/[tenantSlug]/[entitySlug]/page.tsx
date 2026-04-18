@@ -16,8 +16,10 @@ type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
-export default async function EmbedBookingEntityPage({ params }: Props) {
+export default async function EmbedBookingEntityPage({ params, searchParams }: Props) {
   const { tenantSlug, entitySlug } = await params
+  const sp = await searchParams
+  const partnerRef = typeof sp.ref === 'string' ? sp.ref : null
   const supabase = await createServiceRoleClient()
 
   const { data: tenant } = await supabase
@@ -54,6 +56,7 @@ export default async function EmbedBookingEntityPage({ params }: Props) {
           entityId={entityId}
           tenantId={entity.tenant_id as string}
           entityName={entity.name as string}
+          partnerRef={partnerRef}
           types={types.map((t) => ({
             id: t.id,
             typeKey: t.type_key,

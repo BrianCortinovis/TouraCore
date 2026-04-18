@@ -48,6 +48,7 @@ interface Props {
   locations: LocationOption[]
   oneWayEnabled: boolean
   deliveryEnabled: boolean
+  partnerRef?: string | null
 }
 
 interface AppliedVoucher {
@@ -66,6 +67,7 @@ export function BikeBookingClient({
   locations,
   oneWayEnabled,
   deliveryEnabled,
+  partnerRef,
 }: Props) {
   const today = new Date()
   const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000)
@@ -201,6 +203,7 @@ export function BikeBookingClient({
         returnLocationId,
         guest: { name: guestName, email: guestEmail, phone: guestPhone },
         voucherCode: voucher?.code,
+        partnerRef: partnerRef ?? undefined,
       })
       setResult(r)
     })

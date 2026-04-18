@@ -64,6 +64,12 @@ export function DistributionClient({ rows: initialRows, tenantSlug }: Props) {
         </div>
         <div className="ml-auto flex gap-4">
           <a
+            href="/settings/partners"
+            className="font-semibold text-[#003b95] hover:underline"
+          >
+            Partners →
+          </a>
+          <a
             href="/settings/credits"
             className="font-semibold text-[#003b95] hover:underline"
           >
