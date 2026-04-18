@@ -64,19 +64,19 @@ export function DistributionClient({ rows: initialRows, tenantSlug }: Props) {
         </div>
         <div className="ml-auto flex gap-4">
           <a
-            href="/settings/partners"
+            href={tenantSlug ? `/${tenantSlug}/settings/partners` : '/settings/partners'}
             className="font-semibold text-[#003b95] hover:underline"
           >
             Partners →
           </a>
           <a
-            href="/settings/credits"
+            href={tenantSlug ? `/${tenantSlug}/settings/credits` : '/settings/credits'}
             className="font-semibold text-[#003b95] hover:underline"
           >
             Credits Studio →
           </a>
           <a
-            href="/settings/embed-studio"
+            href={tenantSlug ? `/${tenantSlug}/settings/embed-studio` : '/settings/embed-studio'}
             className="font-semibold text-[#003b95] hover:underline"
           >
             Embed Studio →
@@ -154,7 +154,7 @@ export function DistributionClient({ rows: initialRows, tenantSlug }: Props) {
                   </td>
                   <td className="px-4 py-3">
                     <a
-                      href={`/settings/distribution/${r.entity_id}`}
+                      href={tenantSlug ? `/${tenantSlug}/settings/distribution/${r.entity_id}` : `/settings/distribution/${r.entity_id}`}
                       className="text-[#003b95] hover:underline"
                     >
                       Modifica

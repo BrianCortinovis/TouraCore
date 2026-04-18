@@ -17,7 +17,10 @@ export default async function ApiDocsPage({ params }: { params: Promise<{ id: st
   return (
     <div className="max-w-3xl space-y-6">
       <nav className="text-sm">
-        <Link href={`/settings/partners/${id}`} className="text-blue-600 hover:underline">
+        <Link
+          href={b.tenant?.slug ? `/${b.tenant.slug}/settings/partners/${id}` : `/settings/partners/${id}`}
+          className="text-blue-600 hover:underline"
+        >
           ← Torna a {partner.name}
         </Link>
       </nav>

@@ -26,7 +26,10 @@ export default async function CreditDetailPage({
   return (
     <div className="space-y-6">
       <nav className="text-sm">
-        <Link href="/settings/credits" className="text-blue-600 hover:underline">
+        <Link
+          href={bootstrap.tenant?.slug ? `/${bootstrap.tenant.slug}/settings/credits` : '/settings/credits'}
+          className="text-blue-600 hover:underline"
+        >
           ← Torna a Credits Studio
         </Link>
       </nav>

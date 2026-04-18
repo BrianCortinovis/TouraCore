@@ -11,9 +11,17 @@ import { SignJWT, jwtVerify } from 'jose'
 const DEFAULT_ISSUER = 'touracore-vouchers'
 
 function getSecret(): Uint8Array {
-  const raw = process.env.VOUCHER_JWT_SECRET
+  let raw = process.env.VOUCHER_JWT_SECRET
+  // Fallback: deriva da SUPABASE_SERVICE_ROLE_KEY se VOUCHER_JWT_SECRET non settato.
+  // Production SHOULD set a dedicated secret — questo fallback garantisce deploy senza manual env setup.
   if (!raw) {
-    throw new Error('VOUCHER_JWT_SECRET env required for voucher JWT signing')
+    const fallback = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (fallback && fallback.length >= 32) {
+      raw = `touracore-vouchers-${fallback}`
+    }
+  }
+  if (!raw) {
+    throw new Error('VOUCHER_JWT_SECRET env required (or SUPABASE_SERVICE_ROLE_KEY fallback)')
   }
   if (raw.length < 32) {
     throw new Error('VOUCHER_JWT_SECRET must be at least 32 chars')

@@ -70,7 +70,8 @@ export function CreditsStudio({
     params.set('tab', tab)
     params.delete('q')
     params.delete('status')
-    router.push(`/settings/credits?${params.toString()}`)
+    const base = tenantSlug ? `/${tenantSlug}/settings/credits` : '/settings/credits'
+    router.push(`${base}?${params.toString()}`)
   }
 
   return (
@@ -160,7 +161,8 @@ export function CreditsStudio({
           const status = String(fd.get('status') ?? '')
           if (status) params.set('status', status)
           else params.delete('status')
-          router.push(`/settings/credits?${params.toString()}`)
+          const base = tenantSlug ? `/${tenantSlug}/settings/credits` : '/settings/credits'
+          router.push(`${base}?${params.toString()}`)
         }}
       >
         <input
@@ -212,7 +214,11 @@ export function CreditsStudio({
               </tr>
             ) : (
               credits.map((c) => (
-                <CreditRow key={c.id} credit={c} />
+                <CreditRow
+                  key={c.id}
+                  credit={c}
+                  creditDetailBase={tenantSlug ? `/${tenantSlug}/settings/credits` : '/settings/credits'}
+                />
               ))
             )}
           </tbody>
@@ -255,7 +261,7 @@ function StatCard({ label, value, hint }: { label: string; value: string; hint: 
   )
 }
 
-function CreditRow({ credit }: { credit: CreditInstrumentRow }) {
+function CreditRow({ credit, creditDetailBase }: { credit: CreditInstrumentRow; creditDetailBase: string }) {
   const [pending, startTransition] = useTransition()
   const statusMeta = STATUS_META[credit.status] ?? { label: credit.status, color: 'bg-gray-100 text-gray-700' }
 
@@ -341,7 +347,7 @@ function CreditRow({ credit }: { credit: CreditInstrumentRow }) {
           </button>
         )}
         <Link
-          href={`/settings/credits/${credit.id}`}
+          href={`${creditDetailBase}/${credit.id}`}
           className="ml-1 inline-block rounded-md px-2 py-1 text-[11px] font-medium text-blue-600 hover:bg-blue-50"
         >
           Dettagli

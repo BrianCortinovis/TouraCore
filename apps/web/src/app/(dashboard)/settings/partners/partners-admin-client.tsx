@@ -92,7 +92,7 @@ export function PartnersAdminClient({
                 <tr key={p.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
                     <Link
-                      href={`/settings/partners/${p.id}`}
+                      href={tenantSlug ? `/${tenantSlug}/settings/partners/${p.id}` : `/settings/partners/${p.id}`}
                       className="font-medium text-blue-700 hover:underline"
                     >
                       {p.name}
@@ -111,7 +111,7 @@ export function PartnersAdminClient({
                   </td>
                   <td className="px-4 py-3 text-right">
                     <Link
-                      href={`/settings/partners/${p.id}`}
+                      href={tenantSlug ? `/${tenantSlug}/settings/partners/${p.id}` : `/settings/partners/${p.id}`}
                       className="text-[11px] font-medium text-blue-600 hover:underline"
                     >
                       Dettagli →

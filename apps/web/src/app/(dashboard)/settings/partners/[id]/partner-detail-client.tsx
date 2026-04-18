@@ -55,7 +55,10 @@ export function PartnerDetailClient({
   return (
     <div className="space-y-6">
       <nav className="text-sm">
-        <Link href="/settings/partners" className="text-blue-600 hover:underline">
+        <Link
+          href={tenantSlug ? `/${tenantSlug}/settings/partners` : '/settings/partners'}
+          className="text-blue-600 hover:underline"
+        >
           ← Torna a Partners
         </Link>
       </nav>
