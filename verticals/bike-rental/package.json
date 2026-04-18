@@ -1,0 +1,24 @@
+{
+  "name": "@touracore/bike-rental",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "true",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "@touracore/auth": "workspace:*",
+    "@touracore/db": "workspace:*",
+    "@touracore/types": "workspace:*",
+    "@touracore/ui": "workspace:*",
+    "date-fns": "^4.1.0",
+    "lucide-react": "^0.469.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}

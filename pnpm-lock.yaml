@@ -66,6 +66,9 @@ importers:
       '@touracore/auth':
         specifier: workspace:*
         version: link:../../packages/core/auth
+      '@touracore/bike-rental':
+        specifier: workspace:*
+        version: link:../../verticals/bike-rental
       '@touracore/billing':
         specifier: workspace:*
         version: link:../../packages/core/billing
@@ -484,6 +487,37 @@ importers:
       zod:
         specifier: ^3
         version: 3.25.76
+
+  verticals/bike-rental:
+    dependencies:
+      '@supabase/supabase-js':
+        specifier: ^2.49.1
+        version: 2.103.0
+      '@touracore/auth':
+        specifier: workspace:*
+        version: link:../../packages/core/auth
+      '@touracore/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@touracore/types':
+        specifier: workspace:*
+        version: link:../../packages/types
+      '@touracore/ui':
+        specifier: workspace:*
+        version: link:../../packages/core/ui
+      date-fns:
+        specifier: ^4.1.0
+        version: 4.1.0
+      lucide-react:
+        specifier: ^0.469.0
+        version: 0.469.0(react@19.2.5)
+      zod:
+        specifier: ^3.24.2
+        version: 3.25.76
+    devDependencies:
+      typescript:
+        specifier: ^5.5.0
+        version: 5.6.3
 
   verticals/hospitality:
     dependencies:
