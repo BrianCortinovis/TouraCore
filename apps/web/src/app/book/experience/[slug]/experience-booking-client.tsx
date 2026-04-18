@@ -168,8 +168,8 @@ export function ExperienceBookingClient({ entity, products, variants, addons, ti
         })
       const startAt = selectedTimeslot?.start_at ?? new Date().toISOString()
       const endAt = selectedTimeslot?.end_at ?? new Date(new Date(startAt).getTime() + product.duration_minutes * 60 * 1000).toISOString()
+      // SECURITY: action re-compute totali server-side + valida tenantId da entity_id trusted
       const result = await createExperienceReservationAction({
-        tenantId: entity.tenantId,
         entityId: entity.id,
         productId: product.id,
         timeslotId: product.booking_mode === 'timeslot_capacity' ? selectedTimeslot?.id ?? null : null,
@@ -180,12 +180,6 @@ export function ExperienceBookingClient({ entity, products, variants, addons, ti
         endAt,
         guests,
         addons: selectedAddons,
-        subtotalCents: quote.subtotal,
-        addonsCents: quote.addonsCents,
-        pickupCents: quote.pickupCents,
-        discountCents: 0,
-        taxCents: 0,
-        totalCents: quote.total,
         depositCents: product.deposit_required_cents,
         currency: product.currency,
         partnerRef,
