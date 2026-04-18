@@ -87,6 +87,7 @@ export function DistributionClient({ rows: initialRows, tenantSlug }: Props) {
               <th className="px-4 py-3 text-left font-semibold">Slug</th>
               <th className="px-4 py-3 text-left font-semibold">Pubblicata il</th>
               <th className="px-4 py-3 text-left font-semibold">Anteprima</th>
+              <th className="px-4 py-3 text-left font-semibold">Personalizza</th>
               <th className="px-4 py-3 text-right font-semibold">Stato pubblico</th>
             </tr>
           </thead>
@@ -131,6 +132,14 @@ export function DistributionClient({ rows: initialRows, tenantSlug }: Props) {
                       <span className="text-gray-400">—</span>
                     )}
                   </td>
+                  <td className="px-4 py-3">
+                    <a
+                      href={`/settings/distribution/${r.entity_id}`}
+                      className="text-[#003b95] hover:underline"
+                    >
+                      Modifica
+                    </a>
+                  </td>
                   <td className="px-4 py-3 text-right">
                     <button
                       type="button"
@@ -159,7 +168,7 @@ export function DistributionClient({ rows: initialRows, tenantSlug }: Props) {
             })}
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-sm text-gray-500">
+                <td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-500">
                   Nessuna attività. Aggiungi entity al tenant per pubblicare schede.
                 </td>
               </tr>

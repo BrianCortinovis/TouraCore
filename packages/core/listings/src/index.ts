@@ -62,3 +62,23 @@ export type {
 } from './restaurant'
 export { RestaurantTemplate } from './restaurant-template'
 export type { RestaurantTemplateProps } from './restaurant-template'
+
+// Generic vertical template (activity/wellness/bike/moto/ski)
+export { GenericVerticalTemplate } from './generic-vertical-template'
+export type { GenericVerticalTemplateProps } from './generic-vertical-template'
+
+// Photo gallery
+export { getListingPhotos, listingPhotoSchema } from './photos'
+export type { ListingPhoto } from './photos'
+export { ListingGallery } from './gallery'
+export type { ListingGalleryProps } from './gallery'
+
+// Platform profile
+export {
+  BOOKING_MODES,
+  getPlatformProfile,
+  getProfileListings,
+  platformProfileSchema,
+  profileListingSchema,
+} from './profile'
+export type { BookingMode, PlatformProfile, ProfileListing } from './profile'

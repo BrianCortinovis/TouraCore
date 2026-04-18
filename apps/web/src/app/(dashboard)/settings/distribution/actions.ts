@@ -15,6 +15,9 @@ export type DistributionEntityRow = {
   listing_id: string | null
   is_public: boolean
   tagline: string | null
+  featured_amenities: string[] | null
+  seo_title: string | null
+  seo_description: string | null
   published_at: string | null
   updated_at: string | null
 }
@@ -22,6 +25,14 @@ export type DistributionEntityRow = {
 const ToggleSchema = z.object({
   entityId: z.string().min(1),
   isPublic: z.boolean(),
+})
+
+const UpdateCurationSchema = z.object({
+  entityId: z.string().min(1),
+  tagline: z.string().max(500).nullable().optional(),
+  featuredAmenities: z.array(z.string()).max(20).optional(),
+  seoTitle: z.string().max(200).nullable().optional(),
+  seoDescription: z.string().max(500).nullable().optional(),
 })
 
 export async function listDistributionEntitiesAction(): Promise<{
@@ -50,7 +61,7 @@ export async function listDistributionEntitiesAction(): Promise<{
   const entityIds = entities.map((e) => e.id)
   const { data: listings } = await supabase
     .from('public_listings')
-    .select('id, entity_id, is_public, tagline, published_at, updated_at')
+    .select('id, entity_id, is_public, tagline, featured_amenities, seo_title, seo_description, published_at, updated_at')
     .in('entity_id', entityIds.length ? entityIds : ['00000000-0000-0000-0000-000000000000'])
 
   const listingByEntity = new Map(
@@ -68,6 +79,9 @@ export async function listDistributionEntitiesAction(): Promise<{
       listing_id: l?.id ?? null,
       is_public: l?.is_public ?? false,
       tagline: l?.tagline ?? null,
+      featured_amenities: (l?.featured_amenities as string[] | null) ?? null,
+      seo_title: l?.seo_title ?? null,
+      seo_description: l?.seo_description ?? null,
       published_at: l?.published_at ?? null,
       updated_at: l?.updated_at ?? null,
     }
@@ -139,4 +153,56 @@ export async function togglePublicListingAction(
   }
 
   return { success: true, isPublic }
+}
+
+export async function updateListingCurationAction(
+  input: z.input<typeof UpdateCurationSchema>
+): Promise<{ success: boolean; error?: string }> {
+  const parsed = UpdateCurationSchema.safeParse(input)
+  if (!parsed.success) return { success: false, error: 'INVALID_INPUT' }
+
+  const bootstrap = await getAuthBootstrapData()
+  if (!bootstrap.tenant || !bootstrap.user) return { success: false, error: 'TENANT_REQUIRED' }
+
+  const supabase = await createServerSupabaseClient()
+
+  const { data: entity } = await supabase
+    .from('entities')
+    .select('id, slug, tenant_id')
+    .eq('id', parsed.data.entityId)
+    .eq('tenant_id', bootstrap.tenant.id)
+    .maybeSingle()
+  if (!entity) return { success: false, error: 'ENTITY_NOT_FOUND' }
+
+  const updates: Record<string, unknown> = {
+    entity_id: entity.id,
+    tenant_id: entity.tenant_id,
+  }
+  if (parsed.data.tagline !== undefined) updates.tagline = parsed.data.tagline
+  if (parsed.data.featuredAmenities !== undefined) updates.featured_amenities = parsed.data.featuredAmenities
+  if (parsed.data.seoTitle !== undefined) updates.seo_title = parsed.data.seoTitle
+  if (parsed.data.seoDescription !== undefined) updates.seo_description = parsed.data.seoDescription
+
+  const { error } = await supabase
+    .from('public_listings')
+    .upsert(updates, { onConflict: 'entity_id' })
+
+  if (error) return { success: false, error: error.message }
+
+  try {
+    await logAudit({
+      context: { tenantId: bootstrap.tenant.id, userId: bootstrap.user.id },
+      action: 'public_listing_curation_updated',
+      entityType: 'public_listing',
+      entityId: entity.id,
+      newData: parsed.data as Record<string, unknown>,
+    })
+  } catch {}
+
+  const tenantSlug = bootstrap.tenant.slug
+  if (tenantSlug) {
+    revalidatePath(`/s/${tenantSlug}/${entity.slug}`)
+  }
+
+  return { success: true }
 }
