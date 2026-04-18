@@ -12,6 +12,7 @@
     "@supabase/supabase-js": "^2.49.1",
     "@touracore/auth": "workspace:*",
     "@touracore/db": "workspace:*",
+    "@touracore/pricing": "workspace:*",
     "@touracore/types": "workspace:*",
     "@touracore/ui": "workspace:*",
     "date-fns": "^4.1.0",

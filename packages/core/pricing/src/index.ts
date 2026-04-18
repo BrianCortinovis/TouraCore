@@ -22,6 +22,10 @@ export type RuleType =
   | 'early_bird'
   | 'time_of_day'
   | 'group_size'
+  | 'duration_tier'
+  | 'surge'
+  | 'one_way_fee'
+  | 'delivery_fee'
 
 export type AdjustmentType = 'percent' | 'fixed'
 
@@ -36,6 +40,12 @@ export interface PricingContext {
   timeOfDay?: string  // HH:mm
   dayOfWeek?: number  // 0-6
   isWeekend?: boolean
+  // Bike rental specific
+  durationHours?: number  // for duration_tier rules
+  demandLevel?: number  // 0-100, current booking density for surge
+  distanceKm?: number  // for one_way_fee / delivery_fee calculation
+  isOneWay?: boolean
+  isDelivery?: boolean
   metadata?: Record<string, unknown>
 }
 
@@ -145,6 +155,50 @@ export function computePrice(ctx: PricingContext, rules: PricingRule[]): Pricing
       case 'event': {
         const eventDates = (rule.config.dates as string[]) ?? []
         if (eventDates.includes(ctx.serviceDate)) applies = true
+        break
+      }
+      case 'duration_tier': {
+        // config: { minHours, maxHours } — adjustment applied if durationHours in range
+        const minHours = (rule.config.minHours as number) ?? 0
+        const maxHours = (rule.config.maxHours as number) ?? 99999
+        if (ctx.durationHours !== undefined && ctx.durationHours >= minHours && ctx.durationHours <= maxHours) {
+          applies = true
+        }
+        break
+      }
+      case 'surge': {
+        // config: { thresholdPct } — applies when demandLevel >= threshold
+        const threshold = (rule.config.thresholdPct as number) ?? 70
+        if ((ctx.demandLevel ?? 0) >= threshold) applies = true
+        break
+      }
+      case 'one_way_fee': {
+        // config: { baseFee, perKm } — applies flat/km when isOneWay
+        if (ctx.isOneWay) {
+          const baseFee = (rule.config.baseFee as number) ?? 0
+          const perKm = (rule.config.perKm as number) ?? 0
+          const distance = ctx.distanceKm ?? 0
+          const fee = baseFee + perKm * distance
+          price += fee
+          appliedRules.push({ ruleId: rule.id, ruleName: rule.name, delta: Math.round(fee * 100) / 100 })
+          confidence = Math.min(95, confidence + 5)
+          continue
+        }
+        break
+      }
+      case 'delivery_fee': {
+        // config: { baseFee, perKm, maxKm } — applies when isDelivery
+        if (ctx.isDelivery) {
+          const baseFee = (rule.config.baseFee as number) ?? 0
+          const perKm = (rule.config.perKm as number) ?? 0
+          const maxKm = (rule.config.maxKm as number) ?? Infinity
+          const distance = Math.min(ctx.distanceKm ?? 0, maxKm)
+          const fee = baseFee + perKm * distance
+          price += fee
+          appliedRules.push({ ruleId: rule.id, ruleName: rule.name, delta: Math.round(fee * 100) / 100 })
+          confidence = Math.min(95, confidence + 5)
+          continue
+        }
         break
       }
     }

@@ -231,3 +231,88 @@ export interface BikeRentalReservationAddonRow {
   line_total: number
   created_at: string
 }
+
+// =============================================================================
+// Pricing catalog (00097)
+// =============================================================================
+export interface BikeTypeRow {
+  id: string
+  bike_rental_id: string
+  tenant_id: string
+  type_key: BikeType
+  display_name: string
+  description: string | null
+  photo: string | null
+  hourly_rate: number | null
+  half_day_rate: number | null
+  daily_rate: number | null
+  weekly_rate: number | null
+  deposit_amount: number
+  age_min: number | null
+  age_max: number | null
+  height_min: number | null
+  height_max: number | null
+  active: boolean
+  display_order: number
+  created_at: string
+  updated_at: string
+}
+
+export type AddonPricingMode =
+  | 'per_rental'
+  | 'per_day'
+  | 'per_hour'
+  | 'per_bike'
+  | 'percent_of_total'
+
+export type AddonCategory = 'safety' | 'comfort' | 'navigation' | 'insurance' | 'transport'
+
+export interface BikeRentalAddonRow {
+  id: string
+  bike_rental_id: string
+  tenant_id: string
+  addon_key: string
+  display_name: string
+  description: string | null
+  category: AddonCategory | null
+  pricing_mode: AddonPricingMode
+  unit_price: number
+  mandatory_for: string[]
+  stock_total: number | null
+  active: boolean
+  display_order: number
+  created_at: string
+  updated_at: string
+}
+
+export type BikePricingRuleType =
+  | 'season'
+  | 'day_of_week'
+  | 'time_of_day'
+  | 'duration_tier'
+  | 'group_size'
+  | 'surge'
+  | 'early_bird'
+  | 'last_minute'
+  | 'one_way_fee'
+  | 'delivery_fee'
+  | 'event'
+  | 'occupancy_based'
+
+export interface BikePricingRuleRow {
+  id: string
+  bike_rental_id: string
+  tenant_id: string
+  rule_name: string
+  rule_type: BikePricingRuleType
+  applies_to: string[]
+  config: Json
+  adjustment_type: 'percent' | 'fixed'
+  adjustment_value: number
+  priority: number
+  active: boolean
+  valid_from: string | null
+  valid_to: string | null
+  created_at: string
+  updated_at: string
+}

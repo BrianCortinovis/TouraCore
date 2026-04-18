@@ -499,6 +499,9 @@ importers:
       '@touracore/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@touracore/pricing':
+        specifier: workspace:*
+        version: link:../../packages/core/pricing
       '@touracore/types':
         specifier: workspace:*
         version: link:../../packages/types
