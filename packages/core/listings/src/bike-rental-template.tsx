@@ -9,6 +9,7 @@ export type BikeRentalTemplateProps = {
   types: BikeTypePublic[]
   locations: BikeLocationPublic[]
   bookingHref: string
+  giftCardHref?: string
 }
 
 const BIKE_TYPE_ICON: Record<string, string> = {
@@ -38,6 +39,7 @@ export const BikeRentalTemplate: FC<BikeRentalTemplateProps> = ({
   types,
   locations,
   bookingHref,
+  giftCardHref,
 }) => {
   const bikeTypes = rental?.bike_types ?? []
   const city = rental?.city
@@ -198,6 +200,14 @@ export const BikeRentalTemplate: FC<BikeRentalTemplateProps> = ({
           >
             Prenota ora
           </a>
+          {giftCardHref && (
+            <a
+              href={giftCardHref}
+              className="mt-2 block w-full rounded-md border border-[#0369a1] bg-white px-4 py-2 text-center text-xs font-semibold text-[#0369a1] hover:bg-[#f0f9ff]"
+            >
+              🎁 Regala una gift card
+            </a>
+          )}
           <div className="mt-4 space-y-1 text-[11px] text-gray-500">
             {bikeTypes.length > 0 && <p>{bikeTypes.length} tipi disponibili</p>}
             {locations.length > 0 && <p>{locations.length} depositi</p>}

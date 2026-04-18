@@ -151,6 +151,7 @@ export default async function PublicListingPage({ params }: PageProps) {
           types={bikeTypes}
           locations={bikeLocations}
           bookingHref={bookingHref}
+          giftCardHref={`/gift-card/buy/${tenantSlug}`}
         />
       ) : (
         <GenericVerticalTemplate
