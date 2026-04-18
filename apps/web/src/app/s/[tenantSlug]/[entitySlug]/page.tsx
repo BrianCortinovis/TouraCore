@@ -20,6 +20,7 @@ import {
   RestaurantTemplate,
 } from '@touracore/listings'
 import { createPublicClient } from '@/lib/supabase-public'
+import { getSiteBaseUrl } from '@/lib/site-url'
 
 export const revalidate = 60
 export const dynamicParams = true
@@ -96,7 +97,7 @@ export default async function PublicListingPage({ params }: PageProps) {
       : getBookingUrl(tenantSlug)
   const shortId = listing.listing_id.slice(0, 8).toUpperCase()
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+  const baseUrl = getSiteBaseUrl()
   const jsonLd = buildListingJsonLd(listing, {
     baseUrl,
     bookingUrl: new URL(bookingHref, baseUrl).toString(),
