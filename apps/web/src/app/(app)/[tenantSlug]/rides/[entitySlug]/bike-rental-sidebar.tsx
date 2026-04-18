@@ -43,7 +43,7 @@ export function BikeRentalSidebar({ tenantSlug, entitySlug, entityName, hasRenta
     { href: `${base}/maintenance`, label: 'Manutenzione', icon: Wrench, placeholder: true, milestone: 'M043' },
     { href: `${base}/pricing`, label: 'Tariffe & Promo', icon: Tag, placeholder: true, milestone: 'M040' },
     { href: `${base}/analytics`, label: 'Analytics', icon: BarChart3, placeholder: true, milestone: 'M045' },
-    { href: `${base}/channels`, label: 'Channel Manager', icon: Plug, placeholder: true, milestone: 'M046' },
+    { href: `${base}/channels`, label: 'Channel Manager', icon: Plug },
     { href: `${base}/compliance`, label: 'Fiscale & GDPR', icon: ShieldCheck, placeholder: true, milestone: 'M044' },
     { href: `${base}/settings`, label: 'Impostazioni', icon: Settings },
   ]
