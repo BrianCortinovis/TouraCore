@@ -41,6 +41,118 @@ export async function POST(request: NextRequest) {
       const plan = session.metadata?.plan
       const kind = session.metadata?.kind
 
+      // Gift card purchase: emette credit_instrument + email JWT link
+      if (session.metadata?.flow === 'gift_card_purchase') {
+        const tid = session.metadata.tenant_id
+        if (tid) {
+          try {
+            const { issueCredit, signVoucherJwt, renderGiftCardEmail } = await import(
+              '@touracore/vouchers/server'
+            )
+            const { Resend } = await import('resend')
+            const amount = Number(session.metadata.amount ?? '0')
+            const verticalScope = (session.metadata.vertical_scope ?? '')
+              .split(',')
+              .map((s) => s.trim())
+              .filter(Boolean)
+            const deliveryAt = session.metadata.delivery_scheduled_at || undefined
+
+            // Expiry 1y from purchase
+            const expiresAt = new Date()
+            expiresAt.setFullYear(expiresAt.getFullYear() + 1)
+
+            const issued = await issueCredit(
+              {
+                tenantId: tid,
+                kind: 'gift_card',
+                initialAmount: amount,
+                currency: (session.metadata.currency ?? 'EUR').toUpperCase(),
+                expiresAt: expiresAt.toISOString(),
+                verticalScope: verticalScope as never,
+                recipientEmail: session.metadata.recipient_email,
+                recipientName: session.metadata.recipient_name,
+                senderEmail: session.metadata.sender_email,
+                senderName: session.metadata.sender_name,
+                personalMessage: session.metadata.personal_message || undefined,
+                designId: session.metadata.design_id || undefined,
+                deliveryScheduledAt: deliveryAt,
+                issuedVia: 'purchase',
+                purchaseOrderId: session.id,
+                purchaseAmount: amount,
+              },
+              { useServiceRole: true },
+            )
+
+            // Fetch tenant + design + instrument full for email render
+            const [tenantData, designData, instrumentData] = await Promise.all([
+              supabase.from('tenants').select('name, slug').eq('id', tid).maybeSingle(),
+              session.metadata.design_id
+                ? supabase
+                    .from('gift_card_designs')
+                    .select('*')
+                    .eq('id', session.metadata.design_id)
+                    .maybeSingle()
+                : Promise.resolve({ data: null }),
+              supabase
+                .from('credit_instruments')
+                .select('*')
+                .eq('id', issued.id)
+                .maybeSingle(),
+            ])
+
+            const tenantName = (tenantData.data as { name?: string } | null)?.name ?? 'TouraCore'
+            const tenantSlug = (tenantData.data as { slug?: string } | null)?.slug ?? ''
+
+            if (instrumentData.data) {
+              // Sign JWT + deliver URL
+              const jwt = await signVoucherJwt({
+                instrumentId: issued.id,
+                tenantId: tid,
+                kind: 'gift_card',
+                purpose: 'delivery',
+              })
+              const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.VERCEL_URL
+                ? process.env.NEXT_PUBLIC_APP_URL ?? `https://${process.env.VERCEL_URL}`
+                : 'https://touracore.vercel.app'
+              const deliveryUrl = `${appUrl}/credits/${jwt}`
+
+              const emailContent = renderGiftCardEmail({
+                credit: instrumentData.data as never,
+                design: (designData.data as never) ?? null,
+                deliveryUrl,
+                tenantName,
+              })
+
+              // Skip send if scheduled for future
+              const now = Date.now()
+              const sendLater = deliveryAt && new Date(deliveryAt).getTime() > now
+
+              if (!sendLater && session.metadata.recipient_email) {
+                try {
+                  const resend = new Resend(process.env.RESEND_API_KEY ?? '')
+                  await resend.emails.send({
+                    from: process.env.RESEND_FROM_EMAIL ?? 'noreply@touracore.app',
+                    to: session.metadata.recipient_email,
+                    subject: emailContent.subject,
+                    html: emailContent.html,
+                    text: emailContent.text,
+                  })
+                  await supabase
+                    .from('credit_instruments')
+                    .update({ delivered_at: new Date().toISOString() })
+                    .eq('id', issued.id)
+                } catch (emailErr) {
+                  console.error('gift card email send failed', emailErr)
+                }
+              }
+            }
+          } catch (giftErr) {
+            console.error('gift card issue failed', giftErr)
+          }
+        }
+        break
+      }
+
       // Unified reservation bundle (multi-vertical cart)
       if (session.metadata?.type === 'bundle') {
         const bundleId = session.metadata?.bundle_id
