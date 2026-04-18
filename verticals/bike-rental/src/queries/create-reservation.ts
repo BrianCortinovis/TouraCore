@@ -1,4 +1,5 @@
 import { createServiceRoleClient, createServerSupabaseClient } from '@touracore/db'
+import { redeemCredit } from '@touracore/vouchers/server'
 import { computeQuote, type QuoteRequest } from './quote'
 import { findNextAvailableBike } from './availability'
 import type { BikeRentalReservationRow } from '../types/database'
@@ -21,6 +22,10 @@ export interface CreateReservationInput extends QuoteRequest {
   autoAssignBikes?: boolean
   /** Use service role for public booking (no auth). */
   usePublicClient?: boolean
+  /** Voucher / gift card / promo code — atomic redeem post-insert */
+  voucherCode?: string
+  /** Actor IP for rate limit + audit on voucher redeem */
+  actorIp?: string
 }
 
 export interface CreateReservationResult {
@@ -143,11 +148,47 @@ export async function createReservation(
       await supabase.from('bike_rental_reservation_addons').insert(addonInserts)
     }
 
+    // Voucher / gift card / promo — atomic redeem con idempotency_key = reservationId
+    let finalDiscount = quote.discount
+    let finalTotal = quote.totalAmount
+    if (input.voucherCode) {
+      const baseAmount = quote.subtotal + quote.addonsTotal + quote.insuranceAmount + quote.oneWayFee + quote.deliveryFee
+      const redeemResult = await redeemCredit(
+        {
+          code: input.voucherCode,
+          tenantId,
+          amount: baseAmount,
+          reservationId,
+          reservationTable: 'bike_rental_reservations',
+          vertical: 'bike_rental',
+          entityId: input.bikeRentalId,
+          idempotencyKey: reservationId,
+          actorIp: input.actorIp,
+        },
+        { useServiceRole: Boolean(input.usePublicClient) },
+      )
+      if (redeemResult.success && redeemResult.amount_applied) {
+        finalDiscount = quote.discount + redeemResult.amount_applied
+        // Ricalcolo tax + total con discount aggiornato
+        const taxable = baseAmount - finalDiscount
+        const taxAmount = Math.round(taxable * 0.22 * 100) / 100
+        finalTotal = Math.round((taxable + taxAmount) * 100) / 100
+        await supabase
+          .from('bike_rental_reservations')
+          .update({
+            discount: finalDiscount,
+            tax_amount: taxAmount,
+            total_amount: finalTotal,
+          })
+          .eq('id', reservationId)
+      }
+    }
+
     return {
       success: true,
       reservationId,
       referenceCode: (reservation as { reference_code: string }).reference_code,
-      quote,
+      quote: { ...quote, discount: finalDiscount, totalAmount: finalTotal },
     }
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)

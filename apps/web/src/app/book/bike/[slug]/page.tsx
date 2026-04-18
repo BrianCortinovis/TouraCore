@@ -71,6 +71,7 @@ export default async function BikeBookingPage({ params, searchParams }: Props) {
       <main className="mx-auto max-w-4xl px-4 py-6">
         <BikeBookingClient
           entityId={entityId}
+          tenantId={entity.tenant_id as string}
           entityName={entity.name as string}
           types={types.map((t) => ({
             id: t.id,

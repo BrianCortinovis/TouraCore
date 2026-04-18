@@ -1,8 +1,9 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
-import { Bike, CalendarClock, MapPin, Check, Loader2 } from 'lucide-react'
+import { Bike, CalendarClock, MapPin, Check, Loader2, Ticket, X } from 'lucide-react'
 import { createBookingAction } from './actions'
+import { validateVoucherAction } from './voucher-actions'
 
 interface TypeOption {
   id: string
@@ -40,6 +41,7 @@ interface LocationOption {
 
 interface Props {
   entityId: string
+  tenantId: string
   entityName: string
   types: TypeOption[]
   addons: AddonOption[]
@@ -48,8 +50,16 @@ interface Props {
   deliveryEnabled: boolean
 }
 
+interface AppliedVoucher {
+  code: string
+  creditInstrumentId: string
+  amountApplied: number
+  kind: string
+}
+
 export function BikeBookingClient({
   entityId,
+  tenantId,
   entityName,
   types,
   addons,
@@ -72,6 +82,10 @@ export function BikeBookingClient({
   const [guestName, setGuestName] = useState('')
   const [guestEmail, setGuestEmail] = useState('')
   const [guestPhone, setGuestPhone] = useState('')
+  const [voucherCode, setVoucherCode] = useState('')
+  const [voucher, setVoucher] = useState<AppliedVoucher | null>(null)
+  const [voucherError, setVoucherError] = useState<string | null>(null)
+  const [voucherPending, startVoucherCheck] = useTransition()
   const [isPending, startTransition] = useTransition()
   const [result, setResult] = useState<{ success: boolean; referenceCode?: string; total?: number; error?: string } | null>(null)
 
@@ -86,6 +100,61 @@ export function BikeBookingClient({
   }, [rentalStart, rentalEnd])
 
   const isOneWay = oneWayEnabled && pickupLocationId !== returnLocationId
+
+  const estimatedSubtotal = useMemo(() => {
+    let s = 0
+    for (const [typeId, qty] of Object.entries(cart)) {
+      const t = types.find((x) => x.id === typeId)
+      if (!t) continue
+      const perUnit =
+        durationHours >= 168 && t.weeklyRate
+          ? t.weeklyRate
+          : durationHours >= 24 && t.dailyRate
+            ? t.dailyRate * Math.ceil(durationHours / 24)
+            : durationHours >= 8 && t.dailyRate
+              ? t.dailyRate
+              : t.hourlyRate
+                ? t.hourlyRate * durationHours
+                : 0
+      s += perUnit * qty
+    }
+    return Math.round(s * 100) / 100
+  }, [cart, types, durationHours])
+
+  const applyVoucher = () => {
+    setVoucherError(null)
+    if (!voucherCode.trim()) return
+    if (estimatedSubtotal <= 0) {
+      setVoucherError('Seleziona prima almeno una bici')
+      return
+    }
+    startVoucherCheck(async () => {
+      const r = await validateVoucherAction({
+        code: voucherCode.trim().toUpperCase(),
+        tenantId,
+        amount: estimatedSubtotal,
+        vertical: 'bike_rental',
+        entityId,
+      })
+      if (!r.success) {
+        setVoucher(null)
+        setVoucherError(r.error ?? 'Codice non valido')
+        return
+      }
+      setVoucher({
+        code: voucherCode.trim().toUpperCase(),
+        creditInstrumentId: r.credit_instrument_id!,
+        amountApplied: r.amount_applied ?? 0,
+        kind: r.kind ?? 'voucher',
+      })
+    })
+  }
+
+  const removeVoucher = () => {
+    setVoucher(null)
+    setVoucherCode('')
+    setVoucherError(null)
+  }
 
   const addToCart = (typeId: string, delta: number) => {
     setCart((c) => {
@@ -131,6 +200,7 @@ export function BikeBookingClient({
         pickupLocationId,
         returnLocationId,
         guest: { name: guestName, email: guestEmail, phone: guestPhone },
+        voucherCode: voucher?.code,
       })
       setResult(r)
     })
@@ -313,6 +383,51 @@ export function BikeBookingClient({
           </div>
         </Section>
       )}
+
+      {/* Step 4.5: Voucher / Gift Card / Promo */}
+      <Section icon={Ticket} title="Hai un codice sconto o gift card?">
+        {voucher ? (
+          <div className="flex items-center justify-between rounded-md border border-green-200 bg-green-50 p-3 text-sm">
+            <div>
+              <p className="font-semibold text-green-900">
+                Codice applicato: <span className="font-mono">{voucher.code}</span>
+              </p>
+              <p className="text-xs text-green-700">
+                {voucher.kind === 'promo_code' ? 'Sconto promo' : voucher.kind === 'gift_card' ? 'Gift card' : voucher.kind}:{' '}
+                −€{voucher.amountApplied.toFixed(2)}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={removeVoucher}
+              className="text-xs font-medium text-red-600 hover:underline"
+            >
+              Rimuovi
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={voucherCode}
+              onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+              placeholder="XXXX-XXXX-XXXX-XXXX"
+              className="flex-1 rounded-md border border-gray-300 px-3 py-2 font-mono text-sm uppercase tracking-wider"
+            />
+            <button
+              type="button"
+              onClick={applyVoucher}
+              disabled={voucherPending || !voucherCode.trim()}
+              className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+            >
+              {voucherPending ? 'Verifica…' : 'Applica'}
+            </button>
+          </div>
+        )}
+        {voucherError && (
+          <p className="mt-2 text-xs text-red-600">{voucherError}</p>
+        )}
+      </Section>
 
       {/* Step 5: Guest */}
       <Section title="I tuoi dati">

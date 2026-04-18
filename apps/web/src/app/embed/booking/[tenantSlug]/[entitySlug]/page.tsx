@@ -52,6 +52,7 @@ export default async function EmbedBookingEntityPage({ params }: Props) {
       <div style={{ padding: 16, background: '#fff', minHeight: '100vh' }}>
         <BikeBookingClient
           entityId={entityId}
+          tenantId={entity.tenant_id as string}
           entityName={entity.name as string}
           types={types.map((t) => ({
             id: t.id,
