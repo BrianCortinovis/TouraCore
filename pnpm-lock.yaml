@@ -126,6 +126,9 @@ importers:
       '@touracore/ui':
         specifier: workspace:*
         version: link:../../packages/core/ui
+      '@touracore/vouchers':
+        specifier: workspace:*
+        version: link:../../packages/core/vouchers
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0

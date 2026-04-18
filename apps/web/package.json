@@ -23,6 +23,7 @@
     "@touracore/channels": "workspace:*",
     "@touracore/bike-rental": "workspace:*",
     "@touracore/config": "workspace:*",
+    "@touracore/vouchers": "workspace:*",
     "@touracore/db": "workspace:*",
     "@touracore/fiscal": "workspace:*",
     "@touracore/hospitality": "workspace:*",
