@@ -40,11 +40,16 @@ export function PlatformSidebar({ email, role }: PlatformSidebarProps) {
           ],
         },
         {
+          title: 'Config',
+          items: [
+            { href: '/platform/config', label: 'Plans+Commissioni', icon: Layers3 },
+          ],
+        },
+        {
           title: 'Ops',
           items: [
-            { href: '/platform/security', label: 'Sicurezza', icon: Shield },
             { href: '/platform/tech', label: 'Tech Ops', icon: Terminal },
-            { href: '/platform/architecture', label: 'Architettura', icon: Layers3 },
+            { href: '/platform/security', label: 'Sicurezza', icon: Shield },
             { href: '/superadmin', label: 'Legacy', icon: Cog },
           ],
         },
