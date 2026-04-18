@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@touracore/db'
+import { createServerSupabaseClient, createServiceRoleClient } from '@touracore/db'
 import { randomUUID } from 'node:crypto'
 
 export interface CreateReservationInput {
@@ -39,7 +39,8 @@ export interface CreateReservationInput {
 }
 
 export async function createReservation(input: CreateReservationInput): Promise<{ id: string; reference_code: string }> {
-  const supabase = await createServerSupabaseClient()
+  // Use service role per booking anon flow (public widget)
+  const supabase = await createServiceRoleClient()
 
   // Atomic timeslot booking
   if (input.timeslotId) {

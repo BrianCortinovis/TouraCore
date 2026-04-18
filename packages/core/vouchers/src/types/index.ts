@@ -31,6 +31,7 @@ export type ReservationTable =
   | 'restaurant_reservations'
   | 'bike_rental_reservations'
   | 'reservation_bundles'
+  | 'experience_reservations'
 
 export type CreditTransactionType =
   | 'issue'
