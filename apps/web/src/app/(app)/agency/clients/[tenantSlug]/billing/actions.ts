@@ -8,7 +8,7 @@ import { getCurrentUser } from '@touracore/auth'
 async function assertAgencyMember(userId: string, agencyId: string): Promise<boolean> {
   const admin = await createServiceRoleClient()
   const { data } = await admin
-    .from('agency_members')
+    .from('agency_memberships')
     .select('role')
     .eq('user_id', userId)
     .eq('agency_id', agencyId)

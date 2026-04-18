@@ -13,7 +13,7 @@ export default async function AgencyBillingPage() {
 
   // Identifica agency dell'utente
   const { data: agencyMember } = await supabase
-    .from('agency_members')
+    .from('agency_memberships')
     .select('agency_id, role, agency:agencies(id, name, slug, can_grant_free, free_grant_quota)')
     .eq('user_id', user.id)
     .eq('is_active', true)
