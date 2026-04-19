@@ -21,6 +21,8 @@ export function MinimalTemplate(props: MinimalTemplateProps) {
     initialCheckIn: props.initialCheckIn,
     initialCheckOut: props.initialCheckOut,
     initialGuests: props.initialGuests,
+    previewMode: (props as any).previewMode,
+    previewStep: (props as any).previewStep,
   })
 
   const rootStyle = themeToStyle(props.context.theme)

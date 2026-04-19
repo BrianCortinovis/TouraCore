@@ -189,20 +189,65 @@ function DesignPanel({ template, setTemplate, theme, setTheme }: {
   )
 }
 
+const PREVIEW_STEPS = ['search', 'results', 'extras', 'form', 'confirmation'] as const
+type PreviewStep = typeof PREVIEW_STEPS[number]
+const STEP_LABELS: Record<PreviewStep, string> = {
+  search: 'Ricerca',
+  results: 'Risultati camere',
+  extras: 'Extra / Upsell',
+  form: 'Dati ospite',
+  confirmation: 'Conferma',
+}
+
 function PreviewPanel({ slug, template, theme }: { slug: string; template: BookingTemplate; theme: BookingTheme }) {
+  const [stepIdx, setStepIdx] = useState(0)
+  const step: PreviewStep = PREVIEW_STEPS[stepIdx] ?? 'search'
   const accent = theme.accent_color.replace('#', '')
-  const src = `/embed/${slug}?template=${template}&accent=${accent}&t=${Date.now()}`
+  const src = `/embed/${slug}?template=${template}&accent=${accent}&preview_step=${step}&t=${Date.now()}`
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Preview live — {template}</CardTitle>
-        <p className="text-xs text-gray-500 mt-1">Il preview mostra il template corrente. Salva per renderlo effettivo per i visitatori.</p>
+        <CardTitle>Anteprima booking engine · {template}</CardTitle>
+        <p className="text-xs text-gray-500 mt-1">
+          Scheda {stepIdx + 1} di {PREVIEW_STEPS.length}: <strong>{STEP_LABELS[step]}</strong>
+        </p>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-3">
+        <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 p-2">
+          <button
+            type="button"
+            onClick={() => setStepIdx((i) => Math.max(0, i - 1))}
+            disabled={stepIdx === 0}
+            className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 disabled:opacity-40 hover:bg-slate-50"
+          >
+            ← Indietro
+          </button>
+          <div className="flex gap-1">
+            {PREVIEW_STEPS.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setStepIdx(i)}
+                className={`h-2 w-6 rounded-full transition ${i === stepIdx ? 'bg-blue-600' : 'bg-slate-300 hover:bg-slate-400'}`}
+                aria-label={`Vai alla scheda ${i + 1}`}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => setStepIdx((i) => Math.min(PREVIEW_STEPS.length - 1, i + 1))}
+            disabled={stepIdx === PREVIEW_STEPS.length - 1}
+            className="rounded bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40 hover:bg-blue-700"
+          >
+            Avanti →
+          </button>
+        </div>
         <iframe
+          key={step}
           src={src}
-          style={{ width: '100%', minHeight: 680, border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff' }}
-          title="Booking engine preview"
+          style={{ width: '100%', minHeight: 720, border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff' }}
+          title={`Booking preview · ${template} · ${step}`}
         />
       </CardContent>
     </Card>

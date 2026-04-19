@@ -8,7 +8,7 @@ import { createServerActionAdapter } from '../../book/[slug]/booking-adapter'
  * Client wrapper embed: posta altezza contenuto al parent window ad ogni mutation.
  * Parent ascolta con: window.addEventListener('message', e => iframe.style.height = e.data.height + 'px')
  */
-export function EmbedClient({ context }: { context: BookingContext }) {
+export function EmbedClient({ context, previewStep }: { context: BookingContext; previewStep?: 'search' | 'results' | 'extras' | 'form' | 'confirmation' }) {
   const rootRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -37,7 +37,12 @@ export function EmbedClient({ context }: { context: BookingContext }) {
 
   return (
     <div ref={rootRef}>
-      <BookingEngine context={context} adapter={adapter} />
+      <BookingEngine
+        context={context}
+        adapter={adapter}
+        previewMode={Boolean(previewStep)}
+        previewStep={previewStep}
+      />
     </div>
   )
 }

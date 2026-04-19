@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type {
   BookingAvailabilityItem,
   BookingConfirmation,
@@ -42,6 +42,9 @@ export interface UseBookingFlowParams {
   initialCheckOut?: string
   initialGuests?: number
   onConfirmed?: (c: BookingConfirmation) => void
+  /** Forza step iniziale + popola dati mock per anteprima admin (non invia al backend). */
+  previewMode?: boolean
+  previewStep?: BookingStep
 }
 
 export interface UseBookingFlowResult {
@@ -73,7 +76,7 @@ export interface UseBookingFlowResult {
 export function useBookingFlow(params: UseBookingFlowParams): UseBookingFlowResult {
   const { context, adapter, onConfirmed } = params
 
-  const [step, setStep] = useState<BookingStep>('search')
+  const [step, setStep] = useState<BookingStep>(params.previewStep ?? 'search')
   const [selection, setSelection] = useState<BookingSelection>({
     roomTypeId: null,
     ratePlanId: context.defaultRatePlanId,
@@ -102,6 +105,43 @@ export function useBookingFlow(params: UseBookingFlowParams): UseBookingFlowResu
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [confirmation, setConfirmation] = useState<BookingConfirmation | null>(null)
+
+  // Preview mode: popola dati mock per permettere navigazione step senza backend
+  useEffect(() => {
+    if (!params.previewMode || !params.previewStep) return
+    const targetStep = params.previewStep
+    const needsAvailability = ['results', 'extras', 'form', 'confirmation'].includes(targetStep)
+    if (needsAvailability && availability.length === 0) {
+      const mockItem: BookingAvailabilityItem = {
+        roomTypeId: 'preview-room-1',
+        roomTypeName: 'Camera Standard',
+        description: 'Anteprima — dati di esempio',
+        baseOccupancy: 2,
+        maxOccupancy: 3,
+        photos: [],
+        amenities: ['WiFi', 'Aria condizionata', 'TV'],
+        sizeSqm: 22,
+        bedConfiguration: '1 letto matrimoniale',
+        availableRooms: 3,
+        totalRooms: 5,
+        pricePerNight: 120,
+        totalPrice: 240,
+        nights: 2,
+        currency: 'EUR',
+      }
+      setAvailability([mockItem])
+      setSelection((s) => ({ ...s, roomTypeId: 'preview-room-1' }))
+    }
+    if (targetStep === 'confirmation' && !confirmation) {
+      setConfirmation({
+        reservationCode: 'PREV-0001',
+        checkIn: selection.checkIn,
+        checkOut: selection.checkOut,
+        totalAmount: 240,
+        currency: 'EUR',
+      })
+    }
+  }, [params.previewMode, params.previewStep, availability.length, confirmation, selection.checkIn, selection.checkOut])
 
   const updateSelection = useCallback((patch: Partial<BookingSelection>) => {
     setSelection((prev) => ({ ...prev, ...patch }))

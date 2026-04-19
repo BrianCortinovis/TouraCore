@@ -70,5 +70,9 @@ export default async function EmbedPage({
     template,
   }
 
-  return <EmbedClient context={context} />
+  const previewStepRaw = typeof q.preview_step === 'string' ? q.preview_step : undefined
+  const validSteps = ['search', 'results', 'extras', 'form', 'confirmation']
+  const previewStep = previewStepRaw && validSteps.includes(previewStepRaw) ? previewStepRaw : undefined
+
+  return <EmbedClient context={context} previewStep={previewStep as 'search' | 'results' | 'extras' | 'form' | 'confirmation' | undefined} />
 }

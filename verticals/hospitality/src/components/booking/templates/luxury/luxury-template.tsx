@@ -16,6 +16,8 @@ export function LuxuryTemplate(props: LuxuryTemplateProps) {
   const locale = mapLocale(props.context.property.default_language)
   const currency = props.context.property.default_currency
   const flow = useBookingFlow({
+    previewMode: (props as any).previewMode,
+    previewStep: (props as any).previewStep,
     context: props.context,
     adapter: props.adapter,
     initialCheckIn: props.initialCheckIn,

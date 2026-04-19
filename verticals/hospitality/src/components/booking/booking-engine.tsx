@@ -1,6 +1,6 @@
 'use client'
 
-import type { BookingContext, BookingFlowAdapter, BookingTemplate } from './core'
+import type { BookingContext, BookingFlowAdapter, BookingStep, BookingTemplate } from './core'
 import { MinimalTemplate, LuxuryTemplate, MobileTemplate } from './templates'
 
 export interface BookingEngineProps {
@@ -10,6 +10,9 @@ export interface BookingEngineProps {
   initialCheckIn?: string
   initialCheckOut?: string
   initialGuests?: number
+  /** Mostra step specifico con dati mock per anteprima admin. */
+  previewMode?: boolean
+  previewStep?: BookingStep
 }
 
 /**
