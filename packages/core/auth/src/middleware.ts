@@ -31,6 +31,7 @@ function isPublicRoute(pathname: string): boolean {
     pathname.startsWith('/property/') ||
     pathname.startsWith('/s/') ||
     pathname.startsWith('/u/') ||
+    pathname.startsWith('/unsubscribe') ||
     pathname.startsWith('/portal') ||
     pathname.startsWith('/discover') ||
     pathname.startsWith('/credits/') ||
