@@ -63,6 +63,7 @@ export async function saveTaxSettingsAction(settings: {
   tourist_tax_enabled: boolean
   tourist_tax_max_nights: number
   tourist_tax_municipality: string
+  tourist_tax_payment_policy: 'online_only' | 'onsite_only' | 'guest_choice'
 }): Promise<ActionResult> {
   try {
     const { property } = await requireCurrentEntity()
@@ -74,6 +75,7 @@ export async function saveTaxSettingsAction(settings: {
         tourist_tax_enabled: settings.tourist_tax_enabled,
         tourist_tax_max_nights: settings.tourist_tax_max_nights,
         tourist_tax_municipality: settings.tourist_tax_municipality,
+        tourist_tax_payment_policy: settings.tourist_tax_payment_policy,
       })
       .eq('entity_id', property.id)
 
@@ -91,7 +93,7 @@ export async function loadTaxSettingsAction(): Promise<ActionResult> {
 
     const { data, error } = await supabase
       .from('accommodations')
-      .select('tourist_tax_enabled, tourist_tax_max_nights, tourist_tax_municipality')
+      .select('tourist_tax_enabled, tourist_tax_max_nights, tourist_tax_municipality, tourist_tax_payment_policy')
       .eq('entity_id', property.id)
       .single()
 

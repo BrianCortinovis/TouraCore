@@ -7,7 +7,7 @@ import { updateCheckinData, completeCheckin } from '@touracore/hospitality/src/a
 import {
   uploadDocumentScanAction,
   createTouristTaxPaymentIntentAction,
-  markTouristTaxPaidAction,
+  setTaxPaymentChoiceAction,
 } from './actions'
 
 interface CheckinWizardProps {
@@ -19,6 +19,8 @@ interface CheckinWizardProps {
   taxNights: number
   taxPerPerson: number
   taxAlreadyPaid: boolean
+  taxPaymentPolicy: 'online_only' | 'onsite_only' | 'guest_choice'
+  taxInitialChoice: 'online' | 'onsite' | null
   hasFrontDoc: boolean
   hasBackDoc: boolean
 }
@@ -44,12 +46,15 @@ export function CheckinWizard({
   taxNights,
   taxPerPerson,
   taxAlreadyPaid,
+  taxPaymentPolicy,
+  taxInitialChoice,
   hasFrontDoc,
   hasBackDoc,
 }: CheckinWizardProps) {
   const guest = (reservation.guest ?? {}) as Record<string, string | null>
   const roomType = (reservation.room_type ?? {}) as Record<string, string>
   const needsTax = taxAmountCents > 0 && !taxAlreadyPaid
+  const [taxChoice, setTaxChoice] = useState<'online' | 'onsite' | null>(taxInitialChoice)
 
   const STEPS = [
     { key: 'personal', label: 'Dati personali', icon: User },
@@ -83,7 +88,7 @@ export function CheckinWizard({
   const [backUploaded, setBackUploaded] = useState(hasBackDoc)
   const [uploadingKind, setUploadingKind] = useState<'id_front' | 'id_back' | null>(null)
 
-  const [taxPaid, setTaxPaid] = useState(taxAlreadyPaid)
+  const taxPaid = taxAlreadyPaid
 
   const [arrivalTime, setArrivalTime] = useState(guestData.arrival_time ?? '')
   const [specialRequests, setSpecialRequests] = useState(guestData.special_requests ?? '')
@@ -135,6 +140,16 @@ export function CheckinWizard({
 
     if (currentStepKey === 'scan' && (!frontUploaded || !backUploaded)) {
       setError('Carica entrambe le foto del documento (fronte e retro).')
+      return
+    }
+
+    if (currentStepKey === 'tax' && taxPaymentPolicy === 'guest_choice' && !taxChoice) {
+      setError('Scegli come pagare la tassa di soggiorno.')
+      return
+    }
+
+    if (currentStepKey === 'tax' && taxPaymentPolicy === 'online_only' && !taxPaid) {
+      setError('Completa il pagamento online per continuare.')
       return
     }
 
@@ -304,18 +319,68 @@ export function CheckinWizard({
                 <p className="mt-2 text-xl font-bold text-amber-900">€{(taxAmountCents / 100).toFixed(2)}</p>
               </div>
 
-              {taxPaid ? (
+              {taxPaid && (
                 <p className="rounded bg-emerald-50 p-3 text-sm text-emerald-800">
-                  ✓ Tassa soggiorno già pagata.
+                  ✓ Tassa soggiorno già pagata online.
                 </p>
-              ) : (
+              )}
+
+              {!taxPaid && taxPaymentPolicy === 'online_only' && (
                 <>
+                  <p className="rounded bg-slate-50 p-3 text-xs text-slate-600">
+                    La struttura richiede il pagamento online della tassa di soggiorno prima dell&apos;arrivo.
+                  </p>
                   <Button onClick={handlePayTax} disabled={isPending} className="w-full">
                     {isPending ? 'Elaborazione…' : 'Paga online ora'}
                   </Button>
-                  <p className="text-center text-xs text-gray-500">
-                    Oppure potrai pagarla al momento del check-in in struttura.
+                </>
+              )}
+
+              {!taxPaid && taxPaymentPolicy === 'onsite_only' && (
+                <div className="rounded border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                  <p>Pagherai la tassa al momento del check-in in struttura.</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Metodi accettati: contanti, POS, carta.
                   </p>
+                </div>
+              )}
+
+              {!taxPaid && taxPaymentPolicy === 'guest_choice' && (
+                <>
+                  <p className="text-sm font-medium text-gray-700">Come preferisci pagare?</p>
+                  <div className="grid gap-2">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await setTaxPaymentChoiceAction({ token, choice: 'online' })
+                        setTaxChoice('online')
+                      }}
+                      className={`rounded-lg border-2 p-3 text-left transition-all ${
+                        taxChoice === 'online' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <p className="text-sm font-semibold">Paga online ora</p>
+                      <p className="mt-0.5 text-xs text-gray-500">Carta di credito/debito sicura</p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await setTaxPaymentChoiceAction({ token, choice: 'onsite' })
+                        setTaxChoice('onsite')
+                      }}
+                      className={`rounded-lg border-2 p-3 text-left transition-all ${
+                        taxChoice === 'onsite' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <p className="text-sm font-semibold">Paga in struttura</p>
+                      <p className="mt-0.5 text-xs text-gray-500">Contanti, POS o carta al check-in</p>
+                    </button>
+                  </div>
+                  {taxChoice === 'online' && (
+                    <Button onClick={handlePayTax} disabled={isPending} className="w-full">
+                      {isPending ? 'Elaborazione…' : 'Procedi al pagamento'}
+                    </Button>
+                  )}
                 </>
               )}
             </div>
@@ -353,7 +418,13 @@ export function CheckinWizard({
                   {taxAmountCents > 0 && (
                     <>
                       <span className="text-gray-500">Tassa soggiorno</span>
-                      <span>{taxPaid ? 'Pagata online' : 'Da pagare in struttura'}</span>
+                      <span>
+                        {taxPaid
+                          ? 'Pagata online'
+                          : taxChoice === 'online'
+                            ? 'Pagamento online in corso'
+                            : 'Da pagare in struttura'}
+                      </span>
                     </>
                   )}
                 </div>

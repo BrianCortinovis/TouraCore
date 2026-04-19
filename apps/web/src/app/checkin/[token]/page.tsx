@@ -34,7 +34,7 @@ export default async function PublicCheckinPage({ params }: CheckinPageProps) {
   // Accommodation config: tassa soggiorno
   const { data: accommodation } = await supabase
     .from('accommodations')
-    .select('tourist_tax_enabled, tourist_tax_max_nights, tourist_tax_municipality')
+    .select('tourist_tax_enabled, tourist_tax_max_nights, tourist_tax_municipality, tourist_tax_payment_policy')
     .eq('entity_id', checkinToken.entity_id)
     .maybeSingle()
 
@@ -108,6 +108,8 @@ export default async function PublicCheckinPage({ params }: CheckinPageProps) {
             taxNights={taxNights}
             taxPerPerson={taxPerPerson}
             taxAlreadyPaid={Boolean(checkinToken.tourist_tax_paid_at)}
+            taxPaymentPolicy={(accommodation?.tourist_tax_payment_policy ?? 'onsite_only') as 'online_only' | 'onsite_only' | 'guest_choice'}
+            taxInitialChoice={(checkinToken.tourist_tax_payment_choice ?? null) as 'online' | 'onsite' | null}
             hasFrontDoc={Boolean(checkinToken.document_front_url)}
             hasBackDoc={Boolean(checkinToken.document_back_url)}
           />

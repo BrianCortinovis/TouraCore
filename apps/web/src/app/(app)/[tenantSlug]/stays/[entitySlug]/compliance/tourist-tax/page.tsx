@@ -45,6 +45,7 @@ interface TaxSettings {
   tourist_tax_enabled: boolean
   tourist_tax_max_nights: number
   tourist_tax_municipality: string | null
+  tourist_tax_payment_policy: 'online_only' | 'onsite_only' | 'guest_choice'
 }
 
 interface Summary {
@@ -84,6 +85,7 @@ export default function TouristTaxPage() {
     tourist_tax_enabled: false,
     tourist_tax_max_nights: 10,
     tourist_tax_municipality: null,
+    tourist_tax_payment_policy: 'onsite_only',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -129,6 +131,7 @@ export default function TouristTaxPage() {
         tourist_tax_enabled: s.tourist_tax_enabled ?? false,
         tourist_tax_max_nights: s.tourist_tax_max_nights ?? 10,
         tourist_tax_municipality: s.tourist_tax_municipality ?? null,
+        tourist_tax_payment_policy: s.tourist_tax_payment_policy ?? 'onsite_only',
       })
     }
   }, [])
@@ -145,6 +148,7 @@ export default function TouristTaxPage() {
       tourist_tax_enabled: settings.tourist_tax_enabled,
       tourist_tax_max_nights: settings.tourist_tax_max_nights,
       tourist_tax_municipality: settings.tourist_tax_municipality ?? '',
+      tourist_tax_payment_policy: settings.tourist_tax_payment_policy,
     })
 
     if (!settingsResult.success) {
@@ -433,6 +437,36 @@ export default function TouristTaxPage() {
                   />
                   <p className="text-xs text-gray-400 mt-1">Varia per comune (tipicamente 5-14)</p>
                 </div>
+              </div>
+
+              <div className="border-t border-gray-100 pt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Modalità di pagamento tassa
+                </label>
+                <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+                  {[
+                    { val: 'onsite_only', label: 'Solo in struttura', desc: 'Ospite paga al check-in in loco' },
+                    { val: 'online_only', label: 'Solo online', desc: 'Pagamento obbligatorio durante check-in online' },
+                    { val: 'guest_choice', label: 'Ospite sceglie', desc: 'Ospite decide tra online o in struttura' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.val}
+                      type="button"
+                      onClick={() => setSettings(s => ({ ...s, tourist_tax_payment_policy: opt.val as TaxSettings['tourist_tax_payment_policy'] }))}
+                      className={`rounded-lg border-2 p-3 text-left transition-all ${
+                        settings.tourist_tax_payment_policy === opt.val
+                          ? 'border-blue-600 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <p className="text-sm font-semibold text-gray-900">{opt.label}</p>
+                      <p className="mt-0.5 text-xs text-gray-500">{opt.desc}</p>
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-gray-400">
+                  Per pagamento online serve Stripe collegato alla struttura.
+                </p>
               </div>
             </CardContent>
           </Card>

@@ -110,6 +110,19 @@ export async function createTouristTaxPaymentIntentAction(input: {
   return { ok: true, clientSecret: pi.client_secret, intentId: pi.id }
 }
 
+export async function setTaxPaymentChoiceAction(input: {
+  token: string
+  choice: 'online' | 'onsite'
+}): Promise<{ ok: boolean; error?: string }> {
+  const supabase = await createServiceRoleClient()
+  const { error } = await supabase
+    .from('checkin_tokens')
+    .update({ tourist_tax_payment_choice: input.choice })
+    .eq('token', input.token)
+  if (error) return { ok: false, error: error.message }
+  return { ok: true }
+}
+
 export async function markTouristTaxPaidAction(input: {
   token: string
   paymentIntentId: string
