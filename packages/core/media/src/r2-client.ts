@@ -36,13 +36,22 @@ export function getR2Config(): R2Config {
   return { accountId, accessKeyId, secretAccessKey, bucket, publicUrl };
 }
 
+export interface UploadOptions {
+  cacheControl?: string;
+  contentDisposition?: string;
+}
+
+// Default 1-year immutable — content-addressed filenames make this safe
+const DEFAULT_CACHE_CONTROL = 'public, max-age=31536000, immutable';
+
 export async function uploadToR2(
   client: S3Client,
   bucket: string,
   key: string,
   body: Buffer | Uint8Array,
   contentType: string,
-  metadata?: Record<string, string>
+  metadata?: Record<string, string>,
+  options?: UploadOptions
 ): Promise<void> {
   const params: PutObjectCommandInput = {
     Bucket: bucket,
@@ -50,9 +59,28 @@ export async function uploadToR2(
     Body: body,
     ContentType: contentType,
     Metadata: metadata,
+    CacheControl: options?.cacheControl ?? DEFAULT_CACHE_CONTROL,
+    ContentDisposition: options?.contentDisposition,
   };
 
   await client.send(new PutObjectCommand(params));
+}
+
+// Presigned PUT — client uploads direct to R2, skip Vercel 4.5MB body limit
+export async function getPresignedUploadUrl(
+  client: S3Client,
+  bucket: string,
+  key: string,
+  contentType: string,
+  expiresIn = 600
+): Promise<string> {
+  const { PutObjectCommand: PutCmd } = await import('@aws-sdk/client-s3');
+  const command = new PutCmd({
+    Bucket: bucket,
+    Key: key,
+    ContentType: contentType,
+  });
+  return getSignedUrl(client, command, { expiresIn });
 }
 
 export async function deleteFromR2(

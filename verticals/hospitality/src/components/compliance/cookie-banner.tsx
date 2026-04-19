@@ -9,11 +9,23 @@ interface CookiePreferences {
   marketing: boolean
 }
 
-const COOKIE_CONSENT_KEY = 'gest_cookie_consent'
+interface StoredConsent {
+  preferences: CookiePreferences
+  version: string
+  timestamp: string
+}
 
-export function CookieBanner({ orgSlug }: { orgSlug: string }) {
+const COOKIE_CONSENT_KEY = 'touracore_cookie_consent'
+
+interface CookieBannerProps {
+  orgSlug?: string
+  policyVersion: string
+}
+
+export function CookieBanner({ orgSlug, policyVersion }: CookieBannerProps) {
   const [visible, setVisible] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
+  const [isReconsent, setIsReconsent] = useState(false)
   const [preferences, setPreferences] = useState<CookiePreferences>({
     necessary: true,
     analytics: false,
@@ -24,11 +36,40 @@ export function CookieBanner({ orgSlug }: { orgSlug: string }) {
     const stored = localStorage.getItem(COOKIE_CONSENT_KEY)
     if (!stored) {
       setVisible(true)
+      return
     }
-  }, [])
+    try {
+      const parsed: StoredConsent = JSON.parse(stored)
+      // Version mismatch → re-consent required
+      if (parsed.version !== policyVersion) {
+        setIsReconsent(true)
+        setPreferences(parsed.preferences) // pre-fill from prior choice
+        setVisible(true)
+      }
+    } catch {
+      setVisible(true)
+    }
+  }, [policyVersion])
 
   const saveConsent = async (prefs: CookiePreferences) => {
-    localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify(prefs))
+    const record: StoredConsent = {
+      preferences: prefs,
+      version: policyVersion,
+      timestamp: new Date().toISOString(),
+    }
+    localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify(record))
+
+    // Google Consent Mode v2 update
+    if (typeof window !== 'undefined' && (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag) {
+      const g = (window as unknown as { gtag: (...args: unknown[]) => void }).gtag
+      g('consent', 'update', {
+        ad_storage: prefs.marketing ? 'granted' : 'denied',
+        ad_user_data: prefs.marketing ? 'granted' : 'denied',
+        ad_personalization: prefs.marketing ? 'granted' : 'denied',
+        analytics_storage: prefs.analytics ? 'granted' : 'denied',
+      })
+    }
+
     setVisible(false)
     try {
       await fetch('/api/cookie-consent', {
@@ -37,6 +78,8 @@ export function CookieBanner({ orgSlug }: { orgSlug: string }) {
         body: JSON.stringify({
           preferences: prefs,
           org_slug: orgSlug,
+          policy_version: policyVersion,
+          reconsent: isReconsent,
         }),
       })
     } catch {
@@ -62,17 +105,24 @@ export function CookieBanner({ orgSlug }: { orgSlug: string }) {
           <Cookie className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" aria-hidden="true" />
           <div className="flex-1">
             <h2 className="text-base font-semibold text-gray-900">
-              Questo sito utilizza i cookie
+              {isReconsent ? 'Cookie Policy aggiornata' : 'Questo sito utilizza i cookie'}
             </h2>
             <p className="mt-1 text-sm text-gray-600">
-              Utilizziamo cookie tecnici necessari per il funzionamento del sito e, con il tuo
-              consenso, cookie di analisi e marketing. Puoi accettare tutti i cookie, rifiutare
-              quelli non necessari, oppure personalizzare le tue preferenze.{' '}
+              {isReconsent
+                ? 'La nostra Cookie Policy è stata aggiornata. Ti chiediamo di confermare nuovamente le tue preferenze. '
+                : 'Utilizziamo cookie tecnici necessari per il funzionamento del sito e, con il tuo consenso, cookie di analisi e marketing. Puoi accettare tutti i cookie, rifiutare quelli non necessari, oppure personalizzare le tue preferenze. '}
               <a
-                href={`/book/${orgSlug}/cookies`}
+                href="/legal/cookie-policy"
                 className="text-blue-600 underline hover:text-blue-800"
               >
                 Cookie Policy
+              </a>
+              {' · '}
+              <a
+                href="/legal/privacy"
+                className="text-blue-600 underline hover:text-blue-800"
+              >
+                Privacy Policy
               </a>
             </p>
 

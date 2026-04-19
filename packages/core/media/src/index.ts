@@ -1,4 +1,12 @@
-export type { Media, MediaQuery, MediaUploadMeta, R2Config } from './types';
+export type {
+  Media,
+  MediaQuery,
+  MediaUploadMeta,
+  R2Config,
+  MediaVariant,
+  MediaVariantSet,
+  VariantKey,
+} from './types';
 export {
   MediaUploadMetaSchema,
   MediaQuerySchema,
@@ -9,5 +17,7 @@ export {
   MAX_FILE_SIZE,
   MAX_IMAGE_DIMENSION,
   THUMBNAIL_SIZE,
+  VARIANT_SIZES,
+  VARIANT_QUALITY,
   isImageMime,
 } from './types';

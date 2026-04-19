@@ -28,7 +28,22 @@ const nextConfig: NextConfig = {
     "@touracore/legal",
     "@touracore/agency",
     "@touracore/hospitality-config",
+    "@touracore/compliance",
   ],
+  // Allow 50MB uploads via server actions (photo pipeline)
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '55mb',
+    },
+  },
+  // R2 public hostnames for remote images
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: '*.r2.cloudflarestorage.com' },
+      { protocol: 'https', hostname: '*.r2.dev' },
+      { protocol: 'https', hostname: 'cdn.touracore.com' },
+    ],
+  },
 };
 
 export default nextConfig;

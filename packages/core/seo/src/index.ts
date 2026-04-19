@@ -13,6 +13,22 @@ export type {
 } from './types';
 
 export { JsonLdScript } from './json-ld-script';
+export {
+  buildBreadcrumbLd,
+  buildFAQLd,
+  buildReviewLd,
+  buildAggregateRatingLd,
+  buildEventLd,
+  buildOrganizationLd,
+  buildWebsiteLd,
+  type BreadcrumbItem,
+  type FAQ,
+  type Review,
+  type EventOffer,
+  type EventLdInput,
+  type OrganizationLdInput,
+  type WebsiteLdInput,
+} from './schemas';
 
 export function buildMetadata(input: SeoInput): Metadata {
   const metadata: Metadata = {

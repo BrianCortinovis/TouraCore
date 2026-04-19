@@ -1,9 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
-import { Badge } from '@touracore/ui'
-import type { Media } from '@touracore/media'
+import { Badge, TouracoreImage } from '@touracore/ui'
+import type { Media, MediaVariantSet } from '@touracore/media'
 import { isImageMime } from '@touracore/media'
 import { deleteMediaAction } from '../actions'
 
@@ -22,7 +21,6 @@ function MediaCard({ media, onDeleted }: { media: Media; onDeleted: () => void }
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const isImage = isImageMime(media.mime_type)
-  const thumbnailUrl = (media.metadata as Record<string, unknown>)?.['thumbnail_url']
 
   const handleDelete = async () => {
     setDeleting(true)
@@ -36,21 +34,26 @@ function MediaCard({ media, onDeleted }: { media: Media; onDeleted: () => void }
 
   return (
     <div className="border rounded-lg overflow-hidden bg-white hover:shadow-md transition-shadow">
-      <div className="aspect-square bg-gray-100 flex items-center justify-center relative">
-        {isImage && (typeof thumbnailUrl === 'string' || media.url) ? (
-          <Image
-            src={typeof thumbnailUrl === 'string' ? thumbnailUrl : media.url}
+      <div className="aspect-square bg-gray-100 relative">
+        {isImage ? (
+          <TouracoreImage
+            src={media.url}
             alt={media.alt_text ?? media.original_name}
-            className="w-full h-full object-cover"
+            variants={(media.variants ?? undefined) as MediaVariantSet | undefined}
+            blurhash={media.blurhash}
             fill
-            unoptimized
+            preferredTier="thumb"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+            className="object-cover"
           />
         ) : (
-          <div className="text-center p-4">
-            <div className="text-3xl mb-2">📄</div>
-            <p className="text-xs text-gray-500 truncate max-w-full">
-              {media.mime_type.split('/')[1]?.toUpperCase()}
-            </p>
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center p-4">
+              <div className="text-3xl mb-2">📄</div>
+              <p className="text-xs text-gray-500 truncate max-w-full">
+                {media.mime_type.split('/')[1]?.toUpperCase()}
+              </p>
+            </div>
           </div>
         )}
       </div>

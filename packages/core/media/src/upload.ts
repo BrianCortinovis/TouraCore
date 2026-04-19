@@ -9,9 +9,14 @@ import {
   buildR2Key,
   buildPublicUrl,
 } from './r2-client';
-import { optimizeImage, generateThumbnail, isImageMime } from './optimize';
+import { processImage, isImageMime, buildVariantSet } from './optimize';
 import { insertMedia, deleteMedia as deleteMediaRecord, getMediaById } from './queries';
-import { FileValidationSchema, type Media, type MediaUploadMeta } from './types';
+import {
+  FileValidationSchema,
+  type Media,
+  type MediaUploadMeta,
+  type MediaVariantSet,
+} from './types';
 
 export interface UploadFileInput {
   buffer: Buffer;
@@ -27,6 +32,18 @@ export interface UploadResult {
   media: Media;
   thumbnailUrl: string | null;
 }
+
+const FORMAT_EXT: Record<'webp' | 'avif' | 'jpeg', string> = {
+  webp: '.webp',
+  avif: '.avif',
+  jpeg: '.jpg',
+};
+
+const FORMAT_MIME: Record<'webp' | 'avif' | 'jpeg', string> = {
+  webp: 'image/webp',
+  avif: 'image/avif',
+  jpeg: 'image/jpeg',
+};
 
 export async function uploadFile(
   supabase: SupabaseClient,
@@ -49,62 +66,101 @@ export async function uploadFile(
 
   const fileId = randomUUID();
   const ext = extname(input.originalName).toLowerCase();
-  let finalBuffer = input.buffer;
-  let finalMime = input.mimeType;
-  let width: number | null = null;
-  let height: number | null = null;
-  let finalExt = ext;
 
-  if (isImageMime(input.mimeType)) {
-    const optimized = await optimizeImage(input.buffer, input.mimeType);
-    finalBuffer = optimized.buffer;
-    width = optimized.width;
-    height = optimized.height;
+  // Non-image: direct upload, no processing
+  if (!isImageMime(input.mimeType)) {
+    const filename = `${fileId}${ext}`;
+    const r2Key = buildR2Key(input.tenantId, filename);
 
-    if (optimized.format === 'webp') {
-      finalMime = 'image/webp';
-      finalExt = '.webp';
-    }
+    await uploadToR2(r2Client, r2Config.bucket, r2Key, input.buffer, input.mimeType, {
+      'original-name': encodeURIComponent(input.originalName),
+      'tenant-id': input.tenantId,
+    });
+
+    const media = await insertMedia(supabase, {
+      tenant_id: input.tenantId,
+      filename,
+      original_name: input.originalName,
+      mime_type: input.mimeType,
+      size_bytes: input.buffer.length,
+      r2_key: r2Key,
+      r2_bucket: r2Config.bucket,
+      url: buildPublicUrl(r2Config, r2Key),
+      alt_text: input.meta?.alt_text ?? null,
+      width: null,
+      height: null,
+      blurhash: null,
+      variants: null,
+      metadata: input.meta?.metadata ?? {},
+      created_by: input.userId,
+    });
+
+    return { media, thumbnailUrl: null };
   }
 
-  const filename = `${fileId}${finalExt}`;
-  const r2Key = buildR2Key(input.tenantId, filename);
+  // Image: full processing pipeline
+  const processed = await processImage(input.buffer, input.mimeType);
 
-  await uploadToR2(r2Client, r2Config.bucket, r2Key, finalBuffer, finalMime, {
-    'original-name': input.originalName,
-    'tenant-id': input.tenantId,
+  // Upload master (full-size WebP) — reference URL
+  const masterFilename = `${fileId}.webp`;
+  const masterKey = buildR2Key(input.tenantId, masterFilename);
+  await uploadToR2(
+    r2Client,
+    r2Config.bucket,
+    masterKey,
+    processed.master.buffer,
+    'image/webp',
+    {
+      'original-name': encodeURIComponent(input.originalName),
+      'tenant-id': input.tenantId,
+    }
+  );
+
+  // Upload all variants in parallel
+  const variantUploads = processed.variants.map(async (v) => {
+    const ext = FORMAT_EXT[v.format];
+    const key = buildR2Key(
+      input.tenantId,
+      `${fileId}_${v.key}${ext}`
+    );
+    await uploadToR2(
+      r2Client,
+      r2Config.bucket,
+      key,
+      v.buffer,
+      FORMAT_MIME[v.format]
+    );
+    return {
+      ...v,
+      url: buildPublicUrl(r2Config, key),
+      sizeBytes: v.buffer.length,
+    };
   });
 
-  let thumbnailUrl: string | null = null;
-  if (isImageMime(input.mimeType)) {
-    const thumbnail = await generateThumbnail(input.buffer, input.mimeType);
-    if (thumbnail) {
-      const thumbKey = buildR2Key(input.tenantId, `thumb_${fileId}.webp`);
-      await uploadToR2(
-        r2Client,
-        r2Config.bucket,
-        thumbKey,
-        thumbnail.buffer,
-        'image/webp'
-      );
-      thumbnailUrl = buildPublicUrl(r2Config, thumbKey);
-    }
-  }
+  const uploadedVariants = await Promise.all(variantUploads);
+  const variantSet: MediaVariantSet = buildVariantSet(uploadedVariants);
+
+  // Thumbnail URL for backward compat
+  const thumbnailUrl = variantSet.thumb?.webp?.url ?? null;
 
   const media = await insertMedia(supabase, {
     tenant_id: input.tenantId,
-    filename,
+    filename: masterFilename,
     original_name: input.originalName,
-    mime_type: finalMime,
-    size_bytes: finalBuffer.length,
-    r2_key: r2Key,
+    mime_type: 'image/webp',
+    size_bytes: processed.master.buffer.length,
+    r2_key: masterKey,
     r2_bucket: r2Config.bucket,
-    url: buildPublicUrl(r2Config, r2Key),
+    url: buildPublicUrl(r2Config, masterKey),
     alt_text: input.meta?.alt_text ?? null,
-    width,
-    height,
+    width: processed.master.width,
+    height: processed.master.height,
+    blurhash: processed.blurhash,
+    variants: variantSet,
     metadata: {
       ...(input.meta?.metadata ?? {}),
+      original_width: processed.originalWidth,
+      original_height: processed.originalHeight,
       ...(thumbnailUrl ? { thumbnail_url: thumbnailUrl } : {}),
     },
     created_by: input.userId,
@@ -125,17 +181,26 @@ export async function deleteFile(
   const r2Config = getR2Config();
   const r2Client = createR2Client(r2Config);
 
-  await deleteFromR2(r2Client, r2Config.bucket, media.r2_key);
+  // Collect all keys: master + all variants
+  const keys: string[] = [media.r2_key];
 
-  const thumbnailUrl = (media.metadata as Record<string, unknown>)?.['thumbnail_url'];
-  if (typeof thumbnailUrl === 'string') {
-    const thumbKey = thumbnailUrl.replace(`${r2Config.publicUrl}/`, '');
-    try {
-      await deleteFromR2(r2Client, r2Config.bucket, thumbKey);
-    } catch {
-      // Thumbnail cleanup non-critico
+  if (media.variants) {
+    for (const tier of Object.values(media.variants)) {
+      if (!tier) continue;
+      for (const v of Object.values(tier)) {
+        if (!v) continue;
+        const key = v.url.replace(`${r2Config.publicUrl}/`, '');
+        keys.push(key);
+      }
     }
   }
+
+  // Parallel delete, tolerate missing objects
+  await Promise.all(
+    keys.map((k) =>
+      deleteFromR2(r2Client, r2Config.bucket, k).catch(() => undefined)
+    )
+  );
 
   await deleteMediaRecord(supabase, mediaId);
 }

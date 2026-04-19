@@ -7,10 +7,10 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: ['/s/', '/u/', '/discover', '/portal/', '/portali/', '/book/', '/property/', '/'],
+        allow: ['/s/', '/u/', '/discover', '/portal/', '/portali/', '/book/', '/property/', '/legal/', '/'],
         disallow: ['/api/', '/account/', '/dashboard/', '/(app)/', '/(dashboard)/', '/superadmin-login'],
       },
     ],
-    sitemap: `${baseUrl}/sitemap-listings.xml`,
+    sitemap: `${baseUrl}/sitemap_index.xml`,
   }
 }

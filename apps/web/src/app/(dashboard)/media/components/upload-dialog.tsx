@@ -99,7 +99,7 @@ export function UploadDialog({ open, onClose, onUploaded }: UploadDialogProps) {
           ) : (
             <div>
               <p className="text-gray-600">Trascina un file qui o clicca per selezionarlo</p>
-              <p className="text-sm text-gray-400 mt-1">Max 10MB — immagini, PDF, documenti</p>
+              <p className="text-sm text-gray-400 mt-1">Max 50MB — JPEG, PNG, WebP, HEIC, TIFF, PDF</p>
             </div>
           )}
           <input

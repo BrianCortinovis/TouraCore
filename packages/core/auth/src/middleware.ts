@@ -41,8 +41,16 @@ function isPublicRoute(pathname: string): boolean {
     pathname.startsWith('/credits/') ||
     pathname.startsWith('/gift-card/') ||
     pathname === '/sitemap-listings.xml' ||
+    pathname === '/sitemap-legal.xml' ||
+    pathname === '/sitemap-pages.xml' ||
+    pathname === '/sitemap-agencies.xml' ||
+    pathname === '/sitemap_index.xml' ||
     pathname === '/sitemap.xml' ||
     pathname === '/robots.txt' ||
+    pathname.startsWith('/legal/') ||
+    pathname === '/legal' ||
+    pathname === '/api/cookie-consent' ||
+    pathname === '/api/vitals' ||
     pathname.startsWith('/widget/') ||
     pathname.startsWith('/api/webhooks') ||
     pathname.startsWith('/api/v1') ||
