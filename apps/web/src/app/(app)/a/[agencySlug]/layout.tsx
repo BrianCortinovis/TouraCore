@@ -3,6 +3,7 @@ import { createServiceRoleClient } from '@touracore/db/server'
 import { getVisibilityContext } from '@touracore/auth/visibility'
 import { logAgencyAction } from '@touracore/audit'
 import { AgencyScopedSidebar } from './agency-scoped-sidebar'
+import { InboxBell } from '../../../../components/InboxBell'
 
 interface AgencyScopedLayoutProps {
   children: React.ReactNode
@@ -53,7 +54,12 @@ export default async function AgencyScopedLayout({ children, params }: AgencySco
   return (
     <div className="flex gap-6">
       <AgencyScopedSidebar agencySlug={agency.slug} agencyName={agency.name} plan={agency.plan} />
-      <div className="min-w-0 flex-1">{children}</div>
+      <div className="min-w-0 flex-1">
+        <div className="mb-4 flex items-center justify-end">
+          <InboxBell />
+        </div>
+        {children}
+      </div>
     </div>
   )
 }

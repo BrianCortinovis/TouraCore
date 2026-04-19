@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getVisibilityContext } from '@touracore/auth/visibility'
 import { logAgencyAction } from '@touracore/audit'
 import { PlatformSidebar } from './platform-sidebar'
+import { InboxBell } from '../../../components/InboxBell'
 
 interface PlatformLayoutProps {
   children: React.ReactNode
@@ -31,6 +32,9 @@ export default async function PlatformLayout({ children }: PlatformLayoutProps) 
           role={ctx.platformRole ?? 'admin'}
         />
         <main className="min-w-0 flex-1 rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-sm backdrop-blur">
+          <div className="mb-4 flex items-center justify-end">
+            <InboxBell />
+          </div>
           {children}
         </main>
       </div>

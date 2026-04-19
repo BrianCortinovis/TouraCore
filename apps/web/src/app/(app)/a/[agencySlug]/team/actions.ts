@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { getVisibilityContext, hasPermission } from '@touracore/auth/visibility'
 import { logAgencyAction } from '@touracore/audit'
+import { enqueueNotification } from '@touracore/notifications'
 
 export interface InviteInput {
   agencySlug: string
@@ -81,10 +82,30 @@ export async function inviteTeamMemberAction(input: InviteInput): Promise<{ ok: 
     metadata: { email: input.email, role: input.role },
   })
 
-  // Email stub — se Resend/SMTP configurato invia, altrimenti console
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://touracore.vercel.app'
   const acceptUrl = `${baseUrl}/invitations/accept?token=${token}`
-  console.log(`[invite] email to ${input.email}: ${acceptUrl}`)
+
+  // Enqueue via notification pipeline (dispatch async by cron)
+  const { data: agencyFull } = await supabase
+    .from('agencies')
+    .select('name, branding')
+    .eq('id', agency.id)
+    .maybeSingle()
+  const brand = (agencyFull?.branding ?? {}) as { color?: string }
+  await enqueueNotification({
+    eventKey: 'team.invite_sent',
+    templateKey: 'team.invite_sent',
+    channel: 'email',
+    scope: 'agency',
+    agencyId: agency.id,
+    recipientEmail: input.email.toLowerCase().trim(),
+    variables: {
+      agency: { name: agencyFull?.name ?? input.agencySlug },
+      invite: { accept_url: acceptUrl },
+      brand: { color: brand.color ?? '#4f46e5' },
+    },
+    idempotencyKey: `team.invite.${invite.id}`,
+  })
 
   revalidatePath(`/a/${input.agencySlug}/team`)
   return { ok: true, token }

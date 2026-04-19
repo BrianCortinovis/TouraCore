@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   Building2,
   CreditCard,
+  MessageSquare,
   Receipt,
   Settings,
   Users,
@@ -43,6 +44,7 @@ export function AgencyScopedSidebar({ agencySlug, agencyName, plan }: AgencyScop
           title: 'Team',
           items: [
             { href: `${prefix}/team`, label: 'Team', icon: Users },
+            { href: `${prefix}/messaging`, label: 'Messaging', icon: MessageSquare },
             { href: `${prefix}/settings`, label: 'Impostazioni', icon: Settings },
           ],
         },

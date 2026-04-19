@@ -7,6 +7,7 @@ import {
   CreditCard,
   LayoutDashboard,
   Layers3,
+  MessageSquare,
   Shield,
   Terminal,
 } from 'lucide-react'
@@ -43,6 +44,7 @@ export function PlatformSidebar({ email, role }: PlatformSidebarProps) {
           title: 'Config',
           items: [
             { href: '/platform/config', label: 'Plans+Commissioni', icon: Layers3 },
+            { href: '/platform/messaging', label: 'Messaging', icon: MessageSquare },
           ],
         },
         {

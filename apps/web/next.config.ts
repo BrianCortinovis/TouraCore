@@ -18,6 +18,7 @@ const nextConfig: NextConfig = {
     "@touracore/audit",
     "@touracore/settings",
     "@touracore/notifications",
+    "@touracore/agency",
     "@touracore/integrations",
     "@touracore/admin-framework",
     "@touracore/widget",

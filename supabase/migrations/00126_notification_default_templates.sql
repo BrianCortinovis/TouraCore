@@ -1,0 +1,13 @@
+-- M082: seed 23 default platform notification templates
+-- Canali: email, whatsapp, sms, in_app. Locale: it (core), en (subset critici).
+-- Applicato cloud via Management API (vedi m082 memory).
+-- Template keys:
+--   booking.confirmed / booking.cancelled / booking.modified / booking.reminder
+--   payment.received / payment.failed
+--   review.request
+--   team.invite_sent / team.invite_accepted
+--   agency.onboarding_completed / commission.paid / commission.threshold_reached
+--   billing.plan_changed
+--   guest.checkin / guest.checkout
+--   system.alert / system.welcome
+-- Variables: guest.*, entity.*, reservation.*, payment.*, brand.color, unsubscribe_url, ecc.

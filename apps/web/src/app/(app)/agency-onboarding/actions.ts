@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@touracore/auth'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { logAgencyAction } from '@touracore/audit'
+import { enqueueNotification } from '@touracore/notifications'
 
 export interface OnboardingInput {
   name: string
@@ -153,6 +154,23 @@ export async function createAgencyOnboardingAction(input: OnboardingInput): Prom
     actorRole: 'agency_owner',
     agencyId: agencyInsert.id,
     metadata: { plan: input.plan, stripe: Boolean(stripeOnboardingUrl) },
+  })
+
+  await enqueueNotification({
+    eventKey: 'agency.onboarding_completed',
+    templateKey: 'agency.onboarding_completed',
+    channel: 'email',
+    scope: 'agency',
+    agencyId: agencyInsert.id,
+    recipientUserId: user.id,
+    recipientEmail: input.billingEmail,
+    variables: {
+      agency: {
+        name: input.name,
+        dashboard_url: `https://touracore.vercel.app/a/${agencyInsert.slug}`,
+      },
+    },
+    idempotencyKey: `agency.onboarded.${agencyInsert.id}`,
   })
 
   return { ok: true, agencySlug: agencyInsert.slug, stripeOnboardingUrl }
