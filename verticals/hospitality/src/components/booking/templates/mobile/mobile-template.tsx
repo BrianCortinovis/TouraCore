@@ -36,7 +36,7 @@ export function MobileTemplate(props: MobileTemplateProps) {
       </div>
 
       {flow.step !== 'search' && flow.step !== 'confirmation' && flow.selectedAvailability && (
-        <StickyFooter flow={flow} locale={locale} currency={currency} />
+        <StickyFooter flow={flow} context={props.context} locale={locale} currency={currency} />
       )}
 
       {props.context.theme.show_powered_by && flow.step === 'confirmation' && (
@@ -216,6 +216,9 @@ function FormStep({ flow, context, locale, currency }: any) {
         <div><BkLabel>Email</BkLabel><BkInput type="email" inputMode="email" value={flow.guest.email} onChange={(e) => flow.updateGuest({ email: e.target.value })} style={{ fontSize: 17 }} /></div>
         <div><BkLabel>Telefono</BkLabel><BkInput type="tel" inputMode="tel" value={flow.guest.phone} onChange={(e) => flow.updateGuest({ phone: e.target.value })} style={{ fontSize: 17 }} /></div>
       </div>
+      {context.touristTax?.enabled && context.touristTax.paymentPolicy !== 'onsite_only' && (
+        <TaxOptionBlock flow={flow} context={context} currency={currency} locale={locale} />
+      )}
       <div style={{ marginTop: 14, fontSize: 13 }}>
         <label style={{ display: 'flex', gap: 8, alignItems: 'start' }}>
           <input type="checkbox" checked={flow.guest.privacyConsent} onChange={(e) => flow.updateGuest({ privacyConsent: e.target.checked })} style={{ marginTop: 3 }} />
@@ -223,6 +226,48 @@ function FormStep({ flow, context, locale, currency }: any) {
         </label>
       </div>
       {flow.submitError && <p style={{ color: '#dc2626', fontSize: 13, marginTop: 10 }}>{flow.submitError}</p>}
+    </div>
+  )
+}
+
+function computeTouristTax(flow: any, context: any): number {
+  const tax = context.touristTax
+  if (!tax?.enabled) return 0
+  const adults = Number(flow.selection.adults ?? 0)
+  const children = Number(flow.selection.children ?? 0)
+  const maxNights = Number(tax.maxTaxableNights ?? 5)
+  const nights = Math.min(Number(flow.pricing.nights ?? 0), maxNights)
+  return (Number(tax.adultRatePerNight ?? 0) * adults + Number(tax.childRatePerNight ?? 0) * children) * nights
+}
+
+function TaxOptionBlock({ flow, context, currency, locale }: any) {
+  const tax = context.touristTax
+  const estimatedTax = computeTouristTax(flow, context)
+  if (!tax || !tax.enabled || tax.paymentPolicy === 'onsite_only') return null
+
+  const forceOnline = tax.paymentPolicy === 'online_only'
+  const payOnline = forceOnline ? true : Boolean(flow.guest.payTouristTaxOnline)
+
+  return (
+    <div style={{ marginTop: 16, padding: 12, background: '#fffbeb', borderRadius: 'var(--bk-radius)', border: '1px solid #fde68a' }}>
+      <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#78350f' }}>
+        Tassa di soggiorno · {formatMoney(estimatedTax, currency, locale)}
+      </p>
+      {forceOnline ? (
+        <p style={{ margin: '4px 0 0', fontSize: 11, color: '#92400e' }}>
+          Inclusa obbligatoria nel pagamento online.
+        </p>
+      ) : (
+        <label style={{ display: 'flex', alignItems: 'start', gap: 8, marginTop: 8, fontSize: 13 }}>
+          <input
+            type="checkbox"
+            checked={payOnline}
+            onChange={(e) => flow.updateGuest({ payTouristTaxOnline: e.target.checked })}
+            style={{ marginTop: 3 }}
+          />
+          <span>Paga la tassa adesso</span>
+        </label>
+      )}
     </div>
   )
 }
@@ -245,7 +290,7 @@ function ConfirmationStep({ flow, locale, currency }: any) {
   )
 }
 
-function StickyFooter({ flow, locale, currency }: any) {
+function StickyFooter({ flow, context, locale, currency }: any) {
   const onNext = () => {
     if (flow.step === 'results') flow.setStep('extras')
     else if (flow.step === 'extras') flow.setStep('form')
@@ -272,7 +317,12 @@ function StickyFooter({ flow, locale, currency }: any) {
       <div>
         <div style={{ fontSize: 11, color: 'var(--bk-muted)' }}>Totale</div>
         <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--bk-accent)' }}>
-          {formatMoney(flow.pricing.total, currency, locale)}
+          {(() => {
+            const tax = computeTouristTax(flow, context)
+            const policy = context?.touristTax?.paymentPolicy
+            const payOnline = policy === 'online_only' || flow.guest.payTouristTaxOnline
+            return formatMoney(flow.pricing.total + (payOnline ? tax : 0), currency, locale)
+          })()}
         </div>
       </div>
       <BkButton variant="primary" size="lg" onClick={onNext} loading={flow.submitting} disabled={flow.step === 'results' && !flow.selection.roomTypeId}>

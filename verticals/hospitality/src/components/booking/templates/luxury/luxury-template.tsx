@@ -270,8 +270,26 @@ function FormStep({ flow, context, locale, currency }: any) {
         <div style={{ color: 'var(--bk-muted)', marginTop: 4 }}>
           {formatDate(flow.selection.checkIn, locale)} → {formatDate(flow.selection.checkOut, locale)} · {flow.pricing.nights} notti
         </div>
+        {(() => {
+          const tax = computeTouristTax(flow, context)
+          const policy = context.touristTax?.paymentPolicy
+          const payOnline = policy === 'online_only' || flow.guest.payTouristTaxOnline
+          if (tax > 0) {
+            return (
+              <div style={{ marginTop: 8, fontSize: 12, color: 'var(--bk-muted)' }}>
+                Tassa soggiorno: {formatMoney(tax, currency, locale)} · {payOnline ? 'inclusa online' : 'in struttura'}
+              </div>
+            )
+          }
+          return null
+        })()}
         <div style={{ fontSize: 22, fontWeight: 600, color: 'var(--bk-accent)', marginTop: 8 }}>
-          {formatMoney(flow.pricing.total, currency, locale)}
+          {(() => {
+            const tax = computeTouristTax(flow, context)
+            const policy = context.touristTax?.paymentPolicy
+            const payOnline = policy === 'online_only' || flow.guest.payTouristTaxOnline
+            return formatMoney(flow.pricing.total + (payOnline ? tax : 0), currency, locale)
+          })()}
         </div>
       </div>
 
@@ -281,6 +299,10 @@ function FormStep({ flow, context, locale, currency }: any) {
         <div><BkLabel>Email</BkLabel><BkInput type="email" value={flow.guest.email} onChange={(e) => flow.updateGuest({ email: e.target.value })} /></div>
         <div><BkLabel>Telefono</BkLabel><BkInput type="tel" value={flow.guest.phone} onChange={(e) => flow.updateGuest({ phone: e.target.value })} /></div>
       </div>
+
+      {context.touristTax?.enabled && context.touristTax.paymentPolicy !== 'onsite_only' && (
+        <TaxOptionBlock flow={flow} context={context} currency={currency} locale={locale} />
+      )}
 
       <div style={{ marginTop: 20, fontSize: 13 }}>
         <label style={{ display: 'flex', alignItems: 'start', gap: 8 }}>
@@ -297,6 +319,49 @@ function FormStep({ flow, context, locale, currency }: any) {
           Conferma e paga
         </BkButton>
       </div>
+    </div>
+  )
+}
+
+function computeTouristTax(flow: any, context: any): number {
+  const tax = context.touristTax
+  if (!tax?.enabled) return 0
+  const adults = Number(flow.selection.adults ?? 0)
+  const children = Number(flow.selection.children ?? 0)
+  const maxNights = Number(tax.maxTaxableNights ?? 5)
+  const nights = Math.min(Number(flow.pricing.nights ?? 0), maxNights)
+  return (Number(tax.adultRatePerNight ?? 0) * adults + Number(tax.childRatePerNight ?? 0) * children) * nights
+}
+
+function TaxOptionBlock({ flow, context, currency, locale }: any) {
+  const tax = context.touristTax
+  const estimatedTax = computeTouristTax(flow, context)
+  if (!tax || !tax.enabled || tax.paymentPolicy === 'onsite_only') return null
+
+  const forceOnline = tax.paymentPolicy === 'online_only'
+  const payOnline = forceOnline ? true : Boolean(flow.guest.payTouristTaxOnline)
+
+  return (
+    <div style={{ marginTop: 20, padding: 16, background: '#fffbeb', borderRadius: 'var(--bk-radius)', border: '1px solid #fde68a' }}>
+      <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: '#78350f', letterSpacing: '0.02em' }}>
+        Tassa di soggiorno · {formatMoney(estimatedTax, currency, locale)}
+      </p>
+      {forceOnline ? (
+        <p style={{ margin: '6px 0 0', fontSize: 12, color: '#92400e' }}>
+          Inclusa nel pagamento online (obbligatoria).
+        </p>
+      ) : (
+        <label style={{ display: 'flex', alignItems: 'start', gap: 10, marginTop: 10, fontSize: 13 }}>
+          <input
+            type="checkbox"
+            checked={payOnline}
+            onChange={(e) => flow.updateGuest({ payTouristTaxOnline: e.target.checked })}
+          />
+          <span>
+            Desidero saldare la tassa di soggiorno ora. Altrimenti sarà pagata in struttura al check-in.
+          </span>
+        </label>
+      )}
     </div>
   )
 }
