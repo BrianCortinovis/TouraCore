@@ -148,6 +148,16 @@ export function ModulesClient({ tenantSlug, tenantModules, catalog, overrides }:
                   </span>
                 )}
               </div>
+              {active && (
+                <div className="mt-3 border-t border-gray-200 pt-3">
+                  <Link
+                    href={getCreationPath(m.code, tenantSlug)}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-blue-700 hover:text-blue-900"
+                  >
+                    + Aggiungi {entityLabel(m.code)}
+                  </Link>
+                </div>
+              )}
             </div>
           )
         })}
@@ -167,6 +177,34 @@ export function ModulesClient({ tenantSlug, tenantModules, catalog, overrides }:
       </div>
     </div>
   )
+}
+
+const CREATION_PATH: Record<string, string> = {
+  hospitality: '/onboarding/step-3',
+  restaurant: '/onboarding/step-3/restaurant',
+  wellness: '/onboarding/step-3/wellness',
+  experiences: '/onboarding/step-3/experience',
+  bike_rental: '/onboarding/step-3/bike',
+  moto_rental: '/onboarding/step-3/moto',
+  ski_school: '/onboarding/step-3/ski',
+}
+
+const ENTITY_LABEL: Record<string, string> = {
+  hospitality: 'struttura',
+  restaurant: 'ristorante',
+  wellness: 'SPA',
+  experiences: 'esperienza',
+  bike_rental: 'location bike',
+  moto_rental: 'location moto',
+  ski_school: 'scuola sci',
+}
+
+function getCreationPath(code: string, _tenantSlug: string): string {
+  return CREATION_PATH[code] ?? '/onboarding/step-3'
+}
+
+function entityLabel(code: string): string {
+  return ENTITY_LABEL[code] ?? 'entità'
 }
 
 function ToggleSwitch({

@@ -13,6 +13,7 @@
     { "path": "/api/cron/pricing-suggestions", "schedule": "0 4 * * *" },
     { "path": "/api/cron/loyalty-recalc", "schedule": "0 2 * * *" },
     { "path": "/api/cron/restaurant-pricing-suggestions", "schedule": "30 4 * * *" },
-    { "path": "/api/cron/notifications-dispatch", "schedule": "*/2 * * * *" }
+    { "path": "/api/cron/notifications-dispatch", "schedule": "*/2 * * * *" },
+    { "path": "/api/cron/billing-snapshots", "schedule": "0 3 1 * *" }
   ]
 }

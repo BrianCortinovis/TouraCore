@@ -1,9 +1,11 @@
 'use server'
 
+import { randomBytes } from 'crypto'
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { getVisibilityContext, hasPermission } from '@touracore/auth/visibility'
 import { logAgencyAction } from '@touracore/audit'
+import { enqueueNotification } from '@touracore/notifications'
 
 export async function linkTenantToAgencyAction(input: {
   agencySlug: string
@@ -85,6 +87,117 @@ export async function linkTenantToAgencyAction(input: {
   })
 
   revalidatePath(`/a/${input.agencySlug}/clients`)
+  return { ok: true }
+}
+
+function generateToken(): string {
+  return randomBytes(32).toString('base64url')
+}
+
+export async function createClientInviteAction(input: {
+  agencySlug: string
+  email: string
+  tenantName?: string
+  verticalHint?: 'hospitality' | 'restaurant' | 'wellness' | 'experiences' | 'bike_rental' | 'moto_rental' | 'ski_school'
+  billingMode?: 'client_direct' | 'agency_covered'
+  managementMode?: 'agency_managed' | 'self_service'
+}): Promise<{ ok: boolean; error?: string; inviteUrl?: string; token?: string }> {
+  const ctx = await getVisibilityContext()
+  if (!ctx.user) return { ok: false, error: 'unauthenticated' }
+  if (!hasPermission(ctx, 'tenant.write')) return { ok: false, error: 'forbidden' }
+
+  const supabase = await createServiceRoleClient()
+  const { data: agency } = await supabase
+    .from('agencies')
+    .select('id, name, branding, max_tenants')
+    .eq('slug', input.agencySlug)
+    .maybeSingle()
+  if (!agency) return { ok: false, error: 'agency_not_found' }
+  if (agency.id !== ctx.agencyId && !ctx.isPlatformAdmin) return { ok: false, error: 'forbidden' }
+
+  const { count } = await supabase
+    .from('agency_tenant_links')
+    .select('id', { count: 'exact', head: true })
+    .eq('agency_id', agency.id)
+    .eq('status', 'active')
+  if (agency.max_tenants && (count ?? 0) >= agency.max_tenants) {
+    return { ok: false, error: 'plan_limit_reached' }
+  }
+
+  const token = generateToken()
+  const { data: inv, error } = await supabase
+    .from('agency_client_invitations')
+    .insert({
+      agency_id: agency.id,
+      email: input.email.toLowerCase().trim(),
+      tenant_name: input.tenantName ?? null,
+      vertical_hint: input.verticalHint ?? null,
+      billing_mode: input.billingMode ?? 'client_direct',
+      management_mode: input.managementMode ?? 'self_service',
+      token,
+      invited_by: ctx.user.id,
+    })
+    .select('id')
+    .single()
+  if (error || !inv) return { ok: false, error: error?.message ?? 'insert_failed' }
+
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://touracore.vercel.app'
+  const inviteUrl = `${baseUrl}/register?client_invite=${token}`
+
+  const brand = (agency.branding ?? {}) as { color?: string }
+  await enqueueNotification({
+    eventKey: 'agency.client.invite_sent',
+    templateKey: 'agency.client.invite_sent',
+    channel: 'email',
+    scope: 'agency',
+    agencyId: agency.id,
+    recipientEmail: input.email.toLowerCase().trim(),
+    variables: {
+      agency: { name: agency.name },
+      invite: { accept_url: inviteUrl, vertical: input.verticalHint ?? 'attività' },
+      brand: { color: brand.color ?? '#4f46e5' },
+    },
+    idempotencyKey: `agency.client.invite.${inv.id}`,
+  })
+
+  await logAgencyAction({
+    action: 'client.invite_sent',
+    actorUserId: ctx.user.id,
+    actorEmail: ctx.user.email,
+    actorRole: ctx.agencyRole ?? 'agency_member',
+    agencyId: agency.id,
+    targetType: 'client_invitation',
+    targetId: inv.id,
+    metadata: { email: input.email, vertical: input.verticalHint ?? null },
+  })
+
+  revalidatePath(`/a/${input.agencySlug}/clients`)
+  return { ok: true, inviteUrl, token }
+}
+
+export async function revokeClientInviteAction(
+  agencySlug: string,
+  invitationId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const ctx = await getVisibilityContext()
+  if (!ctx.user) return { ok: false, error: 'unauthenticated' }
+  if (!hasPermission(ctx, 'tenant.write')) return { ok: false, error: 'forbidden' }
+
+  const supabase = await createServiceRoleClient()
+  const { data: inv } = await supabase
+    .from('agency_client_invitations')
+    .select('id, agency_id')
+    .eq('id', invitationId)
+    .maybeSingle()
+  if (!inv || (inv.agency_id !== ctx.agencyId && !ctx.isPlatformAdmin)) return { ok: false, error: 'not_found' }
+
+  const { error } = await supabase
+    .from('agency_client_invitations')
+    .update({ revoked_at: new Date().toISOString() })
+    .eq('id', invitationId)
+  if (error) return { ok: false, error: error.message }
+
+  revalidatePath(`/a/${agencySlug}/clients`)
   return { ok: true }
 }
 

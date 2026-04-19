@@ -1,5 +1,6 @@
 'use server'
 
+import { cookies } from 'next/headers'
 import { z } from 'zod'
 import { createServerSupabaseClient, createServiceRoleClient } from '@touracore/db/server'
 import { getCurrentUser } from '@touracore/auth'
@@ -130,6 +131,59 @@ export async function createTenantWithLegalAction(input: Step2Input): Promise<Ac
     console.error('[onboarding/step-2] Errore creazione membership:', membershipError)
     await admin.from('tenants').delete().eq('id', tenant.id)
     return { success: false, error: 'Non siamo riusciti a completare la configurazione. Riprova.' }
+  }
+
+  // Agency attribution: consuma client_invite OR cookie ref_agency
+  try {
+    const authClient = await createServerSupabaseClient()
+    const { data: authRes } = await authClient.auth.getUser()
+    const metadata = (authRes.user?.user_metadata ?? {}) as { pending_client_invite?: string | null }
+    const pendingInvite = metadata.pending_client_invite
+
+    if (pendingInvite) {
+      const { error: rpcErr } = await admin.rpc('agency_client_invitation_accept', {
+        p_token: pendingInvite,
+        p_user_id: user.id,
+        p_tenant_id: tenant.id,
+      })
+      if (!rpcErr) {
+        await authClient.auth.updateUser({ data: { pending_client_invite: null } })
+      } else {
+        console.warn('[onboarding/step-2] client_invite consume failed:', rpcErr.message)
+      }
+    } else {
+      const cookieStore = await cookies()
+      const refAgency = cookieStore.get('ref_agency')?.value
+      if (refAgency) {
+        const { data: ag } = await admin
+          .from('agencies')
+          .select('id, is_active, max_tenants')
+          .eq('id', refAgency)
+          .maybeSingle()
+        if (ag && ag.is_active) {
+          const { count } = await admin
+            .from('agency_tenant_links')
+            .select('id', { count: 'exact', head: true })
+            .eq('agency_id', ag.id)
+            .eq('status', 'active')
+          if (!ag.max_tenants || (count ?? 0) < ag.max_tenants) {
+            await admin.from('tenants').update({ agency_id: ag.id }).eq('id', tenant.id)
+            await admin.from('agency_tenant_links').insert({
+              agency_id: ag.id,
+              tenant_id: tenant.id,
+              billing_mode: 'client_direct',
+              default_management_mode: 'self_service',
+              status: 'active',
+              invited_at: new Date().toISOString(),
+              accepted_at: new Date().toISOString(),
+            })
+          }
+        }
+        cookieStore.delete('ref_agency')
+      }
+    }
+  } catch (e) {
+    console.warn('[onboarding/step-2] agency attribution skipped:', e instanceof Error ? e.message : e)
   }
 
   return { success: true }

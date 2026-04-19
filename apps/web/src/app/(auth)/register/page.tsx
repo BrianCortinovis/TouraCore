@@ -1,21 +1,38 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@touracore/ui'
 import { Input } from '@touracore/ui'
 import { createClient } from '@touracore/db/client'
 import { validatePasswordPolicy, MIN_PASSWORD_LENGTH } from '@touracore/auth/password-policy'
 
-export default function RegisterPage() {
+function RegisterPageInner() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const clientInvite = searchParams?.get('client_invite') ?? null
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [intentScope, setIntentScope] = useState<'tenant' | 'agency'>('tenant')
   const [intentModule, setIntentModule] = useState<string>('hospitality')
+  const [inviteAgencyName, setInviteAgencyName] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!clientInvite) return
+    setIntentScope('tenant')
+    fetch(`/api/agency/client-invite/lookup?token=${encodeURIComponent(clientInvite)}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { agencyName?: string; verticalHint?: string; email?: string } | null) => {
+        if (!data) return
+        if (data.agencyName) setInviteAgencyName(data.agencyName)
+        if (data.verticalHint) setIntentModule(data.verticalHint)
+        if (data.email) setFormData((f) => ({ ...f, email: data.email ?? f.email }))
+      })
+      .catch(() => {})
+  }, [clientInvite])
   const [formData, setFormData] = useState({
     displayName: '',
     email: '',
@@ -55,6 +72,7 @@ export default function RegisterPage() {
             display_name: formData.displayName,
             intent_scope: intentScope,
             intent_module: intentScope === 'agency' ? null : intentModule,
+            pending_client_invite: clientInvite,
           },
         },
       })
@@ -141,6 +159,13 @@ export default function RegisterPage() {
             </p>
           </div>
 
+          {inviteAgencyName && (
+            <div className="mb-4 rounded-lg border border-indigo-200 bg-indigo-50 p-3 text-sm text-indigo-900">
+              Invito da <strong>{inviteAgencyName}</strong>. Il tuo account sarà collegato a questa agenzia.
+            </div>
+          )}
+
+          {!clientInvite && (
           <div className="mb-6">
             <label className="mb-2 block text-sm font-medium text-gray-700">Tipo account</label>
             <div className="grid grid-cols-2 gap-2">
@@ -166,6 +191,7 @@ export default function RegisterPage() {
               </button>
             </div>
           </div>
+          )}
 
           {intentScope === 'tenant' && (
             <div className="mb-6">
@@ -269,5 +295,13 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Caricamento…</div>}>
+      <RegisterPageInner />
+    </Suspense>
   )
 }

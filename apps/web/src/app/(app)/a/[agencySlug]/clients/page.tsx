@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { getVisibilityContext, hasPermission } from '@touracore/auth/visibility'
 import { LinkClientForm } from './link-form'
+import { InviteClientForm } from './invite-form'
 
 interface ClientsPageProps {
   params: Promise<{ agencySlug: string }>
@@ -46,7 +47,12 @@ export default async function ClientsPage({ params }: ClientsPageProps) {
         </div>
       </header>
 
-      {canWrite && <LinkClientForm agencySlug={agencySlug} />}
+      {canWrite && (
+        <div className="space-y-4">
+          <InviteClientForm agencySlug={agencySlug} />
+          <LinkClientForm agencySlug={agencySlug} />
+        </div>
+      )}
 
       <section className="rounded-2xl border border-slate-200 bg-white">
         <header className="border-b border-slate-100 p-4">

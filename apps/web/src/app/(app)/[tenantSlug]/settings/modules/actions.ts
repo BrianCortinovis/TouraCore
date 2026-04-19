@@ -49,6 +49,34 @@ export async function toggleModuleAction(
     { active: boolean; source: string; since?: string; trial_until?: string }
   >
 
+  // Deactivate guard: blocca se >0 entità attive per kind
+  if (!active) {
+    const MODULE_TO_KIND: Record<string, string> = {
+      hospitality: 'accommodation',
+      restaurant: 'restaurant',
+      wellness: 'wellness',
+      experiences: 'activity',
+      bike_rental: 'bike_rental',
+      moto_rental: 'moto_rental',
+      ski_school: 'ski_school',
+    }
+    const kind = MODULE_TO_KIND[moduleCode]
+    if (kind) {
+      const { count } = await admin
+        .from('entities')
+        .select('id', { count: 'exact', head: true })
+        .eq('tenant_id', tenant.id)
+        .eq('kind', kind)
+        .eq('is_active', true)
+      if ((count ?? 0) > 0) {
+        return {
+          success: false,
+          error: `Disattiva prima le ${count} entità attive di tipo ${kind}`,
+        }
+      }
+    }
+  }
+
   const now = new Date().toISOString()
   const existing = current[moduleCode]
   current[moduleCode] = {
@@ -86,4 +114,18 @@ export async function toggleModuleAction(
   revalidatePath(`/${tenantSlug}/settings/modules`)
   revalidatePath(`/${tenantSlug}`)
   return { success: true }
+}
+
+const ENTITY_KIND_PATH: Record<string, string> = {
+  hospitality: '/onboarding/step-3',
+  restaurant: '/onboarding/step-3/restaurant',
+  wellness: '/onboarding/step-3/wellness',
+  experiences: '/onboarding/step-3/experience',
+  bike_rental: '/onboarding/step-3/bike',
+  moto_rental: '/onboarding/step-3/moto',
+  ski_school: '/onboarding/step-3/ski',
+}
+
+export async function getEntityCreationPath(moduleCode: string): Promise<string | null> {
+  return ENTITY_KIND_PATH[moduleCode] ?? null
 }
