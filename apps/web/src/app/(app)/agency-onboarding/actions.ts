@@ -16,6 +16,7 @@ export interface OnboardingInput {
   brandingColor?: string
   brandingLogoUrl?: string
   plan: 'agency_starter' | 'agency_pro' | 'agency_enterprise'
+  setupStripeNow?: boolean
 }
 
 function slugify(s: string): string {
@@ -102,7 +103,7 @@ export async function createAgencyOnboardingAction(input: OnboardingInput): Prom
 
   let stripeOnboardingUrl: string | null = null
   const stripeKey = process.env.STRIPE_SECRET_KEY
-  if (stripeKey) {
+  if (stripeKey && input.setupStripeNow) {
     try {
       const accRes = await fetch('https://api.stripe.com/v1/accounts', {
         method: 'POST',
@@ -153,7 +154,11 @@ export async function createAgencyOnboardingAction(input: OnboardingInput): Prom
     actorEmail: user.email,
     actorRole: 'agency_owner',
     agencyId: agencyInsert.id,
-    metadata: { plan: input.plan, stripe: Boolean(stripeOnboardingUrl) },
+    metadata: {
+      plan: input.plan,
+      stripe: Boolean(stripeOnboardingUrl),
+      minimal: !input.vatId && !input.setupStripeNow,
+    },
   })
 
   await enqueueNotification({
