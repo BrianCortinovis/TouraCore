@@ -7,12 +7,13 @@ interface Props {
   context: RestaurantContext
   template: 'minimal' | 'luxury' | 'mobile'
   isEmbed: boolean
+  previewStep?: 'slot' | 'guest' | 'deposit' | 'success'
 }
 
 type Step = 'slot' | 'guest' | 'deposit' | 'success'
 
-export function BookTableClient({ context, template, isEmbed }: Props) {
-  const [step, setStep] = useState<Step>('slot')
+export function BookTableClient({ context, template, isEmbed, previewStep }: Props) {
+  const [step, setStep] = useState<Step>(previewStep ?? 'slot')
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
   const [party, setParty] = useState(2)
   const [slots, setSlots] = useState<string[]>([])
@@ -36,6 +37,18 @@ export function BookTableClient({ context, template, isEmbed }: Props) {
     void loadAvailability()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date, party])
+
+  // Preview mode: popola dati mock per step avanzati
+  useEffect(() => {
+    if (!previewStep) return
+    if (previewStep !== 'slot' && !selectedSlot) setSelectedSlot('19:30')
+    if (previewStep === 'deposit' && depositAmount === 0) {
+      setDepositAmount(10)
+      setDepositRequired(true)
+    }
+    if (previewStep === 'success' && !reservationId) setReservationId('PREVIEW-001')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewStep])
 
   async function loadAvailability() {
     setLoading(true)

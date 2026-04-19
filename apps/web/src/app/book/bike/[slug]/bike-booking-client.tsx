@@ -230,7 +230,7 @@ export function BikeBookingClient({
   return (
     <div className="space-y-6">
       {/* Step 1: Date/time */}
-      <Section icon={CalendarClock} title="Quando vuoi noleggiare?">
+      <Section icon={CalendarClock} title="Quando vuoi noleggiare?" anchorId="step-date">
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="text-sm">
             <span className="text-gray-600">Ritiro</span>
@@ -256,7 +256,7 @@ export function BikeBookingClient({
 
       {/* Step 2: Locations */}
       {locations.length > 0 && (
-        <Section icon={MapPin} title="Deposito">
+        <Section icon={MapPin} title="Deposito" anchorId="step-location">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="text-sm">
               <span className="text-gray-600">Ritiro</span>
@@ -298,7 +298,7 @@ export function BikeBookingClient({
       )}
 
       {/* Step 3: Bike types */}
-      <Section icon={Bike} title="Scegli le bici">
+      <Section icon={Bike} title="Scegli le bici" anchorId="step-bikes">
         <div className="space-y-2">
           {types.map((t) => {
             const qty = cart[t.id] ?? 0
@@ -341,7 +341,7 @@ export function BikeBookingClient({
 
       {/* Step 4: Addons */}
       {addons.length > 0 && (
-        <Section title="Extra & Assicurazione">
+        <Section title="Extra & Assicurazione" anchorId="step-addons">
           <div className="grid gap-2 sm:grid-cols-2">
             {addons
               .filter((a) => !a.key.startsWith('insurance_'))
@@ -433,7 +433,7 @@ export function BikeBookingClient({
       </Section>
 
       {/* Step 5: Guest */}
-      <Section title="I tuoi dati">
+      <Section title="I tuoi dati" anchorId="step-guest">
         <div className="grid gap-3 sm:grid-cols-2">
           <input
             placeholder="Nome e cognome *"
@@ -489,13 +489,15 @@ function Section({
   icon: Icon,
   title,
   children,
+  anchorId,
 }: {
   icon?: React.ComponentType<{ className?: string }>
   title: string
   children: React.ReactNode
+  anchorId?: string
 }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+    <div id={anchorId} className="scroll-mt-8 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
       <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-gray-500">
         {Icon && <Icon className="h-4 w-4" />}
         {title}

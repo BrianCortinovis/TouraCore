@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 interface Props {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ tenant?: string; product?: string; ref?: string }>
+  searchParams: Promise<{ tenant?: string; product?: string; ref?: string; preview_step?: string }>
 }
 
 export default async function ExperienceBookingPage({ params, searchParams }: Props) {
@@ -102,6 +102,7 @@ export default async function ExperienceBookingPage({ params, searchParams }: Pr
           zones={(zones ?? []) as unknown as Parameters<typeof ExperienceBookingClient>[0]['zones']}
           selectedProductSlug={sp.product}
           partnerRef={sp.ref}
+          previewStep={sp.preview_step ? Math.min(5, Math.max(0, Number(sp.preview_step))) : undefined}
         />
         <p className="mt-6 text-center text-[11px] text-gray-400">
           Booking mode: {products?.[0] ? BOOKING_MODES[products[0].booking_mode as keyof typeof BOOKING_MODES]?.label : '—'}

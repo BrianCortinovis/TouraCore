@@ -13,6 +13,7 @@ import {
   Plug,
   Tag,
   ShieldCheck,
+  Globe,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -39,6 +40,7 @@ export function BikeRentalSidebar({ tenantSlug, entitySlug, entityName, hasRenta
     { href: base, label: 'Panoramica', icon: LayoutDashboard },
     { href: `${base}/fleet`, label: 'Flotta', icon: Bike },
     { href: `${base}/reservations`, label: 'Prenotazioni', icon: CalendarClock },
+    { href: `${base}/booking-engine`, label: 'Widget prenotazioni', icon: Globe },
     { href: `${base}/locations`, label: 'Depositi', icon: MapPin },
     { href: `${base}/maintenance`, label: 'Manutenzione', icon: Wrench, placeholder: true, milestone: 'M043' },
     { href: `${base}/pricing`, label: 'Tariffe & Promo', icon: Tag, placeholder: true, milestone: 'M040' },

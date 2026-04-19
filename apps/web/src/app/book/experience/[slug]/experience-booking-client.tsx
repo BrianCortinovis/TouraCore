@@ -82,11 +82,12 @@ interface Props {
   zones: Zone[]
   selectedProductSlug?: string
   partnerRef?: string
+  previewStep?: number
 }
 
-export function ExperienceBookingClient({ entity, products, variants, addons, timeslots, zones, selectedProductSlug, partnerRef }: Props) {
+export function ExperienceBookingClient({ entity, products, variants, addons, timeslots, zones, selectedProductSlug, partnerRef, previewStep }: Props) {
   const router = useRouter()
-  const [step, setStep] = useState(0)
+  const [step, setStep] = useState(previewStep ?? 0)
   const [productId, setProductId] = useState<string | null>(() => {
     if (selectedProductSlug) return products.find((p) => p.slug === selectedProductSlug)?.id ?? null
     return products[0]?.id ?? null

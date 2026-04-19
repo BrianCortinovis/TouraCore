@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Package, CalendarRange, CalendarClock, Users,
-  ClipboardList, Printer, QrCode, FileCheck2, Plug, Settings,
+  ClipboardList, Printer, QrCode, FileCheck2, Plug, Settings, Globe,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -22,6 +22,7 @@ export function ExperienceSidebar({ tenantSlug, entitySlug, entityName }: Props)
     { href: `${base}/slots`, label: 'Slot inventory', icon: CalendarClock },
     { href: `${base}/resources`, label: 'Risorse (guide/mezzi)', icon: Users },
     { href: `${base}/reservations`, label: 'Prenotazioni', icon: ClipboardList },
+    { href: `${base}/booking-engine`, label: 'Widget prenotazioni', icon: Globe },
     { href: `${base}/manifest`, label: 'Manifest giorno', icon: Printer },
     { href: `${base}/checkin`, label: 'Check-in QR', icon: QrCode },
     { href: `${base}/waivers`, label: 'Waiver digitali', icon: FileCheck2 },
