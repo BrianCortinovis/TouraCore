@@ -113,6 +113,9 @@ export interface BookingGuest {
   specialRequests?: string
   privacyConsent: boolean
   marketingConsent: boolean
+  /** Se true + struttura abilita tassa + policy ≠ onsite_only, la tassa soggiorno viene
+   *  aggiunta al totale Stripe e marcata pagata online. Default false. */
+  payTouristTaxOnline?: boolean
 }
 
 export interface BookingConfirmation {
@@ -124,6 +127,16 @@ export interface BookingConfirmation {
   paymentSessionUrl?: string
 }
 
+export interface BookingTouristTaxConfig {
+  enabled: boolean
+  /** 'online_only' | 'onsite_only' | 'guest_choice' */
+  paymentPolicy: 'online_only' | 'onsite_only' | 'guest_choice'
+  /** €/persona/notte adulto (per preview). Stima server-side autoritativa in checkout. */
+  adultRatePerNight: number
+  childRatePerNight: number
+  maxTaxableNights: number
+}
+
 export interface BookingContext {
   property: BookingProperty
   ratePlans: BookingRatePlan[]
@@ -132,4 +145,5 @@ export interface BookingContext {
   cancellationPolicyText: string | null
   theme: BookingTheme
   template: BookingTemplate
+  touristTax?: BookingTouristTaxConfig
 }

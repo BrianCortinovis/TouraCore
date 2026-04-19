@@ -15,12 +15,31 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
   const supabase = await createServiceRoleClient()
   const { data: acc } = await supabase
     .from('accommodations')
-    .select('booking_template, booking_theme, default_language, default_currency, pet_policy')
+    .select('booking_template, booking_theme, default_language, default_currency, pet_policy, tourist_tax_enabled, tourist_tax_max_nights, tourist_tax_payment_policy')
     .eq('entity_id', pub.property.id)
     .maybeSingle()
 
   const template = (acc?.booking_template ?? 'minimal') as BookingTemplate
   const theme = normalizeTheme(acc?.booking_theme)
+
+  // Tourist tax preview rates
+  let touristTax: BookingContext['touristTax']
+  if (acc?.tourist_tax_enabled) {
+    const { data: rates } = await supabase
+      .from('tourist_tax_rates')
+      .select('rate_per_person, category')
+      .eq('entity_id', pub.property.id)
+      .eq('is_active', true)
+    const adultRate = Number((rates ?? []).find((r) => r.category === 'adult')?.rate_per_person ?? 0)
+    const childRate = Number((rates ?? []).find((r) => r.category === 'child_0-9')?.rate_per_person ?? 0)
+    touristTax = {
+      enabled: true,
+      paymentPolicy: (acc.tourist_tax_payment_policy ?? 'onsite_only') as 'online_only' | 'onsite_only' | 'guest_choice',
+      adultRatePerNight: adultRate,
+      childRatePerNight: childRate,
+      maxTaxableNights: acc.tourist_tax_max_nights ?? 5,
+    }
+  }
 
   const context: BookingContext = {
     property: {
@@ -57,6 +76,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
     cancellationPolicyText: pub.cancellationPolicyText,
     theme,
     template,
+    touristTax,
   }
 
   return <BookingPageClient context={context} />

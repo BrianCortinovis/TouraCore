@@ -19,17 +19,48 @@ export async function POST(req: NextRequest) {
   try { body = await req.json() } catch { return jsonWithCors({ error: 'Invalid JSON' }, { status: 400, origin }) }
 
   const reservationId = body?.reservationId as string | undefined
+  const includeTouristTax = Boolean(body?.includeTouristTax)
   if (!reservationId) return jsonWithCors({ error: 'reservationId required' }, { status: 400, origin })
 
   const supabase = await createServiceRoleClient()
   const { data: res } = await supabase
     .from('reservations')
-    .select('id, reservation_code, entity_id, total_amount, currency, guest_id, check_in, check_out')
+    .select('id, reservation_code, entity_id, total_amount, currency, guest_id, check_in, check_out, adults, children')
     .eq('id', reservationId)
     .maybeSingle()
 
   if (!res) return jsonWithCors({ error: 'Reservation not found' }, { status: 404, origin })
   if (Number(res.total_amount) <= 0) return jsonWithCors({ error: 'Amount must be > 0' }, { status: 400, origin })
+
+  // Calcolo tassa soggiorno se richiesto + abilitata + policy != onsite_only
+  let touristTaxCents = 0
+  const { data: accommodation } = await supabase
+    .from('accommodations')
+    .select('tourist_tax_enabled, tourist_tax_max_nights, tourist_tax_payment_policy')
+    .eq('entity_id', res.entity_id)
+    .maybeSingle()
+
+  const taxEnabled = Boolean(accommodation?.tourist_tax_enabled)
+  const taxPolicy = (accommodation?.tourist_tax_payment_policy ?? 'onsite_only') as 'online_only' | 'onsite_only' | 'guest_choice'
+  const forceOnline = taxPolicy === 'online_only'
+  const canChoose = taxPolicy === 'guest_choice'
+  const shouldIncludeTax = taxEnabled && (forceOnline || (canChoose && includeTouristTax))
+
+  if (shouldIncludeTax && res.check_in && res.check_out) {
+    const nights = Math.max(1, Math.round((new Date(res.check_out).getTime() - new Date(res.check_in).getTime()) / 86_400_000))
+    const taxableNights = Math.min(nights, accommodation?.tourist_tax_max_nights ?? 5)
+    const { data: rates } = await supabase
+      .from('tourist_tax_rates')
+      .select('rate_per_person, category')
+      .eq('entity_id', res.entity_id)
+      .eq('is_active', true)
+    const adultRate = Number((rates ?? []).find((r) => r.category === 'adult')?.rate_per_person ?? 0)
+    const childRate = Number((rates ?? []).find((r) => r.category === 'child_0-9')?.rate_per_person ?? 0)
+    const adults = Number(res.adults ?? 1)
+    const children = Number(res.children ?? 0)
+    const taxTotal = (adultRate * adults + childRate * children) * taxableNights
+    touristTaxCents = Math.round(taxTotal * 100)
+  }
 
   const { data: entity } = await supabase
     .from('entities')
@@ -89,6 +120,19 @@ export async function POST(req: NextRequest) {
           },
           quantity: 1,
         },
+        ...(touristTaxCents > 0
+          ? [{
+              price_data: {
+                currency: (res.currency ?? 'EUR').toLowerCase(),
+                unit_amount: touristTaxCents,
+                product_data: {
+                  name: 'Tassa di soggiorno',
+                  description: `Incluso nel pagamento online · ${res.reservation_code}`,
+                },
+              },
+              quantity: 1,
+            }]
+          : []),
       ],
       success_url: successUrl,
       cancel_url: cancelUrl,
@@ -97,6 +141,8 @@ export async function POST(req: NextRequest) {
         reservation_code: res.reservation_code,
         entity_id: res.entity_id,
         kind: 'booking_engine_payment',
+        tourist_tax_cents: String(touristTaxCents),
+        tourist_tax_paid_online: touristTaxCents > 0 ? 'true' : 'false',
       },
     })
 

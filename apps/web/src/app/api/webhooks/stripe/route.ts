@@ -274,6 +274,22 @@ export async function POST(request: NextRequest) {
               description: `Booking engine payment ${session.metadata?.reservation_code ?? ''}`,
               reference_number: session.metadata?.reservation_code ?? null,
             })
+
+            // Marca tassa soggiorno paid se inclusa nel pagamento
+            const taxPaidOnline = session.metadata?.tourist_tax_paid_online === 'true'
+            const taxCents = Number(session.metadata?.tourist_tax_cents ?? 0)
+            if (taxPaidOnline && taxCents > 0) {
+              await supabase
+                .from('tourist_tax_records')
+                .update({
+                  is_collected: true,
+                  collected_at: new Date().toISOString(),
+                  paid_via: 'online_checkin',
+                  paid_online_at: new Date().toISOString(),
+                  stripe_payment_intent_id: session.payment_intent as string,
+                })
+                .eq('reservation_id', reservation.id)
+            }
           }
         }
         break

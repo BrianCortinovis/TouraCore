@@ -225,6 +225,9 @@ function FormStep({ flow, context, locale, currency }: any) {
           </div>
         </div>
         <div style={{ marginTop: 16, fontSize: 13 }}>
+          {context.touristTax?.enabled && context.touristTax.paymentPolicy !== 'onsite_only' && (
+            <TaxOptionBlock flow={flow} context={context} currency={currency} locale={locale} />
+          )}
           <label style={{ display: 'flex', alignItems: 'start', gap: 8 }}>
             <input type="checkbox" checked={flow.guest.privacyConsent} onChange={(e) => flow.updateGuest({ privacyConsent: e.target.checked })} />
             <span>Accetto <a href="#" style={{ color: 'var(--bk-accent)' }}>privacy policy</a> e <a href="#" style={{ color: 'var(--bk-accent)' }}>termini di prenotazione</a>.</span>
@@ -269,6 +272,49 @@ function ConfirmationStep({ flow, locale, currency }: any) {
   )
 }
 
+function computeTouristTax(flow: any, context: any): number {
+  const tax = context.touristTax
+  if (!tax?.enabled) return 0
+  const adults = Number(flow.selection.adults ?? 0)
+  const children = Number(flow.selection.children ?? 0)
+  const maxNights = Number(tax.maxTaxableNights ?? 5)
+  const nights = Math.min(Number(flow.pricing.nights ?? 0), maxNights)
+  return (Number(tax.adultRatePerNight ?? 0) * adults + Number(tax.childRatePerNight ?? 0) * children) * nights
+}
+
+function TaxOptionBlock({ flow, context, currency, locale }: any) {
+  const tax = context.touristTax
+  const estimatedTax = computeTouristTax(flow, context)
+  if (!tax || !tax.enabled || tax.paymentPolicy === 'onsite_only') return null
+
+  const forceOnline = tax.paymentPolicy === 'online_only'
+  const payOnline = forceOnline ? true : Boolean(flow.guest.payTouristTaxOnline)
+
+  return (
+    <div style={{ marginBottom: 12, padding: 12, background: '#fef3c7', borderRadius: 8, border: '1px solid #fde68a' }}>
+      <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#92400e' }}>
+        Tassa di soggiorno · {formatMoney(estimatedTax, currency, locale)}
+      </p>
+      {forceOnline ? (
+        <p style={{ margin: '4px 0 0', fontSize: 12, color: '#92400e' }}>
+          Inclusa nel pagamento online (obbligatoria).
+        </p>
+      ) : (
+        <label style={{ display: 'flex', alignItems: 'start', gap: 8, marginTop: 8, fontSize: 13 }}>
+          <input
+            type="checkbox"
+            checked={payOnline}
+            onChange={(e) => flow.updateGuest({ payTouristTaxOnline: e.target.checked })}
+          />
+          <span>
+            Paga anche la tassa di soggiorno adesso. Se non selezioni, pagherai in struttura al check-in.
+          </span>
+        </label>
+      )}
+    </div>
+  )
+}
+
 function Summary({ flow, context, locale, currency }: any) {
   if (!flow.selectedAvailability) {
     return (
@@ -289,10 +335,29 @@ function Summary({ flow, context, locale, currency }: any) {
         <Row label={flow.selectedAvailability.roomTypeName} value={formatMoney(flow.pricing.roomSubtotal, currency, locale)} />
         {flow.pricing.upsellSubtotal > 0 && <Row label="Extra" value={formatMoney(flow.pricing.upsellSubtotal, currency, locale)} />}
         {flow.pricing.petSupplement > 0 && <Row label="Supplemento animali" value={formatMoney(flow.pricing.petSupplement, currency, locale)} />}
+        {(() => {
+          const tax = computeTouristTax(flow, context)
+          const policy = context.touristTax?.paymentPolicy
+          const payOnline = policy === 'online_only' || flow.guest.payTouristTaxOnline
+          if (tax > 0 && payOnline) {
+            return <Row label="Tassa di soggiorno (online)" value={formatMoney(tax, currency, locale)} />
+          }
+          if (tax > 0 && !payOnline) {
+            return <Row label="Tassa di soggiorno (in struttura)" value={formatMoney(tax, currency, locale)} />
+          }
+          return null
+        })()}
       </div>
       <div style={{ borderTop: '1px solid #e5e7eb', marginTop: 12, paddingTop: 12, display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 18 }}>
-        <span>Totale</span>
-        <span style={{ color: 'var(--bk-accent)' }}>{formatMoney(flow.pricing.total, currency, locale)}</span>
+        <span>Totale online</span>
+        <span style={{ color: 'var(--bk-accent)' }}>
+          {(() => {
+            const tax = computeTouristTax(flow, context)
+            const policy = context.touristTax?.paymentPolicy
+            const payOnline = policy === 'online_only' || flow.guest.payTouristTaxOnline
+            return formatMoney(flow.pricing.total + (payOnline ? tax : 0), currency, locale)
+          })()}
+        </span>
       </div>
     </BkCard>
   )

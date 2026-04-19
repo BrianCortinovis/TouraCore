@@ -85,6 +85,7 @@ export function createServerActionAdapter(opts: {
             reservationId: data.reservationId,
             returnUrl: opts.returnUrl,
             cancelUrl: opts.cancelUrl,
+            includeTouristTax: Boolean(guest.payTouristTaxOnline),
           }),
         })
         if (resp.ok) {
