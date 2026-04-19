@@ -27,9 +27,41 @@ export default async function PublicCheckinPage({ params }: CheckinPageProps) {
 
   const { data: entity } = await supabase
     .from('entities')
-    .select('name')
+    .select('id, name, tenant_id')
     .eq('id', checkinToken.entity_id)
     .single()
+
+  // Accommodation config: tassa soggiorno
+  const { data: accommodation } = await supabase
+    .from('accommodations')
+    .select('tourist_tax_enabled, tourist_tax_max_nights, tourist_tax_municipality')
+    .eq('entity_id', checkinToken.entity_id)
+    .maybeSingle()
+
+  // Calcola tassa soggiorno se attiva
+  let taxAmountCents = 0
+  let taxNights = 0
+  let taxPerPerson = 0
+  const checkIn = checkinToken.reservation?.check_in as string | undefined
+  const checkOut = checkinToken.reservation?.check_out as string | undefined
+  const adults = Number(checkinToken.reservation?.adults ?? 1)
+  const children = Number(checkinToken.reservation?.children ?? 0)
+
+  if (accommodation?.tourist_tax_enabled && checkIn && checkOut) {
+    const nights = Math.max(1, Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86_400_000))
+    const maxNights = accommodation.tourist_tax_max_nights ?? 5
+    taxNights = Math.min(nights, maxNights)
+    const { data: rates } = await supabase
+      .from('tourist_tax_rates')
+      .select('rate_per_person, category')
+      .eq('entity_id', checkinToken.entity_id)
+      .eq('is_active', true)
+    const adultRate = Number((rates ?? []).find((r) => r.category === 'adult')?.rate_per_person ?? 0)
+    const childRate = Number((rates ?? []).find((r) => r.category === 'child_0-9')?.rate_per_person ?? 0)
+    taxPerPerson = adultRate
+    const totalEur = (adultRate * adults + childRate * children) * taxNights
+    taxAmountCents = Math.round(totalEur * 100)
+  }
 
   const isExpired =
     checkinToken.status === 'expired' ||
@@ -69,8 +101,15 @@ export default async function PublicCheckinPage({ params }: CheckinPageProps) {
         {!isExpired && !isCompleted && (
           <CheckinWizard
             token={token}
+            entityId={checkinToken.entity_id}
             reservation={checkinToken.reservation as Record<string, unknown>}
             guestData={(checkinToken.guest_data ?? {}) as Record<string, string>}
+            taxAmountCents={taxAmountCents}
+            taxNights={taxNights}
+            taxPerPerson={taxPerPerson}
+            taxAlreadyPaid={Boolean(checkinToken.tourist_tax_paid_at)}
+            hasFrontDoc={Boolean(checkinToken.document_front_url)}
+            hasBackDoc={Boolean(checkinToken.document_back_url)}
           />
         )}
       </div>

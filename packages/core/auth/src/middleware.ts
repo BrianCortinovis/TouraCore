@@ -26,6 +26,8 @@ function isPublicRoute(pathname: string): boolean {
     pathname.startsWith('/embed/') ||
     pathname.startsWith('/embed-table/') ||
     pathname.startsWith('/allergens/') ||
+    pathname.startsWith('/checkin/') ||
+    pathname.startsWith('/checkout/') ||
     pathname.startsWith('/portal/') ||
     pathname.startsWith('/portali/') ||
     pathname.startsWith('/property/') ||

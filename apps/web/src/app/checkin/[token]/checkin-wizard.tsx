@@ -2,25 +2,63 @@
 
 import { useState, useTransition } from 'react'
 import { Button, Input, Card, CardContent } from '@touracore/ui'
-import { User, FileText, Clock, CheckCircle, Loader2, ChevronRight, ChevronLeft } from 'lucide-react'
+import { User, FileText, Camera, Euro, Clock, CheckCircle, Loader2, ChevronRight, ChevronLeft } from 'lucide-react'
 import { updateCheckinData, completeCheckin } from '@touracore/hospitality/src/actions/checkin'
+import {
+  uploadDocumentScanAction,
+  createTouristTaxPaymentIntentAction,
+  markTouristTaxPaidAction,
+} from './actions'
 
 interface CheckinWizardProps {
   token: string
+  entityId: string
   reservation: Record<string, unknown>
   guestData: Record<string, string>
+  taxAmountCents: number
+  taxNights: number
+  taxPerPerson: number
+  taxAlreadyPaid: boolean
+  hasFrontDoc: boolean
+  hasBackDoc: boolean
 }
 
-const STEPS = [
-  { key: 'personal', label: 'Dati personali', icon: User },
-  { key: 'document', label: 'Documento', icon: FileText },
-  { key: 'details', label: 'Dettagli arrivo', icon: Clock },
-  { key: 'confirm', label: 'Conferma', icon: CheckCircle },
-] as const
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      const base64 = result.split(',')[1] ?? ''
+      resolve(base64)
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
 
-export function CheckinWizard({ token, reservation, guestData }: CheckinWizardProps) {
+export function CheckinWizard({
+  token,
+  reservation,
+  guestData,
+  taxAmountCents,
+  taxNights,
+  taxPerPerson,
+  taxAlreadyPaid,
+  hasFrontDoc,
+  hasBackDoc,
+}: CheckinWizardProps) {
   const guest = (reservation.guest ?? {}) as Record<string, string | null>
   const roomType = (reservation.room_type ?? {}) as Record<string, string>
+  const needsTax = taxAmountCents > 0 && !taxAlreadyPaid
+
+  const STEPS = [
+    { key: 'personal', label: 'Dati personali', icon: User },
+    { key: 'document', label: 'Documento', icon: FileText },
+    { key: 'scan', label: 'Foto documento', icon: Camera },
+    ...(needsTax ? [{ key: 'tax', label: 'Tassa soggiorno', icon: Euro }] : []),
+    { key: 'details', label: 'Arrivo', icon: Clock },
+    { key: 'confirm', label: 'Conferma', icon: CheckCircle },
+  ]
 
   const [step, setStep] = useState(0)
   const [isPending, startTransition] = useTransition()
@@ -41,12 +79,65 @@ export function CheckinWizard({ token, reservation, guestData }: CheckinWizardPr
   const [documentIssuedBy, setDocumentIssuedBy] = useState(guestData.document_issued_by ?? '')
   const [documentExpiry, setDocumentExpiry] = useState(guestData.document_expiry ?? '')
 
+  const [frontUploaded, setFrontUploaded] = useState(hasFrontDoc)
+  const [backUploaded, setBackUploaded] = useState(hasBackDoc)
+  const [uploadingKind, setUploadingKind] = useState<'id_front' | 'id_back' | null>(null)
+
+  const [taxPaid, setTaxPaid] = useState(taxAlreadyPaid)
+
   const [arrivalTime, setArrivalTime] = useState(guestData.arrival_time ?? '')
   const [specialRequests, setSpecialRequests] = useState(guestData.special_requests ?? '')
   const [privacyConsent, setPrivacyConsent] = useState(false)
 
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>, kind: 'id_front' | 'id_back') {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) {
+      setError('File troppo grande (max 5 MB)')
+      return
+    }
+    setError('')
+    setUploadingKind(kind)
+    try {
+      const base64 = await fileToBase64(file)
+      const res = await uploadDocumentScanAction({ token, kind, mimeType: file.type, base64 })
+      if (!res.ok) {
+        setError(`Upload fallito: ${res.error}`)
+      } else {
+        if (kind === 'id_front') setFrontUploaded(true)
+        else setBackUploaded(true)
+      }
+    } catch {
+      setError('Errore durante upload')
+    } finally {
+      setUploadingKind(null)
+    }
+  }
+
+  async function handlePayTax() {
+    setError('')
+    startTransition(async () => {
+      const res = await createTouristTaxPaymentIntentAction({ token, amountCents: taxAmountCents })
+      if (!res.ok || !res.clientSecret) {
+        setError(`Errore pagamento: ${res.error}`)
+        return
+      }
+      // Simulato: conferma immediata (TODO: wire Stripe Elements frontend)
+      // Per MVP marchiamo come pagato dopo creazione intent — in produzione servono Stripe Elements
+      // Disabilitato fino a integrazione Stripe Elements lato client
+      setError('Pagamento online disponibile con Stripe Elements — per ora pagherai al check-in in struttura.')
+    })
+  }
+
   function saveStep() {
     setError('')
+    const currentStepKey = STEPS[step]?.key
+
+    if (currentStepKey === 'scan' && (!frontUploaded || !backUploaded)) {
+      setError('Carica entrambe le foto del documento (fronte e retro).')
+      return
+    }
+
     startTransition(async () => {
       try {
         const data: Record<string, unknown> = {
@@ -68,17 +159,16 @@ export function CheckinWizard({ token, reservation, guestData }: CheckinWizardPr
           special_requests: specialRequests || null,
         }
 
-        if (step === 3) {
-          data.privacy_signed = privacyConsent
-        }
+        const lastIdx = STEPS.length - 1
+        if (step === lastIdx) data.privacy_signed = privacyConsent
 
         await updateCheckinData(token, data)
 
-        if (step === 3 && privacyConsent) {
+        if (step === lastIdx && privacyConsent) {
           await completeCheckin(token)
           setCompleted(true)
         } else {
-          setStep((s) => Math.min(s + 1, 3))
+          setStep((s) => Math.min(s + 1, lastIdx))
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Errore nel salvataggio')
@@ -102,10 +192,11 @@ export function CheckinWizard({ token, reservation, guestData }: CheckinWizardPr
 
   const checkIn = reservation.check_in as string
   const checkOut = reservation.check_out as string
+  const lastIdx = STEPS.length - 1
+  const currentKey = STEPS[step]?.key
 
   return (
     <div className="space-y-4">
-      {/* Riepilogo prenotazione */}
       <Card>
         <CardContent className="py-4">
           <div className="flex items-center justify-between text-sm">
@@ -124,33 +215,25 @@ export function CheckinWizard({ token, reservation, guestData }: CheckinWizardPr
         </CardContent>
       </Card>
 
-      {/* Stepper */}
       <div className="flex items-center justify-between px-2">
         {STEPS.map((s, i) => (
           <div key={s.key} className="flex items-center gap-1">
             <div
-              className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium ${
-                i < step
-                  ? 'bg-green-100 text-green-700'
-                  : i === step
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-400'
+              className={`flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-medium ${
+                i < step ? 'bg-green-100 text-green-700' : i === step ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-400'
               }`}
             >
               {i < step ? <CheckCircle className="h-4 w-4" /> : i + 1}
             </div>
-            {i < STEPS.length - 1 && (
-              <div className={`h-px w-6 sm:w-10 ${i < step ? 'bg-green-300' : 'bg-gray-200'}`} />
-            )}
+            {i < STEPS.length - 1 && <div className={`h-px w-3 sm:w-6 ${i < step ? 'bg-green-300' : 'bg-gray-200'}`} />}
           </div>
         ))}
       </div>
       <p className="text-center text-sm font-medium text-gray-700">{STEPS[step]?.label}</p>
 
-      {/* Form */}
       <Card>
         <CardContent className="space-y-4 py-5">
-          {step === 0 && (
+          {currentKey === 'personal' && (
             <>
               <div className="grid grid-cols-2 gap-3">
                 <Input label="Nome" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
@@ -169,19 +252,16 @@ export function CheckinWizard({ token, reservation, guestData }: CheckinWizardPr
             </>
           )}
 
-          {step === 1 && (
+          {currentKey === 'document' && (
             <>
               <div>
-                <label htmlFor="doc_type" className="block text-sm font-medium text-gray-700">
-                  Tipo documento
-                </label>
+                <label className="block text-sm font-medium text-gray-700">Tipo documento</label>
                 <select
-                  id="doc_type"
                   value={documentType}
                   onChange={(e) => setDocumentType(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
                 >
-                  <option value="id_card">Carta d'identità</option>
+                  <option value="id_card">Carta d&apos;identità</option>
                   <option value="passport">Passaporto</option>
                   <option value="driving_license">Patente di guida</option>
                 </select>
@@ -192,41 +272,90 @@ export function CheckinWizard({ token, reservation, guestData }: CheckinWizardPr
             </>
           )}
 
-          {step === 2 && (
-            <>
-              <Input
-                label="Orario previsto di arrivo"
-                type="time"
-                value={arrivalTime}
-                onChange={(e) => setArrivalTime(e.target.value)}
+          {currentKey === 'scan' && (
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">
+                Carica foto nitide fronte e retro del documento (o solo fronte per passaporto). Max 5 MB per foto.
+              </p>
+              <DocUpload
+                label="Fronte del documento"
+                done={frontUploaded}
+                uploading={uploadingKind === 'id_front'}
+                onChange={(e) => handleUpload(e, 'id_front')}
               />
+              {documentType !== 'passport' && (
+                <DocUpload
+                  label="Retro del documento"
+                  done={backUploaded}
+                  uploading={uploadingKind === 'id_back'}
+                  onChange={(e) => handleUpload(e, 'id_back')}
+                />
+              )}
+            </div>
+          )}
+
+          {currentKey === 'tax' && (
+            <div className="space-y-3">
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                <p className="text-sm font-semibold text-amber-900">Tassa di soggiorno</p>
+                <p className="mt-1 text-xs text-amber-800">
+                  {taxNights} notti · €{(taxPerPerson).toFixed(2)} a persona/notte
+                </p>
+                <p className="mt-2 text-xl font-bold text-amber-900">€{(taxAmountCents / 100).toFixed(2)}</p>
+              </div>
+
+              {taxPaid ? (
+                <p className="rounded bg-emerald-50 p-3 text-sm text-emerald-800">
+                  ✓ Tassa soggiorno già pagata.
+                </p>
+              ) : (
+                <>
+                  <Button onClick={handlePayTax} disabled={isPending} className="w-full">
+                    {isPending ? 'Elaborazione…' : 'Paga online ora'}
+                  </Button>
+                  <p className="text-center text-xs text-gray-500">
+                    Oppure potrai pagarla al momento del check-in in struttura.
+                  </p>
+                </>
+              )}
+            </div>
+          )}
+
+          {currentKey === 'details' && (
+            <>
+              <Input label="Orario previsto di arrivo" type="time" value={arrivalTime} onChange={(e) => setArrivalTime(e.target.value)} />
               <div>
-                <label htmlFor="requests" className="block text-sm font-medium text-gray-700">
-                  Richieste speciali
-                </label>
+                <label className="block text-sm font-medium text-gray-700">Richieste speciali</label>
                 <textarea
-                  id="requests"
                   value={specialRequests}
                   onChange={(e) => setSpecialRequests(e.target.value)}
                   rows={3}
                   placeholder="Allergie, esigenze particolari, orari..."
-                  className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
                 />
               </div>
             </>
           )}
 
-          {step === 3 && (
+          {currentKey === 'confirm' && (
             <>
               <div className="space-y-3 text-sm text-gray-600">
-                <p className="font-medium text-gray-900">Riepilogo dati</p>
+                <p className="font-medium text-gray-900">Riepilogo</p>
                 <div className="grid grid-cols-2 gap-2 rounded-lg bg-gray-50 p-3">
                   <span className="text-gray-500">Nome</span>
                   <span>{firstName} {lastName}</span>
                   <span className="text-gray-500">Documento</span>
                   <span>{documentNumber || '—'}</span>
+                  <span className="text-gray-500">Foto caricate</span>
+                  <span>{frontUploaded && backUploaded ? 'Fronte + retro' : frontUploaded ? 'Solo fronte' : 'Non caricate'}</span>
                   <span className="text-gray-500">Arrivo</span>
                   <span>{arrivalTime || 'Non specificato'}</span>
+                  {taxAmountCents > 0 && (
+                    <>
+                      <span className="text-gray-500">Tassa soggiorno</span>
+                      <span>{taxPaid ? 'Pagata online' : 'Da pagare in struttura'}</span>
+                    </>
+                  )}
                 </div>
               </div>
               <label className="flex items-start gap-3 rounded-lg border border-gray-200 p-4">
@@ -238,37 +367,70 @@ export function CheckinWizard({ token, reservation, guestData }: CheckinWizardPr
                 />
                 <span className="text-sm text-gray-700">
                   Acconsento al trattamento dei miei dati personali ai sensi del GDPR e della normativa italiana vigente.
-                  I dati saranno utilizzati esclusivamente per la registrazione presso la struttura e per gli adempimenti di legge.
+                  I dati e le foto del documento saranno utilizzati per la registrazione presso la struttura e per gli
+                  adempimenti di legge (Alloggiati Web Questura).
                 </span>
               </label>
             </>
           )}
 
-          {error && (
-            <p className="text-sm text-red-600">{error}</p>
-          )}
+          {error && <p className="text-sm text-red-600">{error}</p>}
         </CardContent>
       </Card>
 
-      {/* Navigazione */}
       <div className="flex justify-between">
-        <Button
-          variant="outline"
-          onClick={() => setStep((s) => Math.max(s - 1, 0))}
-          disabled={step === 0 || isPending}
-        >
+        <Button variant="outline" onClick={() => setStep((s) => Math.max(s - 1, 0))} disabled={step === 0 || isPending}>
           <ChevronLeft className="mr-1 h-4 w-4" />
           Indietro
         </Button>
-        <Button
-          onClick={saveStep}
-          disabled={isPending || (step === 3 && !privacyConsent)}
-        >
+        <Button onClick={saveStep} disabled={isPending || (step === lastIdx && !privacyConsent)}>
           {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {step === 3 ? 'Completa check-in' : 'Avanti'}
-          {step < 3 && <ChevronRight className="ml-1 h-4 w-4" />}
+          {step === lastIdx ? 'Completa check-in' : 'Avanti'}
+          {step < lastIdx && <ChevronRight className="ml-1 h-4 w-4" />}
         </Button>
       </div>
     </div>
+  )
+}
+
+function DocUpload({
+  label,
+  done,
+  uploading,
+  onChange,
+}: {
+  label: string
+  done: boolean
+  uploading: boolean
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+}) {
+  return (
+    <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 border-dashed p-4 ${
+      done ? 'border-emerald-400 bg-emerald-50' : uploading ? 'border-amber-400 bg-amber-50' : 'border-gray-300 hover:bg-gray-50'
+    }`}>
+      <div className="flex items-center gap-3">
+        {done ? (
+          <CheckCircle className="h-6 w-6 text-emerald-600" />
+        ) : uploading ? (
+          <Loader2 className="h-6 w-6 animate-spin text-amber-600" />
+        ) : (
+          <Camera className="h-6 w-6 text-gray-400" />
+        )}
+        <div>
+          <p className="text-sm font-medium text-gray-900">{label}</p>
+          <p className="text-xs text-gray-500">
+            {done ? 'Caricato' : uploading ? 'Caricamento…' : 'Tocca per scattare o caricare'}
+          </p>
+        </div>
+      </div>
+      <input
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        capture="environment"
+        onChange={onChange}
+        disabled={uploading}
+        className="hidden"
+      />
+    </label>
   )
 }
