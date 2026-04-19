@@ -266,7 +266,7 @@ export async function dispatchQueueItem(queueId: string): Promise<AdapterResult>
   // Add unsubscribe link in email vars
   if (item.channel === 'email' && item.recipient_email) {
     const tok = signUnsubscribeToken(item.recipient_email, item.event_key ?? item.template_key)
-    vars.unsubscribe_url = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://touracore.vercel.app'}/u/${tok}?e=${encodeURIComponent(item.recipient_email)}&k=${encodeURIComponent(item.event_key ?? item.template_key)}`
+    vars.unsubscribe_url = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://touracore.vercel.app'}/unsubscribe?token=${tok}&e=${encodeURIComponent(item.recipient_email)}&k=${encodeURIComponent(item.event_key ?? item.template_key)}`
   }
 
   // Resolve provider

@@ -3,15 +3,13 @@ import { unsubscribeByToken } from '@touracore/notifications'
 export const dynamic = 'force-dynamic'
 
 interface Props {
-  params: Promise<{ token: string }>
-  searchParams: Promise<{ e?: string; k?: string }>
+  searchParams: Promise<{ token?: string; e?: string; k?: string }>
 }
 
-export default async function UnsubscribePage({ params, searchParams }: Props) {
-  const { token } = await params
-  const { e: email, k: eventKey } = await searchParams
+export default async function UnsubscribePage({ searchParams }: Props) {
+  const { token, e: email, k: eventKey } = await searchParams
 
-  if (!email || !eventKey) {
+  if (!token || !email || !eventKey) {
     return <Card title="Link non valido" body="Il link di disiscrizione è incompleto." error />
   }
 
