@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServiceRoleClient } from '@touracore/db/server'
+import { stripeUpdateSubscriptionItemQuantity } from '@/lib/stripe-sub-sync'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -70,6 +71,31 @@ async function handler(req: Request) {
       const extraUnits = Math.max(0, entityCount - 1)
       const total = base + extraUnits * unit
 
+      // Stripe qty sync: update subscription_item quantity = entityCount
+      let stripeSyncStatus: 'pending' | 'synced' | 'failed' | 'skipped' = 'skipped'
+      let stripeSubItemId: string | null = null
+      let stripeSyncError: string | null = null
+      try {
+        const { data: subItem } = await supabase
+          .from('subscription_items')
+          .select('id, stripe_subscription_item_id, status')
+          .eq('tenant_id', t.id)
+          .eq('module_code', mod.code)
+          .maybeSingle()
+        if (subItem?.stripe_subscription_item_id && subItem.status === 'active') {
+          stripeSubItemId = subItem.stripe_subscription_item_id
+          const ok = await stripeUpdateSubscriptionItemQuantity({
+            subscriptionItemId: subItem.stripe_subscription_item_id,
+            quantity: Math.max(1, entityCount),
+          })
+          stripeSyncStatus = ok ? 'synced' : 'failed'
+          if (!ok) stripeSyncError = 'stripe_update_failed'
+        }
+      } catch (e) {
+        stripeSyncStatus = 'failed'
+        stripeSyncError = e instanceof Error ? e.message : 'unknown'
+      }
+
       const { error } = await supabase.from('entity_billing_snapshots').upsert(
         {
           tenant_id: t.id,
@@ -79,7 +105,9 @@ async function handler(req: Request) {
           unit_price_eur: unit,
           base_price_eur: base,
           total_eur: total,
-          stripe_sync_status: 'pending',
+          stripe_subitem_id: stripeSubItemId,
+          stripe_sync_status: stripeSyncStatus,
+          stripe_sync_error: stripeSyncError,
         },
         { onConflict: 'tenant_id,module_code,period_month' },
       )

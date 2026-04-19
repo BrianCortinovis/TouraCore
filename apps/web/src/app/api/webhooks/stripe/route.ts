@@ -366,15 +366,16 @@ export async function POST(request: NextRequest) {
       const invoice = event.data.object as Stripe.Invoice
       const tenantId = invoice.metadata?.tenant_id
       if (!tenantId) break
-      // Segna past_due — dopo 7gg grace deactivation avverrà via cron (non implementato MVP)
+      const graceUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
       await upsertSubscription(supabase, tenantId, { status: 'past_due' })
+      await supabase.from('tenants').update({ billing_grace_until: graceUntil }).eq('id', tenantId)
       await supabase.from('module_activation_log').insert({
         tenant_id: tenantId,
         module_code: 'all',
         action: 'payment_failed',
         actor_scope: 'system',
         stripe_event_id: event.id,
-        notes: `Invoice ${invoice.id} failed`,
+        notes: `Invoice ${invoice.id} failed. Grace until ${graceUntil}`,
       })
       break
     }
@@ -417,6 +418,8 @@ export async function POST(request: NextRequest) {
         description: `Fattura ${invoice.number ?? invoice.id}`,
         status: 'completed',
       })
+      // Clear grace period
+      await supabase.from('tenants').update({ billing_grace_until: null }).eq('id', tenantId)
       break
     }
 

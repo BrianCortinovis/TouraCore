@@ -5,6 +5,10 @@ import { createServerSupabaseClient, createServiceRoleClient } from '@touracore/
 import { getCurrentUser } from '@touracore/auth'
 import { logAudit, getAuditContext } from '@touracore/audit'
 import { z } from 'zod'
+import {
+  stripeCreateSubscriptionItem,
+  stripeDeleteSubscriptionItem,
+} from '@/lib/stripe-sub-sync'
 
 const ModuleCodeEnum = z.enum([
   'hospitality',
@@ -100,6 +104,63 @@ export async function toggleModuleAction(
     actor_user_id: user.id,
     actor_scope: 'tenant_owner',
   })
+
+  // Stripe sync (best-effort; logs warning on failure)
+  try {
+    const { data: sub } = await admin
+      .from('subscriptions')
+      .select('id, stripe_subscription_id')
+      .eq('tenant_id', tenant.id)
+      .maybeSingle()
+    const { data: cat } = await admin
+      .from('module_catalog')
+      .select('stripe_price_id_monthly, base_price_eur')
+      .eq('code', moduleCode)
+      .maybeSingle()
+
+    if (sub?.stripe_subscription_id && cat?.stripe_price_id_monthly) {
+      const { data: subItem } = await admin
+        .from('subscription_items')
+        .select('id, stripe_subscription_item_id')
+        .eq('tenant_id', tenant.id)
+        .eq('module_code', moduleCode)
+        .maybeSingle()
+
+      if (active) {
+        if (!subItem) {
+          const stripeItemId = await stripeCreateSubscriptionItem({
+            subscriptionId: sub.stripe_subscription_id,
+            priceId: cat.stripe_price_id_monthly,
+            quantity: 1,
+          })
+          if (stripeItemId) {
+            await admin.from('subscription_items').insert({
+              subscription_id: sub.id,
+              tenant_id: tenant.id,
+              module_code: moduleCode,
+              stripe_subscription_item_id: stripeItemId,
+              quantity: 1,
+              unit_amount_eur: Number(cat.base_price_eur ?? 0),
+              status: 'active',
+            })
+          }
+        } else if (subItem.stripe_subscription_item_id) {
+          await admin
+            .from('subscription_items')
+            .update({ status: 'active' })
+            .eq('id', subItem.id)
+        }
+      } else if (subItem?.stripe_subscription_item_id) {
+        const ok = await stripeDeleteSubscriptionItem(subItem.stripe_subscription_item_id)
+        await admin
+          .from('subscription_items')
+          .update({ status: 'canceled', stripe_subscription_item_id: ok ? null : subItem.stripe_subscription_item_id })
+          .eq('id', subItem.id)
+      }
+    }
+  } catch (e) {
+    console.warn('[toggleModuleAction] stripe sync skipped:', e instanceof Error ? e.message : e)
+  }
 
   const auditCtx = await getAuditContext(tenant.id, user.id)
   await logAudit({
