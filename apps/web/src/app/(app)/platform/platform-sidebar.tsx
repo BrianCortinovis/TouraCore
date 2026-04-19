@@ -22,37 +22,37 @@ export function PlatformSidebar({ email, role }: PlatformSidebarProps) {
   return (
     <SharedSidebar
       scope="platform"
-      title="Control Room"
-      subtitle={`${role === 'super_admin' ? 'Super Admin' : 'Admin'} · ${email}`}
-      badge="Platform"
+      title="Centro di controllo"
+      subtitle={`${role === 'super_admin' ? 'Amministratore capo' : 'Amministratore'} · ${email}`}
+      badge="Piattaforma"
       groups={[
         {
-          title: 'Command',
+          title: 'Panoramica',
           items: [
-            { href: '/platform', label: 'Overview', icon: LayoutDashboard, exact: true },
+            { href: '/platform', label: 'Riepilogo', icon: LayoutDashboard, exact: true },
           ],
         },
         {
-          title: 'Business',
+          title: 'Gestione',
           items: [
             { href: '/platform/agencies', label: 'Agenzie', icon: Briefcase },
             { href: '/platform/clients', label: 'Clienti', icon: Building2 },
-            { href: '/platform/billing', label: 'Billing', icon: CreditCard },
+            { href: '/platform/billing', label: 'Fatturazione', icon: CreditCard },
           ],
         },
         {
-          title: 'Config',
+          title: 'Configurazione',
           items: [
-            { href: '/platform/config', label: 'Plans+Commissioni', icon: Layers3 },
-            { href: '/platform/messaging', label: 'Messaging', icon: MessageSquare },
+            { href: '/platform/config', label: 'Piani e commissioni', icon: Layers3 },
+            { href: '/platform/messaging', label: 'Messaggistica', icon: MessageSquare },
           ],
         },
         {
-          title: 'Ops',
+          title: 'Sistema',
           items: [
-            { href: '/platform/tech', label: 'Tech Ops', icon: Terminal },
+            { href: '/platform/tech', label: 'Operazioni tecniche', icon: Terminal },
             { href: '/platform/security', label: 'Sicurezza', icon: Shield },
-            { href: '/superadmin', label: 'Legacy', icon: Cog },
+            { href: '/superadmin', label: 'Vecchia console', icon: Cog },
           ],
         },
       ]}

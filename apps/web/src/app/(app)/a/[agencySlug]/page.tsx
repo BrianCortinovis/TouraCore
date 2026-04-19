@@ -96,28 +96,28 @@ export default async function AgencyHomePage({ params }: AgencyHomePageProps) {
     <div className="space-y-6 px-6 py-6">
       <header>
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-indigo-500">
-          Agency Dashboard
+          Pannello agenzia
         </p>
         <h1 className="mt-1 text-2xl font-semibold text-slate-900">{agency.name}</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Piano <span className="font-medium">{agency.plan}</span> · {tenantIds.length}/{agency.max_tenants ?? '∞'} clienti attivi · ruolo {ctx.agencyRole ?? 'platform'}
+          Piano <span className="font-medium">{planLabel(agency.plan)}</span> · {tenantIds.length}/{agency.max_tenants ?? '∞'} clienti attivi · ruolo {roleLabel(ctx.agencyRole)}
         </p>
       </header>
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <Kpi label="Revenue mese" value={`€${revenueMonth.toFixed(2)}`} />
-        <Kpi label="Bookings oggi" value={String(bookingsToday)} />
-        <Kpi label="Bookings mese" value={String(bookingsMonth)} />
-        <Kpi label="Clienti attivi" value={String(tenantIds.length)} />
+        <Kpi label="Incassi del mese" value={formatEUR(revenueMonth)} />
+        <Kpi label="Prenotazioni oggi" value={formatInt(bookingsToday)} />
+        <Kpi label="Prenotazioni del mese" value={formatInt(bookingsMonth)} />
+        <Kpi label="Clienti attivi" value={formatInt(tenantIds.length)} />
       </section>
 
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 bg-white p-5">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
-            Top clienti (revenue mese)
+            Clienti con più incassi questo mese
           </h2>
           {topTenants.length === 0 ? (
-            <p className="text-sm text-slate-500">Nessun booking questo mese.</p>
+            <p className="text-sm text-slate-500">Nessuna prenotazione questo mese.</p>
           ) : (
             <ul className="space-y-2">
               {topTenants.map((t) => (
@@ -125,7 +125,7 @@ export default async function AgencyHomePage({ params }: AgencyHomePageProps) {
                   <Link href={`/a/${agencySlug}/clients/${t.tenantId}`} className="text-sm font-medium text-indigo-700 hover:underline">
                     {t.name}
                   </Link>
-                  <span className="text-sm tabular-nums text-slate-700">€{t.revenue.toFixed(2)}</span>
+                  <span className="text-sm tabular-nums text-slate-700">{formatEUR(t.revenue)}</span>
                 </li>
               ))}
             </ul>
@@ -134,20 +134,50 @@ export default async function AgencyHomePage({ params }: AgencyHomePageProps) {
 
         <div className="rounded-2xl border border-slate-200 bg-white p-5">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
-            Quick actions
+            Azioni rapide
           </h2>
           <div className="grid grid-cols-2 gap-2">
             <Quick href={`/a/${agencySlug}/clients`} label="Clienti" />
-            <Quick href={`/a/${agencySlug}/team`} label="Team" />
+            <Quick href={`/a/${agencySlug}/team`} label="Collaboratori" />
             <Quick href={`/a/${agencySlug}/commissions`} label="Commissioni" />
-            <Quick href={`/a/${agencySlug}/billing`} label="Billing" />
+            <Quick href={`/a/${agencySlug}/billing`} label="Fatturazione" />
             <Quick href={`/a/${agencySlug}/reports`} label="Report" />
-            <Quick href={`/a/${agencySlug}/settings`} label="Branding" />
+            <Quick href={`/a/${agencySlug}/settings`} label="Personalizzazione" />
           </div>
         </div>
       </section>
     </div>
   )
+}
+
+const EUR_FMT = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })
+const INT_FMT = new Intl.NumberFormat('it-IT')
+
+function formatEUR(n: number): string {
+  return EUR_FMT.format(Math.round(n))
+}
+
+function formatInt(n: number): string {
+  return INT_FMT.format(n)
+}
+
+function planLabel(p: string | null | undefined): string {
+  switch (p) {
+    case 'agency_starter': return 'Starter'
+    case 'agency_pro': return 'Pro'
+    case 'agency_enterprise': return 'Enterprise'
+    case 'custom': return 'Personalizzato'
+    default: return p ?? '—'
+  }
+}
+
+function roleLabel(r: string | null | undefined): string {
+  switch (r) {
+    case 'agency_owner': return 'Titolare'
+    case 'agency_admin': return 'Amministratore'
+    case 'agency_member': return 'Collaboratore'
+    default: return 'Piattaforma'
+  }
 }
 
 function Kpi({ label, value }: { label: string; value: string }) {

@@ -158,7 +158,7 @@ export function ConsolidatedDashboard(props: Props) {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Entity ranking */}
         <section className="rounded-lg border border-gray-200 bg-white p-4">
-          <h2 className="mb-3 text-sm font-semibold">Top entity per revenue</h2>
+          <h2 className="mb-3 text-sm font-semibold">Attività con più incassi</h2>
           {entityBarData.length === 0 ? (
             <p className="py-8 text-center text-xs text-gray-400">Nessun dato</p>
           ) : (
@@ -176,7 +176,7 @@ export function ConsolidatedDashboard(props: Props) {
 
         {/* Vertical mix */}
         <section className="rounded-lg border border-gray-200 bg-white p-4">
-          <h2 className="mb-3 text-sm font-semibold">Mix vertical</h2>
+          <h2 className="mb-3 text-sm font-semibold">Distribuzione per tipo attività</h2>
           {pieData.length === 0 ? (
             <p className="py-8 text-center text-xs text-gray-400">Nessun dato</p>
           ) : (

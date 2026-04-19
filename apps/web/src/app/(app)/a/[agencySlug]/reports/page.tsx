@@ -64,19 +64,20 @@ export default async function ReportsPage({ params }: ReportsProps) {
   }
 
   const maxRev = Math.max(1, ...months.map((m) => revenueByMonth.get(m.key) ?? 0))
+  const EUR_R = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })
 
   return (
     <div className="space-y-6 px-6 py-6">
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Reports · {agency.name}</h1>
-          <p className="mt-1 text-sm text-slate-600">Trend 6 mesi · revenue + bookings + commissioni.</p>
+          <h1 className="text-2xl font-semibold">Report · {agency.name}</h1>
+          <p className="mt-1 text-sm text-slate-600">Andamento ultimi 6 mesi · incassi, prenotazioni e commissioni.</p>
         </div>
-        <a href={`/a/${agencySlug}/reports/export?range=6mo`} className="rounded border border-slate-300 px-3 py-2 text-sm">Export CSV</a>
+        <a href={`/a/${agencySlug}/reports/export?range=6mo`} className="rounded border border-slate-300 px-3 py-2 text-sm">Esporta CSV</a>
       </header>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Revenue mensile (6 mesi)</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Incassi mensili (ultimi 6 mesi)</h2>
         <div className="mt-4 flex items-end gap-2">
           {months.map((m) => {
             const rev = revenueByMonth.get(m.key) ?? 0
@@ -87,7 +88,7 @@ export default async function ReportsPage({ params }: ReportsProps) {
                   <div className="w-full rounded-t bg-indigo-500" style={{ height: `${h}px` }} />
                 </div>
                 <p className="text-xs font-medium">{m.label}</p>
-                <p className="text-[10px] text-slate-500">€{rev.toFixed(0)}</p>
+                <p className="text-[10px] text-slate-500">{EUR_R.format(Math.round(rev))}</p>
               </div>
             )
           })}
@@ -95,13 +96,13 @@ export default async function ReportsPage({ params }: ReportsProps) {
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Tabella dettaglio</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Tabella di riepilogo</h2>
         <table className="mt-3 w-full text-sm">
           <thead>
             <tr className="text-left text-xs uppercase text-slate-400">
               <th className="pb-2">Mese</th>
-              <th className="pb-2 text-right">Revenue</th>
-              <th className="pb-2 text-right">Bookings</th>
+              <th className="pb-2 text-right">Incassi</th>
+              <th className="pb-2 text-right">Prenotazioni</th>
               <th className="pb-2 text-right">Commissioni</th>
               <th className="pb-2 text-right">% commissione</th>
             </tr>
@@ -115,9 +116,9 @@ export default async function ReportsPage({ params }: ReportsProps) {
               return (
                 <tr key={m.key} className="border-t border-slate-100">
                   <td className="py-2">{m.label}</td>
-                  <td className="py-2 text-right tabular-nums">€{rev.toFixed(2)}</td>
+                  <td className="py-2 text-right tabular-nums">{EUR_R.format(Math.round(rev))}</td>
                   <td className="py-2 text-right">{bk}</td>
-                  <td className="py-2 text-right tabular-nums">€{cm.toFixed(2)}</td>
+                  <td className="py-2 text-right tabular-nums">{EUR_R.format(Math.round(cm))}</td>
                   <td className="py-2 text-right">{pct.toFixed(1)}%</td>
                 </tr>
               )

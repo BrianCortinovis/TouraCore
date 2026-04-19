@@ -229,33 +229,33 @@ export default async function SuperadminOverview() {
             </div>
             <div className="space-y-2">
               <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-                Suite command center per 6 o 7 CMS verticali
+                Centro di controllo piattaforma
               </h1>
               <p className="max-w-2xl text-sm leading-6 text-white/70 sm:text-base">
-                Visibilità unificata su tenant, strutture, billing, integrazioni, audit e readiness
-                dei moduli verticali. Tutto il core resta condiviso, ma ogni struttura continua a
-                vivere nel suo scope.
+                Visibilità unificata su clienti, attività, fatturazione, integrazioni e registri
+                della piattaforma. Il nucleo è condiviso ma ogni cliente opera nel proprio spazio
+                isolato.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <QuickLink href="/superadmin/security" label="Sicurezza" icon={Shield} />
-              <QuickLink href="/superadmin/billing" label="Billing" icon={CreditCard} />
+              <QuickLink href="/superadmin/billing" label="Fatturazione" icon={CreditCard} />
               <QuickLink href="/superadmin/integrations" label="Integrazioni" icon={Network} />
-              <QuickLink href="/superadmin/tenancy" label="Tenancy" icon={GitBranch} />
+              <QuickLink href="/superadmin/tenancy" label="Clienti" icon={GitBranch} />
               <QuickLink href="/superadmin/architecture" label="Architettura" icon={Layers3} />
             </div>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 xl:w-[28rem]">
             <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
-              <p className="text-xs uppercase tracking-[0.22em] text-white/50">Tenant isolation</p>
+              <p className="text-xs uppercase tracking-[0.22em] text-white/50">Isolamento clienti</p>
               <p className="mt-2 text-3xl font-semibold">{isolationScore}/4</p>
               <p className="mt-1 text-sm text-white/70">
-                Check base attivi: integr. configurate, canali attivi, abbonamenti, connect.
+                Verifiche base: integrazioni configurate, canali attivi, abbonamenti, pagamenti.
               </p>
             </div>
             <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
-              <p className="text-xs uppercase tracking-[0.22em] text-white/50">Audit trail</p>
+              <p className="text-xs uppercase tracking-[0.22em] text-white/50">Registro eventi</p>
               <p className="mt-2 text-3xl font-semibold">{formatNumber(auditCount ?? 0)}</p>
               <p className="mt-1 text-sm text-white/70">
                 Eventi tracciati nel registro immutabile della piattaforma.
@@ -266,31 +266,31 @@ export default async function SuperadminOverview() {
       </section>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Tenant" value={formatNumber(tenantCount ?? 0)} hint="Clienti / tenant" icon={Building2} tone="blue" />
-        <MetricCard label="Strutture" value={formatNumber(entityCount ?? 0)} hint="Scope operativi attivi" icon={Activity} tone="violet" />
-        <MetricCard label="Agenzie" value={formatNumber(agencyCount ?? 0)} hint="Layer intermedi" icon={Briefcase} tone="amber" />
-        <MetricCard label="Staff" value={formatNumber(staffCount ?? 0)} hint="Membri operativi" icon={Users} tone="emerald" />
+        <MetricCard label="Clienti" value={formatNumber(tenantCount ?? 0)} hint="Attività registrate" icon={Building2} tone="blue" />
+        <MetricCard label="Strutture" value={formatNumber(entityCount ?? 0)} hint="Attività operative" icon={Activity} tone="violet" />
+        <MetricCard label="Agenzie" value={formatNumber(agencyCount ?? 0)} hint="Partner intermedi" icon={Briefcase} tone="amber" />
+        <MetricCard label="Collaboratori" value={formatNumber(staffCount ?? 0)} hint="Membri dello staff" icon={Users} tone="emerald" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
         <MetricCard
-          label="Integrations configured"
+          label="Integrazioni configurate"
           value={formatNumber(configuredIntegrationCount ?? 0)}
           hint={`${formatNumber(integrationCount ?? 0)} credenziali totali`}
           icon={Network}
           tone="blue"
         />
         <MetricCard
-          label="Channel connections"
+          label="Canali collegati"
           value={formatNumber(activeChannelCount ?? 0)}
           hint={`${formatNumber(channelCount ?? 0)} connessioni totali`}
           icon={Layers3}
           tone="violet"
         />
         <MetricCard
-          label="Subscription health"
+          label="Abbonamenti attivi"
           value={formatNumber(activeSubscriptionCount ?? 0)}
-          hint={`${formatNumber(subscriptionCount ?? 0)} subscription totali`}
+          hint={`${formatNumber(subscriptionCount ?? 0)} abbonamenti totali`}
           icon={CreditCard}
           tone="emerald"
         />
@@ -298,22 +298,22 @@ export default async function SuperadminOverview() {
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <SectionCard
-          title="Consumption index"
-          description="Volume di attività della suite negli ultimi mesi: audit, booking, messaging, sync e fatturazione."
+          title="Volume di attività"
+          description="Eventi della piattaforma negli ultimi mesi: registri, prenotazioni, messaggi, sincronizzazioni e fatture."
         >
           <TrendList items={suiteActivity} valueLabel="eventi" barTone="bg-slate-900" />
         </SectionCard>
 
         <SectionCard
-          title="Tenant growth"
-          description="Nuovi tenant creati e nuove strutture aperte nel tempo."
+          title="Crescita clienti"
+          description="Nuovi clienti registrati e nuove attività aperte nel tempo."
         >
           <div className="space-y-6">
             <div>
               <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                Tenant
+                Clienti
               </p>
-              <TrendList items={tenantGrowth} valueLabel="tenant" barTone="bg-blue-600" />
+              <TrendList items={tenantGrowth} valueLabel="clienti" barTone="bg-blue-600" />
             </div>
             <div>
               <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
@@ -327,8 +327,8 @@ export default async function SuperadminOverview() {
 
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
         <SectionCard
-          title="Top modules della suite"
-          description="Quanti tenant hanno attivato ogni modulo verticale o capability condivisa."
+          title="Moduli più usati"
+          description="Quanti clienti hanno attivato ciascun modulo verticale o funzione condivisa."
         >
           {topModules.length === 0 ? (
             <p className="text-sm text-slate-500">Nessun modulo attivo ancora.</p>
@@ -359,13 +359,13 @@ export default async function SuperadminOverview() {
         </SectionCard>
 
         <SectionCard
-          title="Isolation & operations feed"
-          description="Segnali recenti di sistema, sicurezza e attività gestionali."
+          title="Segnali operativi"
+          description="Attività recenti, sicurezza e operazioni gestionali della piattaforma."
         >
           <div className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-2xl bg-slate-50 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Reservation flow</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Prenotazioni</p>
                 <p className="mt-2 text-2xl font-semibold text-slate-900">
                   {formatNumber(reservationCount ?? 0)}
                 </p>
@@ -374,57 +374,57 @@ export default async function SuperadminOverview() {
                 </p>
               </div>
               <div className="rounded-2xl bg-slate-50 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Messaging</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Messaggi</p>
                 <p className="mt-2 text-2xl font-semibold text-slate-900">
                   {formatNumber(messageCount ?? 0)}
                 </p>
-                <p className="text-sm text-slate-500">Messaggi inviati / queue</p>
+                <p className="text-sm text-slate-500">Inviati o in coda</p>
               </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-2xl bg-slate-50 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Channel sync</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Sincronizzazioni</p>
                 <p className="mt-2 text-2xl font-semibold text-slate-900">
                   {formatNumber(syncCount ?? 0)}
                 </p>
-                <p className="text-sm text-slate-500">Outbound + inbound sync logs</p>
+                <p className="text-sm text-slate-500">Canali in entrata e uscita</p>
               </div>
               <div className="rounded-2xl bg-slate-50 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Connect accounts</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Account pagamenti</p>
                 <p className="mt-2 text-2xl font-semibold text-slate-900">
                   {formatNumber(connectAccountCount ?? 0)}
                 </p>
-                <p className="text-sm text-slate-500">Stripe Connect / payout rail</p>
+                <p className="text-sm text-slate-500">Stripe collegati</p>
               </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-2xl bg-slate-50 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Invoices</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Fatture</p>
                 <p className="mt-2 text-2xl font-semibold text-slate-900">
                   {formatNumber(invoiceCount ?? 0)}
                 </p>
-                <p className="text-sm text-slate-500">Fatture registrate</p>
+                <p className="text-sm text-slate-500">Registrate</p>
               </div>
               <div className="rounded-2xl bg-slate-50 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Platform admins</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Amministratori</p>
                 <p className="mt-2 text-2xl font-semibold text-slate-900">
                   {formatNumber(adminCount ?? 0)}
                 </p>
-                <p className="text-sm text-slate-500">Accesso al livello piattaforma</p>
+                <p className="text-sm text-slate-500">Accesso piattaforma</p>
               </div>
             </div>
 
             <div className="flex flex-wrap gap-2">
               <StatusBadge tone={configuredIntegrationCount ? 'emerald' : 'rose'}>
-                {configuredIntegrationCount ? 'Integrations ready' : 'Integrations missing'}
+                {configuredIntegrationCount ? 'Integrazioni attive' : 'Integrazioni mancanti'}
               </StatusBadge>
               <StatusBadge tone={activeChannelCount ? 'emerald' : 'amber'}>
-                {activeChannelCount ? 'Channel sync on' : 'Channel sync idle'}
+                {activeChannelCount ? 'Canali sincronizzati' : 'Canali inattivi'}
               </StatusBadge>
               <StatusBadge tone={activeSubscriptionCount ? 'emerald' : 'amber'}>
-                {activeSubscriptionCount ? 'Revenue protected' : 'Subscriptions to review'}
+                {activeSubscriptionCount ? 'Abbonamenti ok' : 'Abbonamenti da verificare'}
               </StatusBadge>
             </div>
           </div>
@@ -432,9 +432,9 @@ export default async function SuperadminOverview() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <SectionCard title="Ultimi tenant" description="Ultimi tenant creati nella suite.">
+        <SectionCard title="Ultimi clienti registrati" description="Nuove attività aggiunte di recente.">
           {(!recentTenants || recentTenants.length === 0) ? (
-            <p className="text-sm text-slate-500">Nessun tenant.</p>
+            <p className="text-sm text-slate-500">Nessun cliente registrato.</p>
           ) : (
             <div className="divide-y divide-slate-200">
               {(recentTenants as TenantRow[]).map((tenant) => (
@@ -442,8 +442,8 @@ export default async function SuperadminOverview() {
                   <div>
                     <p className="font-medium text-slate-900">{tenant.name}</p>
                     <p className="text-sm text-slate-500">
-                      {tenant.slug} · {tenant.country?.toUpperCase() ?? 'N/D'} ·{' '}
-                      {tenant.agency_id ? 'agency-linked' : 'direct'}
+                      {tenant.country?.toUpperCase() ?? 'N/D'} ·{' '}
+                      {tenant.agency_id ? 'Via agenzia' : 'Diretto'}
                     </p>
                   </div>
                   <div className="text-right">

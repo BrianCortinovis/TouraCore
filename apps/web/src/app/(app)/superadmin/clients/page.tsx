@@ -14,6 +14,14 @@ interface TenantRow {
   agency_id: string | null
 }
 
+function legalTypeLabel(t: string | null | undefined): string {
+  if (t === 'private') return 'Privato'
+  if (t === 'business') return 'Azienda'
+  if (t === 'forfettario') return 'Forfettario'
+  if (t === 'occasionale') return 'Occasionale'
+  return t ?? '—'
+}
+
 export default async function SuperadminClientsPage() {
   const supabase = await createServiceRoleClient()
 
@@ -26,12 +34,12 @@ export default async function SuperadminClientsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Clienti</h1>
-        <span className="text-sm text-gray-500">{tenants?.length ?? 0} tenant</span>
+        <span className="text-sm text-gray-500">{tenants?.length ?? 0} totali</span>
       </div>
 
       {(!tenants || tenants.length === 0) ? (
         <div className="rounded-lg border border-dashed border-gray-300 p-12 text-center">
-          <p className="text-sm text-gray-500">Nessun tenant registrato.</p>
+          <p className="text-sm text-gray-500">Nessun cliente registrato.</p>
         </div>
       ) : (
         <div className="divide-y rounded-lg border bg-white">
@@ -46,16 +54,16 @@ export default async function SuperadminClientsPage() {
                 <div>
                   <p className="font-medium text-gray-900">{t.name}</p>
                   <p className="text-sm text-gray-500">
-                    {t.slug} · {t.country?.toUpperCase()} · {t.legal_type ?? 'N/A'}
+                    {t.country?.toUpperCase()} · {legalTypeLabel(t.legal_type)}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {modules.hospitality && <Badge variant="secondary">Hospitality</Badge>}
-                  {modules.experiences && <Badge variant="secondary">Experiences</Badge>}
+                  {modules.hospitality && <Badge variant="secondary">Ospitalità</Badge>}
+                  {modules.experiences && <Badge variant="secondary">Esperienze</Badge>}
                   <Badge variant={t.is_active ? 'default' : 'secondary'}>
                     {t.is_active ? 'Attivo' : 'Inattivo'}
                   </Badge>
-                  {t.agency_id && <Badge variant="outline">Agenzia</Badge>}
+                  {t.agency_id && <Badge variant="outline">Via agenzia</Badge>}
                 </div>
               </Link>
             )

@@ -65,8 +65,8 @@ export default async function TenantConsolidatedPage({ params, searchParams }: P
   return (
     <div className="space-y-4 p-6">
       <header>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard consolidato</h1>
-        <p className="text-sm text-gray-500">{tenant.name} — KPI cross-vertical (hospitality + ristorazione)</p>
+        <h1 className="text-2xl font-bold text-gray-900">Panoramica generale</h1>
+        <p className="text-sm text-gray-500">{tenant.name} — indicatori unificati di ospitalità e ristorazione</p>
       </header>
       <ConsolidatedDashboard
         tenantSlug={tenantSlug}

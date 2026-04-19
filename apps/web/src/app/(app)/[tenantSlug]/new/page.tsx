@@ -71,9 +71,9 @@ export default async function NewEntityHub({ params }: Props) {
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Crea nuova entity</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Crea nuova attività</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Scegli il tipo di entity da creare in base ai moduli attivi.
+          Scegli il tipo di attività da aggiungere in base ai moduli che hai attivato.
         </p>
       </div>
 

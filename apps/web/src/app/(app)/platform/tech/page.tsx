@@ -72,13 +72,13 @@ export default async function TechOpsPage() {
         </Card>
       </section>
 
-      <Card title="Health check">
-        <p className="text-sm text-slate-600">Endpoint test:</p>
+      <Card title="Stato sistema">
+        <p className="text-sm text-slate-600">Endpoint principali:</p>
         <ul className="mt-2 text-sm">
-          <li>/ → 200 (public listings)</li>
-          <li>/platform → 200 (platform admin)</li>
-          <li>/a/[slug] → 200 (agency)</li>
-          <li>/[tenantSlug] → 200 (tenant)</li>
+          <li>Homepage pubblica → 200 OK</li>
+          <li>Area piattaforma → 200 OK</li>
+          <li>Area agenzia → 200 OK</li>
+          <li>Area cliente → 200 OK</li>
         </ul>
       </Card>
     </div>

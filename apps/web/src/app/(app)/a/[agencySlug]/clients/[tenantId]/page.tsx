@@ -67,46 +67,100 @@ export default async function ClientDetailPage({ params }: ClientDetailProps) {
       <header>
         <h1 className="text-2xl font-semibold">{tenant.name}</h1>
         <p className="mt-1 text-sm text-slate-600">
-          {tenant.slug} · {link.billing_mode} · {link.default_management_mode} · {link.status}
+          {billingLabel(link.billing_mode)} · {mgmtLabel(link.default_management_mode)} · {statusLabel(link.status)}
         </p>
       </header>
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Kpi label="Revenue mese" value={`€${revenueMonth.toFixed(2)}`} />
-        <Kpi label="Bookings mese" value={String(bookings)} />
-        <Kpi label="Strutture attive" value={String(entityIds.length)} />
+        <Kpi label="Incassi del mese" value={EUR.format(Math.round(revenueMonth))} />
+        <Kpi label="Prenotazioni del mese" value={String(bookings)} />
+        <Kpi label="Attività attive" value={String(entityIds.length)} />
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white">
         <header className="border-b border-slate-100 p-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Strutture/Entity</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Strutture e attività</h2>
         </header>
         <ul className="divide-y divide-slate-100">
           {(entities ?? []).map((e) => (
             <li key={e.id} className="flex items-center justify-between p-4">
               <div>
                 <p className="font-medium">{e.name}</p>
-                <p className="text-xs text-slate-500">{e.kind} · {e.slug}</p>
+                <p className="text-xs text-slate-500">{kindLabel(e.kind)}</p>
               </div>
               <Link href={`/${tenant.slug}/stays/${e.slug}`} className="text-xs text-indigo-600 hover:underline">
-                Apri admin →
+                Apri gestione →
               </Link>
             </li>
           ))}
           {(entities ?? []).length === 0 && (
-            <li className="p-6 text-center text-sm text-slate-500">Nessuna struttura.</li>
+            <li className="p-6 text-center text-sm text-slate-500">Nessuna attività configurata.</li>
           )}
         </ul>
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5">
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">Moduli attivi</h2>
-        <pre className="overflow-x-auto rounded bg-slate-50 p-3 text-xs text-slate-700">
-{JSON.stringify(tenant.modules, null, 2)}
-        </pre>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Moduli attivi</h2>
+        <ul className="flex flex-wrap gap-2">
+          {Object.entries((tenant.modules ?? {}) as Record<string, { active: boolean }>).filter(([, v]) => v?.active).map(([code]) => (
+            <li key={code} className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
+              {moduleLabel(code)}
+            </li>
+          ))}
+          {Object.values((tenant.modules ?? {}) as Record<string, { active: boolean }>).filter((v) => v?.active).length === 0 && (
+            <li className="text-sm text-slate-500">Nessun modulo attivo.</li>
+          )}
+        </ul>
       </section>
     </div>
   )
+}
+
+const EUR = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })
+
+function statusLabel(s: string | null | undefined): string {
+  if (s === 'active') return 'Attivo'
+  if (s === 'pending') return 'In attesa'
+  if (s === 'revoked') return 'Disattivato'
+  return s ?? '—'
+}
+
+function billingLabel(b: string | null | undefined): string {
+  if (b === 'client_direct') return 'Cliente paga direttamente'
+  if (b === 'agency_covered') return 'Agenzia paga'
+  return b ?? '—'
+}
+
+function mgmtLabel(m: string | null | undefined): string {
+  if (m === 'agency_managed') return 'Gestita da agenzia'
+  if (m === 'self_service') return 'Autonoma'
+  return m ?? '—'
+}
+
+function kindLabel(k: string | null | undefined): string {
+  const map: Record<string, string> = {
+    accommodation: 'Struttura ricettiva',
+    restaurant: 'Ristorazione',
+    activity: 'Esperienza / Tour',
+    bike_rental: 'Noleggio bike',
+    moto_rental: 'Noleggio moto',
+    wellness: 'Wellness / SPA',
+    ski_school: 'Scuola sci',
+  }
+  return map[k ?? ''] ?? k ?? '—'
+}
+
+function moduleLabel(code: string): string {
+  const map: Record<string, string> = {
+    hospitality: 'Struttura ricettiva',
+    restaurant: 'Ristorazione',
+    wellness: 'Wellness / SPA',
+    experiences: 'Esperienze / Tour',
+    bike_rental: 'Noleggio bike',
+    moto_rental: 'Noleggio moto',
+    ski_school: 'Scuola sci',
+  }
+  return map[code] ?? code
 }
 
 function Kpi({ label, value }: { label: string; value: string }) {

@@ -42,7 +42,7 @@ export function InviteClientForm({ agencySlug }: { agencySlug: string }) {
     <div className="rounded-2xl border border-slate-200 bg-white p-4">
       <h3 className="text-sm font-semibold">Invita nuovo cliente</h3>
       <p className="mt-1 text-xs text-slate-500">
-        Genera link invito. Il cliente crea tenant con agency_id auto-associato.
+        Genera un link di invito. Il cliente si registra e viene collegato automaticamente alla tua agenzia.
       </p>
       <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-4">
         <label className="text-sm md:col-span-2">
@@ -56,7 +56,7 @@ export function InviteClientForm({ agencySlug }: { agencySlug: string }) {
           />
         </label>
         <label className="text-sm md:col-span-2">
-          <span className="text-slate-600">Nome tenant (suggerito)</span>
+          <span className="text-slate-600">Nome attività (opzionale)</span>
           <input
             className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
             value={tenantName}
@@ -65,7 +65,7 @@ export function InviteClientForm({ agencySlug }: { agencySlug: string }) {
           />
         </label>
         <label className="text-sm">
-          <span className="text-slate-600">Vertical</span>
+          <span className="text-slate-600">Tipo attività</span>
           <select
             className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
             value={vertical}
@@ -73,33 +73,33 @@ export function InviteClientForm({ agencySlug }: { agencySlug: string }) {
           >
             <option value="hospitality">Struttura ricettiva</option>
             <option value="restaurant">Ristorazione</option>
-            <option value="bike_rental">Bike rental</option>
-            <option value="moto_rental">Moto rental</option>
-            <option value="experiences">Esperienze/Tour</option>
-            <option value="wellness">Wellness/SPA</option>
+            <option value="bike_rental">Noleggio bike</option>
+            <option value="moto_rental">Noleggio moto</option>
+            <option value="experiences">Esperienze / Tour</option>
+            <option value="wellness">Wellness / SPA</option>
             <option value="ski_school">Scuola sci</option>
           </select>
         </label>
         <label className="text-sm">
-          <span className="text-slate-600">Billing mode</span>
+          <span className="text-slate-600">Fatturazione</span>
           <select
             className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
             value={billingMode}
             onChange={(e) => setBillingMode(e.target.value as typeof billingMode)}
           >
-            <option value="client_direct">client_direct</option>
-            <option value="agency_covered">agency_covered</option>
+            <option value="client_direct">Cliente paga direttamente</option>
+            <option value="agency_covered">Pago io per il cliente</option>
           </select>
         </label>
         <label className="text-sm">
-          <span className="text-slate-600">Management</span>
+          <span className="text-slate-600">Modalità di gestione</span>
           <select
             className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
             value={managementMode}
             onChange={(e) => setManagementMode(e.target.value as typeof managementMode)}
           >
-            <option value="self_service">self_service</option>
-            <option value="agency_managed">agency_managed</option>
+            <option value="self_service">Cliente gestisce autonomamente</option>
+            <option value="agency_managed">Gestisco io per il cliente</option>
           </select>
         </label>
       </div>
@@ -116,7 +116,7 @@ export function InviteClientForm({ agencySlug }: { agencySlug: string }) {
       {msg && <p className="mt-2 text-xs text-slate-600">{msg}</p>}
       {inviteUrl && (
         <div className="mt-2 rounded bg-slate-50 p-2">
-          <p className="text-xs font-medium text-slate-700">Link condivisibile:</p>
+          <p className="text-xs font-medium text-slate-700">Link da condividere:</p>
           <code className="mt-1 block break-all text-xs text-indigo-700">{inviteUrl}</code>
         </div>
       )}

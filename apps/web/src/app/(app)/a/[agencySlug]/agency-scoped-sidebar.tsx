@@ -24,27 +24,27 @@ export function AgencyScopedSidebar({ agencySlug, agencyName, plan }: AgencyScop
       scope="agency"
       title={agencyName}
       subtitle={plan ?? undefined}
-      badge="Agency"
+      badge="Agenzia"
       groups={[
         {
-          title: 'Command',
+          title: 'Panoramica',
           items: [
-            { href: prefix, label: 'Overview', icon: LayoutDashboard, exact: true },
+            { href: prefix, label: 'Riepilogo', icon: LayoutDashboard, exact: true },
           ],
         },
         {
-          title: 'Business',
+          title: 'Gestione',
           items: [
             { href: `${prefix}/clients`, label: 'Clienti', icon: Building2 },
             { href: `${prefix}/commissions`, label: 'Commissioni', icon: Receipt },
-            { href: `${prefix}/billing`, label: 'Billing', icon: CreditCard },
+            { href: `${prefix}/billing`, label: 'Fatturazione', icon: CreditCard },
           ],
         },
         {
-          title: 'Team',
+          title: 'Collaborazione',
           items: [
-            { href: `${prefix}/team`, label: 'Team', icon: Users },
-            { href: `${prefix}/messaging`, label: 'Messaging', icon: MessageSquare },
+            { href: `${prefix}/team`, label: 'Collaboratori', icon: Users },
+            { href: `${prefix}/messaging`, label: 'Messaggi', icon: MessageSquare },
             { href: `${prefix}/settings`, label: 'Impostazioni', icon: Settings },
           ],
         },

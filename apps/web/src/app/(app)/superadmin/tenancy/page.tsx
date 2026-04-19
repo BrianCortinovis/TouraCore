@@ -144,17 +144,17 @@ export default async function SuperadminTenancyPage() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Agency routing" description="Quanti tenant vivono dentro il layer agenzia.">
+        <SectionCard title="Clienti e agenzie" description="Quanti clienti sono gestiti tramite un'agenzia partner.">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl bg-slate-50 p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Direct tenants</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Clienti diretti</p>
               <p className="mt-2 text-2xl font-semibold text-slate-900">{formatNumber(tenantRows.length - agencyTenantCount)}</p>
-              <p className="text-sm text-slate-500">Tenant non assegnati a un'agenzia</p>
+              <p className="text-sm text-slate-500">Non collegati a un&apos;agenzia</p>
             </div>
             <div className="rounded-2xl bg-slate-50 p-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Agency tenants</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Clienti di agenzia</p>
               <p className="mt-2 text-2xl font-semibold text-slate-900">{formatNumber(agencyTenantCount)}</p>
-              <p className="text-sm text-slate-500">Tenant agganciati a un'agenzia</p>
+              <p className="text-sm text-slate-500">Gestiti tramite un&apos;agenzia</p>
             </div>
           </div>
 
@@ -163,20 +163,20 @@ export default async function SuperadminTenancyPage() {
               {activeAgencies} agenzie attive
             </StatusBadge>
             <StatusBadge tone={activeLinks ? 'emerald' : 'slate'}>
-              {activeLinks} link attivi
+              {activeLinks} collegamenti attivi
             </StatusBadge>
           </div>
         </SectionCard>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <SectionCard title="Top modules per tenant" description="Adozione delle capability shared e verticali.">
-          <TrendList items={topModules} valueLabel="tenant" barTone="bg-slate-900" />
+        <SectionCard title="Moduli più usati" description="Funzionalità verticali e condivise adottate dai clienti.">
+          <TrendList items={topModules} valueLabel="clienti" barTone="bg-slate-900" />
         </SectionCard>
 
-        <SectionCard title="Recent tenants" description="Ultime strutture create con il loro scope.">
+        <SectionCard title="Ultimi clienti registrati" description="Nuove attività aggiunte alla piattaforma.">
           {tenantRows.length === 0 ? (
-            <p className="text-sm text-slate-500">Nessun tenant.</p>
+            <p className="text-sm text-slate-500">Nessun cliente registrato.</p>
           ) : (
             <div className="divide-y divide-slate-200">
               {tenantRows.slice(0, 8).map((tenant) => (
@@ -184,17 +184,17 @@ export default async function SuperadminTenancyPage() {
                   <div>
                     <p className="font-medium text-slate-900">{tenant.name}</p>
                     <p className="text-sm text-slate-500">
-                      {tenant.slug} · {tenant.country?.toUpperCase() ?? 'N/D'} ·{' '}
-                      {tenant.agency_id ? 'agency-linked' : 'direct'}
+                      {tenant.country?.toUpperCase() ?? 'N/D'} ·{' '}
+                      {tenant.agency_id ? 'Via agenzia' : 'Diretto'}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-slate-400">{formatDate(tenant.created_at)}</p>
                     <div className="mt-1 flex justify-end gap-1">
                       {tenant.is_active ? (
-                        <StatusBadge tone="emerald">attivo</StatusBadge>
+                        <StatusBadge tone="emerald">Attivo</StatusBadge>
                       ) : (
-                        <StatusBadge tone="amber">inattivo</StatusBadge>
+                        <StatusBadge tone="amber">Inattivo</StatusBadge>
                       )}
                     </div>
                   </div>
@@ -206,16 +206,16 @@ export default async function SuperadminTenancyPage() {
       </div>
 
       <SectionCard
-        title="Isolation checklist"
-        description="La gerarchia deve restare chiara: platform → agency → tenant → entity → booking."
+        title="Gerarchia dei permessi"
+        description="Piattaforma → Agenzia → Cliente → Attività → Prenotazione."
       >
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
           {[
-            ['Platform', 'superadmin only'],
-            ['Agency', 'agency_id scoped'],
-            ['Tenant', 'tenant_id scoped'],
-            ['Entity', 'entity_id scoped'],
-            ['Booking', 'session-scoped'],
+            ['Piattaforma', 'Solo amministratori'],
+            ['Agenzia', 'Gestisce più clienti'],
+            ['Cliente', 'Titolare attività'],
+            ['Attività', 'Struttura o servizio'],
+            ['Prenotazione', 'Singolo booking'],
           ].map(([label, value]) => (
             <div key={label} className="rounded-2xl bg-slate-50 p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{label}</p>
@@ -225,7 +225,7 @@ export default async function SuperadminTenancyPage() {
         </div>
       </SectionCard>
 
-      <SectionCard title="Top tenant density" description="Tenant con più entity nel perimetro attuale.">
+      <SectionCard title="Clienti con più attività" description="Chi ha più strutture/servizi configurati.">
         {topTenantsByEntities.length === 0 ? (
           <p className="text-sm text-slate-500">Nessun dato disponibile.</p>
         ) : (
@@ -234,10 +234,9 @@ export default async function SuperadminTenancyPage() {
               <div key={tenant.id} className="flex items-center justify-between gap-4 py-3">
                 <div>
                   <p className="text-sm font-medium text-slate-900">{tenant.name}</p>
-                  <p className="text-xs text-slate-400">{tenant.slug}</p>
                 </div>
                 <StatusBadge tone={tenant.entityCount > 0 ? 'emerald' : 'slate'}>
-                  {tenant.entityCount} entity
+                  {tenant.entityCount} attività
                 </StatusBadge>
               </div>
             ))}

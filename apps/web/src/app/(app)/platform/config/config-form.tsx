@@ -6,6 +6,14 @@ import { updatePlatformConfigAction } from './actions'
 interface Plans { [k: string]: { price: number; max_tenants: number } }
 interface Tiers { [vertical: string]: Array<{ threshold: number; rate: number }> }
 
+function planLabel(k: string): string {
+  if (k === 'agency_starter') return 'Starter'
+  if (k === 'agency_pro') return 'Pro'
+  if (k === 'agency_enterprise') return 'Enterprise'
+  if (k === 'custom') return 'Personalizzato'
+  return k.replace('agency_', '')
+}
+
 export function ConfigForm({
   plans: initialPlans,
   commissionTiers: initialTiers,
@@ -36,19 +44,19 @@ export function ConfigForm({
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-slate-200 bg-white p-5">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Piani agency</h2>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Piani agenzia</h2>
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs uppercase text-slate-400">
               <th>Piano</th>
               <th>Prezzo €/mese</th>
-              <th>Max tenants</th>
+              <th>Clienti massimi</th>
             </tr>
           </thead>
           <tbody>
             {Object.entries(plans).map(([k, v]) => (
               <tr key={k} className="border-t border-slate-100">
-                <td className="py-2 capitalize">{k.replace('agency_', '')}</td>
+                <td className="py-2 capitalize">{planLabel(k)}</td>
                 <td>
                   <input
                     type="number"

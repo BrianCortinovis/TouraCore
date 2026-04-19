@@ -36,13 +36,38 @@ export default async function ClientsPage({ params }: ClientsPageProps) {
 
   const canWrite = hasPermission(ctx, 'tenant.write') || ctx.isPlatformAdmin
 
+  function statusLabel(s: string | null | undefined): string {
+    switch (s) {
+      case 'active': return 'Attivo'
+      case 'pending': return 'In attesa'
+      case 'revoked': return 'Disattivato'
+      default: return s ?? '—'
+    }
+  }
+
+  function billingLabel(b: string | null | undefined): string {
+    switch (b) {
+      case 'client_direct': return 'Cliente paga direttamente'
+      case 'agency_covered': return 'Agenzia paga'
+      default: return b ?? '—'
+    }
+  }
+
+  function mgmtLabel(m: string | null | undefined): string {
+    switch (m) {
+      case 'agency_managed': return 'Gestita da agenzia'
+      case 'self_service': return 'Autonoma'
+      default: return m ?? '—'
+    }
+  }
+
   return (
     <div className="space-y-6 px-6 py-6">
       <header className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Clienti · {agency.name}</h1>
           <p className="mt-1 text-sm text-slate-600">
-            {links?.length ?? 0}/{agency.max_tenants ?? '∞'} tenant collegati · link con billing_mode e management_mode per cliente.
+            {links?.length ?? 0}/{agency.max_tenants ?? '∞'} clienti collegati · configura fatturazione e modalità di gestione per ciascun cliente.
           </p>
         </div>
       </header>
@@ -56,7 +81,7 @@ export default async function ClientsPage({ params }: ClientsPageProps) {
 
       <section className="rounded-2xl border border-slate-200 bg-white">
         <header className="border-b border-slate-100 p-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Tenant collegati</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Clienti collegati</h2>
         </header>
         <ul className="divide-y divide-slate-100">
           {(links ?? []).map((l) => {
@@ -65,10 +90,10 @@ export default async function ClientsPage({ params }: ClientsPageProps) {
               <li key={l.id} className="flex items-center justify-between p-4">
                 <div>
                   <Link href={`/a/${agencySlug}/clients/${l.tenant_id}`} className="font-medium text-indigo-700 hover:underline">
-                    {t?.name ?? l.tenant_id.slice(0, 8)}
+                    {t?.name ?? 'Cliente senza nome'}
                   </Link>
                   <p className="text-xs text-slate-500">
-                    {t?.slug} · stato: {l.status} · billing: {l.billing_mode} · mode: {l.default_management_mode}
+                    {statusLabel(l.status)} · Fatturazione: {billingLabel(l.billing_mode)} · Gestione: {mgmtLabel(l.default_management_mode)}
                   </p>
                 </div>
                 <span
@@ -76,13 +101,13 @@ export default async function ClientsPage({ params }: ClientsPageProps) {
                     l.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
                   }`}
                 >
-                  {l.status}
+                  {statusLabel(l.status)}
                 </span>
               </li>
             )
           })}
           {(links ?? []).length === 0 && (
-            <li className="p-6 text-center text-sm text-slate-500">Nessun cliente collegato. Usa form sopra.</li>
+            <li className="p-6 text-center text-sm text-slate-500">Nessun cliente collegato. Usa il form in alto per invitare o collegare un cliente.</li>
           )}
         </ul>
       </section>
