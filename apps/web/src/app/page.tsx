@@ -11,7 +11,7 @@ import {
   Users,
   Globe,
 } from 'lucide-react'
-import { createServiceRoleClient } from '@touracore/db/server'
+import { createServerSupabaseClient, createServiceRoleClient } from '@touracore/db/server'
 import { getAuthBootstrapData } from '@touracore/auth'
 
 export default async function HomePage() {
@@ -36,6 +36,29 @@ export default async function HomePage() {
 
     if (tenantSlug) {
       redirect(`/${tenantSlug}`)
+    }
+
+    const { data: agencyMembership } = await adminClient
+      .from('agency_memberships')
+      .select('agencies(slug)')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .limit(1)
+      .maybeSingle()
+
+    if (agencyMembership) {
+      const agencyRel = (agencyMembership as unknown as { agencies?: unknown }).agencies
+      const agencySlug = Array.isArray(agencyRel)
+        ? (agencyRel[0] as { slug?: string } | undefined)?.slug
+        : (agencyRel as { slug?: string } | null)?.slug
+      if (agencySlug) redirect(`/a/${agencySlug}`)
+    }
+
+    const serverClient = await createServerSupabaseClient()
+    const { data: authRes } = await serverClient.auth.getUser()
+    const intentScope = (authRes.user?.user_metadata as { intent_scope?: string } | null)?.intent_scope
+    if (intentScope === 'agency') {
+      redirect('/agency-onboarding')
     }
 
     redirect('/onboarding')

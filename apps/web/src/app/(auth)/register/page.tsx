@@ -14,6 +14,8 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [intentScope, setIntentScope] = useState<'tenant' | 'agency'>('tenant')
+  const [intentModule, setIntentModule] = useState<string>('hospitality')
   const [formData, setFormData] = useState({
     displayName: '',
     email: '',
@@ -51,6 +53,8 @@ export default function RegisterPage() {
         options: {
           data: {
             display_name: formData.displayName,
+            intent_scope: intentScope,
+            intent_module: intentScope === 'agency' ? null : intentModule,
           },
         },
       })
@@ -130,12 +134,57 @@ export default function RegisterPage() {
             <h1 className="text-2xl font-bold text-gray-900">TouraCore</h1>
           </div>
 
-          <div className="mb-8">
+          <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Crea il tuo account</h2>
             <p className="mt-2 text-sm text-gray-500">
-              Registrati e configura le tue strutture dopo il primo accesso
+              Scegli cosa vuoi gestire. Potrai aggiungere altro dopo.
             </p>
           </div>
+
+          <div className="mb-6">
+            <label className="mb-2 block text-sm font-medium text-gray-700">Tipo account</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setIntentScope('tenant')}
+                className={`rounded-lg border-2 p-3 text-left transition-all ${
+                  intentScope === 'tenant' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="text-sm font-semibold text-gray-900">Struttura / Attività</div>
+                <div className="mt-1 text-xs text-gray-500">Hotel, ristorante, noleggi, tour</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIntentScope('agency')}
+                className={`rounded-lg border-2 p-3 text-left transition-all ${
+                  intentScope === 'agency' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="text-sm font-semibold text-gray-900">Agenzia</div>
+                <div className="mt-1 text-xs text-gray-500">Gestisci più clienti</div>
+              </button>
+            </div>
+          </div>
+
+          {intentScope === 'tenant' && (
+            <div className="mb-6">
+              <label className="mb-2 block text-sm font-medium text-gray-700">Cosa gestisci?</label>
+              <select
+                value={intentModule}
+                onChange={(e) => setIntentModule(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              >
+                <option value="hospitality">Struttura ricettiva (hotel/B&amp;B/agriturismo)</option>
+                <option value="restaurant">Ristorazione</option>
+                <option value="bike_rental">Noleggio bike/e-bike</option>
+                <option value="moto_rental">Noleggio moto</option>
+                <option value="experiences">Esperienze / Tour</option>
+                <option value="wellness">Wellness / SPA</option>
+                <option value="ski_school">Scuola sci</option>
+              </select>
+            </div>
+          )}
 
           {error && (
             <div className="mb-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">

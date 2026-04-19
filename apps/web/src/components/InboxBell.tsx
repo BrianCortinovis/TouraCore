@@ -10,7 +10,7 @@ export async function InboxBell() {
 
   return (
     <Link
-      href="/inbox"
+      href="/messages"
       className="relative inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:bg-slate-50"
       aria-label={`Inbox (${count} non letti)`}
     >

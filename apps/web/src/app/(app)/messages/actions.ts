@@ -8,19 +8,19 @@ export async function markAsReadAction(id: string): Promise<void> {
   const user = await getCurrentUser()
   if (!user) return
   await markAsRead(id, user.id)
-  revalidatePath('/inbox')
+  revalidatePath('/messages')
 }
 
 export async function markAllAsReadAction(): Promise<void> {
   const user = await getCurrentUser()
   if (!user) return
   await markAllAsRead(user.id)
-  revalidatePath('/inbox')
+  revalidatePath('/messages')
 }
 
 export async function archiveAction(id: string): Promise<void> {
   const user = await getCurrentUser()
   if (!user) return
   await archiveEntry(id, user.id)
-  revalidatePath('/inbox')
+  revalidatePath('/messages')
 }

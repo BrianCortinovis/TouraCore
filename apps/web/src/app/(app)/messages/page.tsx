@@ -1,13 +1,13 @@
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@touracore/auth'
 import { listInbox } from '@touracore/notifications'
-import { InboxList } from './inbox-list'
+import { InboxList } from './messages-list'
 
 export const dynamic = 'force-dynamic'
 
 export default async function InboxPage() {
   const user = await getCurrentUser()
-  if (!user) redirect('/login?next=/inbox')
+  if (!user) redirect('/login?next=/messages')
 
   const entries = await listInbox(user.id, 100)
 
