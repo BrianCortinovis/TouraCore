@@ -8,6 +8,8 @@ import {
   Receipt,
   Settings,
   Users,
+  Megaphone,
+  LineChart,
 } from 'lucide-react'
 import { SharedSidebar } from '../../../../components/SharedSidebar'
 
@@ -33,18 +35,25 @@ export function AgencyScopedSidebar({ agencySlug, agencyName, plan }: AgencyScop
           ],
         },
         {
-          title: 'Gestione',
+          title: 'Clienti',
           items: [
-            { href: `${prefix}/clients`, label: 'Clienti', icon: Building2 },
+            { href: `${prefix}/clients`, label: 'Elenco clienti', icon: Building2 },
+            { href: `${prefix}/broadcast`, label: 'Avvisi', icon: Megaphone },
+            { href: `${prefix}/reports`, label: 'Report', icon: LineChart },
+          ],
+        },
+        {
+          title: 'Finanze',
+          items: [
             { href: `${prefix}/commissions`, label: 'Commissioni', icon: Receipt },
             { href: `${prefix}/billing`, label: 'Fatturazione', icon: CreditCard },
           ],
         },
         {
-          title: 'Collaborazione',
+          title: 'Organizzazione',
           items: [
             { href: `${prefix}/team`, label: 'Collaboratori', icon: Users },
-            { href: `${prefix}/messaging`, label: 'Messaggi', icon: MessageSquare },
+            { href: `${prefix}/messaging`, label: 'Messaggistica', icon: MessageSquare },
             { href: `${prefix}/settings`, label: 'Impostazioni', icon: Settings },
           ],
         },

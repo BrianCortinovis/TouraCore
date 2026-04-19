@@ -66,7 +66,7 @@ export default async function BillingPage({ params }: BillingPageProps) {
               : <span className="text-amber-700">Da configurare</span>}
           </p>
           {canWrite && !agency.stripe_connect_account_id && (
-            <Link href={`/a/${agencySlug}/billing/stripe`} className="mt-2 inline-block text-xs text-indigo-600 hover:underline">
+            <Link href={`/a/${agencySlug}/settings/stripe`} className="mt-2 inline-block text-xs text-indigo-600 hover:underline">
               Collega Stripe →
             </Link>
           )}

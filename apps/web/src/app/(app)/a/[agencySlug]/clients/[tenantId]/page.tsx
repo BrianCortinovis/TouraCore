@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { getVisibilityContext, canAccessTenant } from '@touracore/auth/visibility'
+import { CrmPanel } from './crm-panel'
 
 interface ClientDetailProps {
   params: Promise<{ agencySlug: string; tenantId: string }>
@@ -58,6 +59,24 @@ export default async function ClientDetailPage({ params }: ClientDetailProps) {
     }
   }
 
+  const { data: notes } = await supabase
+    .from('agency_client_notes')
+    .select('id, body, pinned, created_at, author_user_id')
+    .eq('agency_id', agency.id)
+    .eq('tenant_id', tenantId)
+    .order('pinned', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(50)
+
+  const { data: tasks } = await supabase
+    .from('agency_client_tasks')
+    .select('id, title, description, status, priority, due_date, created_at')
+    .eq('agency_id', agency.id)
+    .eq('tenant_id', tenantId)
+    .order('status', { ascending: true })
+    .order('due_date', { ascending: true, nullsFirst: false })
+    .limit(100)
+
   return (
     <div className="space-y-6 px-6 py-6">
       <nav className="text-xs text-slate-500">
@@ -99,8 +118,8 @@ export default async function ClientDetailPage({ params }: ClientDetailProps) {
         </ul>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Moduli attivi</h2>
+      <section className="rounded-lg border border-slate-200 bg-white p-4">
+        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Moduli attivi</h2>
         <ul className="flex flex-wrap gap-2">
           {Object.entries((tenant.modules ?? {}) as Record<string, { active: boolean }>).filter(([, v]) => v?.active).map(([code]) => (
             <li key={code} className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
@@ -112,6 +131,13 @@ export default async function ClientDetailPage({ params }: ClientDetailProps) {
           )}
         </ul>
       </section>
+
+      <CrmPanel
+        agencySlug={agencySlug}
+        tenantId={tenantId}
+        notes={(notes ?? []) as unknown as Parameters<typeof CrmPanel>[0]['notes']}
+        tasks={(tasks ?? []) as unknown as Parameters<typeof CrmPanel>[0]['tasks']}
+      />
     </div>
   )
 }

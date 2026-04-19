@@ -93,56 +93,68 @@ export default async function AgencyHomePage({ params }: AgencyHomePageProps) {
     })
 
   return (
-    <div className="space-y-6 px-6 py-6">
-      <header>
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-indigo-500">
-          Pannello agenzia
-        </p>
-        <h1 className="mt-1 text-2xl font-semibold text-slate-900">{agency.name}</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Piano <span className="font-medium">{planLabel(agency.plan)}</span> · {tenantIds.length}/{agency.max_tenants ?? '∞'} clienti attivi · ruolo {roleLabel(ctx.agencyRole)}
-        </p>
+    <div className="space-y-4 px-5 py-4">
+      <header className="flex items-end justify-between gap-4">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-indigo-500">
+            Pannello agenzia
+          </p>
+          <h1 className="mt-0.5 text-xl font-semibold text-slate-900">{agency.name}</h1>
+          <p className="text-xs text-slate-500">
+            Piano {planLabel(agency.plan)} · {tenantIds.length}/{agency.max_tenants ?? '∞'} clienti · {roleLabel(ctx.agencyRole)}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Link href={`/a/${agencySlug}/broadcast`} className="rounded bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700">
+            Invia avviso
+          </Link>
+          <Link href={`/a/${agencySlug}/clients`} className="rounded border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
+            + Nuovo cliente
+          </Link>
+        </div>
       </header>
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <Kpi label="Incassi del mese" value={formatEUR(revenueMonth)} />
+      <section className="grid grid-cols-2 gap-2 md:grid-cols-4">
+        <Kpi label="Incassi mese" value={formatEUR(revenueMonth)} />
         <Kpi label="Prenotazioni oggi" value={formatInt(bookingsToday)} />
-        <Kpi label="Prenotazioni del mese" value={formatInt(bookingsMonth)} />
+        <Kpi label="Prenotazioni mese" value={formatInt(bookingsMonth)} />
         <Kpi label="Clienti attivi" value={formatInt(tenantIds.length)} />
       </section>
 
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
-            Clienti con più incassi questo mese
+      <section className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <div className="rounded-lg border border-slate-200 bg-white p-4">
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Top clienti del mese
           </h2>
           {topTenants.length === 0 ? (
-            <p className="text-sm text-slate-500">Nessuna prenotazione questo mese.</p>
+            <p className="text-xs text-slate-500">Nessuna prenotazione questo mese.</p>
           ) : (
-            <ul className="space-y-2">
+            <ul className="divide-y divide-slate-100">
               {topTenants.map((t) => (
-                <li key={t.tenantId} className="flex items-center justify-between">
+                <li key={t.tenantId} className="flex items-center justify-between py-1.5">
                   <Link href={`/a/${agencySlug}/clients/${t.tenantId}`} className="text-sm font-medium text-indigo-700 hover:underline">
                     {t.name}
                   </Link>
-                  <span className="text-sm tabular-nums text-slate-700">{formatEUR(t.revenue)}</span>
+                  <span className="text-xs tabular-nums text-slate-700">{formatEUR(t.revenue)}</span>
                 </li>
               ))}
             </ul>
           )}
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+        <div className="rounded-lg border border-slate-200 bg-white p-4">
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
             Azioni rapide
           </h2>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-1.5">
             <Quick href={`/a/${agencySlug}/clients`} label="Clienti" />
-            <Quick href={`/a/${agencySlug}/team`} label="Collaboratori" />
+            <Quick href={`/a/${agencySlug}/broadcast`} label="Avvisi" />
+            <Quick href={`/a/${agencySlug}/reports`} label="Report" />
             <Quick href={`/a/${agencySlug}/commissions`} label="Commissioni" />
             <Quick href={`/a/${agencySlug}/billing`} label="Fatturazione" />
-            <Quick href={`/a/${agencySlug}/reports`} label="Report" />
-            <Quick href={`/a/${agencySlug}/settings`} label="Personalizzazione" />
+            <Quick href={`/a/${agencySlug}/team`} label="Collaboratori" />
+            <Quick href={`/a/${agencySlug}/messaging`} label="Messaggistica" />
+            <Quick href={`/a/${agencySlug}/settings`} label="Impostazioni" />
           </div>
         </div>
       </section>
@@ -182,9 +194,9 @@ function roleLabel(r: string | null | undefined): string {
 
 function Kpi({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-slate-900">{value}</p>
+    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="mt-0.5 text-lg font-semibold tabular-nums text-slate-900">{value}</p>
     </div>
   )
 }
@@ -193,7 +205,7 @@ function Quick({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-white hover:shadow-sm"
+      className="rounded border border-slate-200 bg-slate-50 px-2 py-1.5 text-center text-xs font-medium text-slate-700 hover:bg-white hover:shadow-sm"
     >
       {label}
     </Link>

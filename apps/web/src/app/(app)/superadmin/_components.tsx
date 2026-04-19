@@ -26,14 +26,14 @@ export function SectionCard({
 }) {
   return (
     <Card className="border-slate-200/80 shadow-sm">
-      <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
-        <div className="space-y-1">
-          <CardTitle className="text-base text-slate-900">{title}</CardTitle>
-          {description ? <p className="text-sm text-slate-500">{description}</p> : null}
+      <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 pb-3">
+        <div className="space-y-0.5">
+          <CardTitle className="text-sm font-semibold text-slate-900">{title}</CardTitle>
+          {description ? <p className="text-xs text-slate-500">{description}</p> : null}
         </div>
         {action ? <div>{action}</div> : null}
       </CardHeader>
-      <CardContent>{children}</CardContent>
+      <CardContent className="pt-0">{children}</CardContent>
     </Card>
   )
 }
@@ -53,15 +53,15 @@ export function MetricCard({
 }) {
   return (
     <Card className="border-slate-200/80 shadow-sm">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-slate-500">{label}</p>
-            <p className="text-3xl font-semibold tracking-tight text-slate-900">{value}</p>
-            {hint ? <p className="text-xs text-slate-500">{hint}</p> : null}
+      <CardContent className="p-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">{label}</p>
+            <p className="text-2xl font-semibold tabular-nums tracking-tight text-slate-900">{value}</p>
+            {hint ? <p className="text-[11px] text-slate-500">{hint}</p> : null}
           </div>
-          <div className={`rounded-2xl p-3 ring-1 ${toneClasses[tone]}`}>
-            <Icon className="h-5 w-5" />
+          <div className={`rounded-lg p-2 ring-1 ${toneClasses[tone]}`}>
+            <Icon className="h-4 w-4" />
           </div>
         </div>
       </CardContent>

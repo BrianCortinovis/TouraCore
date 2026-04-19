@@ -8,7 +8,6 @@ import {
   Building2,
   ChevronDown,
   Check,
-  ArrowLeft,
   User,
   Shield,
 } from 'lucide-react'
@@ -218,9 +217,9 @@ export function AppTopBar() {
             <Link
               href="/account/profile"
               className="flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 hover:border-gray-300 hover:bg-gray-50"
-              title="Profilo utente platform"
+              title="Il tuo profilo"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <User className="h-4 w-4" />
               <span className="hidden sm:inline">Account</span>
             </Link>
           </div>
