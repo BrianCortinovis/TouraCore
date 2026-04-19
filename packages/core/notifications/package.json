@@ -13,7 +13,11 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.0",
+    "@touracore/db": "workspace:*",
     "resend": "^6.10.0",
     "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22"
   }
 }
