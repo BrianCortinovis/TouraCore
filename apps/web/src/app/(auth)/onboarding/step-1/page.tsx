@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createServerSupabaseClient } from '@touracore/db/server'
+import { createServerSupabaseClient, createServiceRoleClient } from '@touracore/db/server'
 import { getCurrentUser } from '@touracore/auth'
 import Link from 'next/link'
 
@@ -9,6 +9,23 @@ export default async function OnboardingStep1() {
 
   if (!user) {
     redirect('/login')
+  }
+
+  // Agency owner senza tenant: redirect /a/{slug}
+  const admin = await createServiceRoleClient()
+  const { data: agencyMembership } = await admin
+    .from('agency_memberships')
+    .select('agencies(slug)')
+    .eq('user_id', user.id)
+    .eq('is_active', true)
+    .limit(1)
+    .maybeSingle()
+
+  if (agencyMembership) {
+    const agencyRel = (agencyMembership as unknown as { agencies?: unknown }).agencies
+    const agencyData = Array.isArray(agencyRel) ? agencyRel[0] : agencyRel
+    const agencySlug = (agencyData as { slug?: string } | null)?.slug
+    if (agencySlug) redirect(`/a/${agencySlug}`)
   }
 
   // Se ha già un tenant, salta a step successivo

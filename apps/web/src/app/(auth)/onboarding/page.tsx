@@ -19,6 +19,23 @@ export default async function OnboardingPage() {
     .limit(1)
 
   if (!memberships || memberships.length === 0) {
+    // Agency owner senza tenant: redirect /a/{slug}
+    const admin = await createServiceRoleClient()
+    const { data: agencyMembership } = await admin
+      .from('agency_memberships')
+      .select('agencies(slug)')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .limit(1)
+      .maybeSingle()
+
+    if (agencyMembership) {
+      const agencyRel = (agencyMembership as unknown as { agencies?: unknown }).agencies
+      const agencyData = Array.isArray(agencyRel) ? agencyRel[0] : agencyRel
+      const agencySlug = (agencyData as { slug?: string } | null)?.slug
+      if (agencySlug) redirect(`/a/${agencySlug}`)
+    }
+
     redirect('/onboarding/step-1')
   }
 
