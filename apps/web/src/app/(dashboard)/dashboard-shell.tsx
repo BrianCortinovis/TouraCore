@@ -1,8 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@touracore/db/client'
 import { useAuthStore } from '@touracore/auth/store'
 import { getStructureTerms } from './structure-terms'
 import { PropertySelector } from './property-selector'
@@ -11,13 +9,6 @@ import { NotificationBell } from './components/notification-bell'
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { user, profile, tenant, property, isLoading } = useAuthStore()
   const terms = getStructureTerms(property?.property_type)
-  const router = useRouter()
-
-  async function handleLogout() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/login')
-  }
 
   if (isLoading) {
     return (
@@ -100,12 +91,14 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   {property.name}
                 </span>
               )}
-              <button
-                onClick={handleLogout}
-                className="text-sm text-gray-500 hover:text-gray-700"
-              >
-                Esci
-              </button>
+              <form action="/auth/signout" method="POST">
+                <button
+                  type="submit"
+                  className="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  Esci
+                </button>
+              </form>
             </div>
           </div>
         </div>

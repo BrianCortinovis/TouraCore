@@ -1,20 +1,37 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { createServerSupabaseClient } from '@touracore/db/server'
 
-// Gestisce logout via POST (chiamato dal form nel topbar)
-export async function POST() {
+// Logout: POST preferito (CSRF-safe form action). GET fallback per link diretti.
+async function handleSignout(request: NextRequest) {
   const supabase = await createServerSupabaseClient()
   await supabase.auth.signOut()
 
-  // Redirect alla landing page
-  const url = new URL('/', process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000')
-  return NextResponse.redirect(url, { status: 303 })
+  const loginUrl = new URL('/login', request.url)
+  const response = NextResponse.redirect(loginUrl, { status: 303 })
+
+  // Forza rimozione cookie Supabase sb-* su tutti path
+  const cookiesToClear = [
+    'sb-access-token',
+    'sb-refresh-token',
+  ]
+  for (const name of cookiesToClear) {
+    response.cookies.set(name, '', { maxAge: 0, path: '/' })
+  }
+
+  // Rimuove anche cookies Supabase con project ref (sb-<ref>-auth-token)
+  for (const cookie of request.cookies.getAll()) {
+    if (cookie.name.startsWith('sb-')) {
+      response.cookies.set(cookie.name, '', { maxAge: 0, path: '/' })
+    }
+  }
+
+  return response
 }
 
-// GET mostra comunque redirect per sicurezza (non logout via GET per CSRF)
-export async function GET() {
-  return NextResponse.redirect(
-    new URL('/', process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'),
-    { status: 303 }
-  )
+export async function POST(request: NextRequest) {
+  return handleSignout(request)
+}
+
+export async function GET(request: NextRequest) {
+  return handleSignout(request)
 }

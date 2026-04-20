@@ -1,8 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { createClient } from '@touracore/db/client'
+import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@touracore/auth/store'
 import { cn } from '@touracore/ui'
 
@@ -18,13 +17,6 @@ const ACCOUNT_TABS = [
 export function AccountShell({ children }: { children: React.ReactNode }) {
   const { user, profile } = useAuthStore()
   const pathname = usePathname()
-  const router = useRouter()
-
-  async function handleLogout() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/login')
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -38,12 +30,14 @@ export function AccountShell({ children }: { children: React.ReactNode }) {
             <span className="text-sm text-gray-600">
               {profile?.display_name ?? user?.email}
             </span>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-gray-500 hover:text-gray-700"
-            >
-              Esci
-            </button>
+            <form action="/auth/signout" method="POST">
+              <button
+                type="submit"
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
+                Esci
+              </button>
+            </form>
           </div>
         </div>
       </header>
