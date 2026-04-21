@@ -2,6 +2,11 @@
 
 import { CookieBanner } from './cookie-banner'
 
-export function CookieBannerWrapper({ orgSlug }: { orgSlug: string }) {
-  return <CookieBanner orgSlug={orgSlug} />
+interface CookieBannerWrapperProps {
+  orgSlug?: string
+  policyVersion?: string
+}
+
+export function CookieBannerWrapper({ orgSlug, policyVersion = '2026-04-22' }: CookieBannerWrapperProps) {
+  return <CookieBanner orgSlug={orgSlug} policyVersion={policyVersion} />
 }

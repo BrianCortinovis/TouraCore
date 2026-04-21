@@ -37,9 +37,18 @@ export default async function MenuPage({ params }: Props) {
 
   return (
     <div className="space-y-4 p-6">
-      <header>
-        <h1 className="text-2xl font-bold text-gray-900">Menu</h1>
-        <p className="text-sm text-gray-500">Categorie, piatti, modifiers, allergeni UE</p>
+      <header className="flex items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Menu</h1>
+          <p className="text-sm text-gray-500">Categorie, piatti, modifiers, allergeni UE</p>
+        </div>
+        <a
+          href={`/api/allergens-qr/${entitySlug}`}
+          download
+          className="inline-flex items-center gap-1 rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+        >
+          Stampa QR allergeni (UE 1169/2011)
+        </a>
       </header>
       <MenuEditor
         tenantSlug={tenantSlug}

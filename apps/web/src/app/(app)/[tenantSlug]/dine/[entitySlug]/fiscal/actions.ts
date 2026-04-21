@@ -5,7 +5,7 @@ import { createServiceRoleClient } from '@touracore/db/server'
 import { z } from 'zod'
 import { assertUserOwnsRestaurant } from '@/lib/restaurant-guard'
 import { buildSDIXml, buildSDIFilename } from '@/lib/sdi-xml'
-import { buildADECorrispettiviXml, submitADECorrispettivi, issueRTReceipt } from '@/lib/rt-middleware'
+import { buildADECorrispettiviXml, submitADECorrispettivi, issueRTReceipt, voidRTReceipt } from '@/lib/rt-middleware'
 import { decryptConfig } from '@/lib/integration-crypto'
 
 const ADESchema = z.object({
@@ -331,4 +331,69 @@ export async function savRetentionPolicy(input: z.infer<typeof RetentionSchema>)
     { onConflict: 'restaurant_id,category' },
   )
   revalidatePath(pathFor(parsed))
+}
+
+export async function voidRTReceiptAction(input: {
+  restaurantId: string
+  tenantSlug: string
+  entitySlug: string
+  receiptId: string
+}): Promise<{ ok: boolean; error?: string }> {
+  await assertUserOwnsRestaurant(input.restaurantId)
+  const admin = await createServiceRoleClient()
+
+  const { data: receipt } = await admin
+    .from('fiscal_receipts')
+    .select('id, receipt_number, rt_serial, rt_status')
+    .eq('id', input.receiptId)
+    .eq('restaurant_id', input.restaurantId)
+    .single()
+
+  if (!receipt) return { ok: false, error: 'Scontrino non trovato' }
+  if (receipt.rt_status === 'voided') return { ok: false, error: 'Scontrino già annullato' }
+  if (receipt.rt_status !== 'printed') return { ok: false, error: 'Solo scontrini stampati possono essere annullati' }
+  if (!receipt.receipt_number || !receipt.rt_serial) return { ok: false, error: 'Dati RT mancanti' }
+
+  const { data: integration } = await admin
+    .from('restaurant_integrations')
+    .select('config_encrypted, config_meta')
+    .eq('restaurant_id', input.restaurantId)
+    .eq('provider', 'rt_fiscal_it')
+    .eq('is_active', true)
+    .maybeSingle()
+
+  let middlewareUrl = ''
+  if (integration?.config_encrypted && integration?.config_meta) {
+    try {
+      const meta = integration.config_meta as { iv?: string }
+      const decrypted = decryptConfig(integration.config_encrypted as string, meta.iv ?? '')
+      const config = JSON.parse(decrypted) as { middlewareUrl?: string }
+      middlewareUrl = config.middlewareUrl ?? ''
+    } catch {
+      // ignore
+    }
+  }
+
+  if (!middlewareUrl) {
+    await admin
+      .from('fiscal_receipts')
+      .update({ rt_status: 'voided', rt_response: 'sandbox void' })
+      .eq('id', input.receiptId)
+    revalidatePath(pathFor(input))
+    return { ok: true }
+  }
+
+  const result = await voidRTReceipt(middlewareUrl, receipt.receipt_number as string, receipt.rt_serial as string)
+  await admin
+    .from('fiscal_receipts')
+    .update({
+      rt_status: result.ok ? 'voided' : 'failed',
+      rt_response: result.error ?? 'voided',
+    })
+    .eq('id', input.receiptId)
+
+  if (!result.ok) return { ok: false, error: result.error }
+
+  revalidatePath(pathFor(input))
+  return { ok: true }
 }

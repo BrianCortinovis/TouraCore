@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Button, Badge, Input, Card, CardContent } from '@touracore/ui'
 import { useParams } from 'next/navigation'
-import { getReservationsAction, updateReservationStatusAction, getReservationStatsAction } from './actions'
+import { getReservationsAction, updateReservationStatusAction, getReservationStatsAction, sendCheckinInvitationAction } from './actions'
 
 type ReservationStatus = 'inquiry' | 'option' | 'confirmed' | 'checked_in' | 'checked_out' | 'cancelled' | 'no_show'
 
@@ -107,6 +107,21 @@ export default function EntityBookingsPage() {
     if (result.success) void loadData()
   }
 
+  const [invitingId, setInvitingId] = useState<string | null>(null)
+  const handleSendCheckinInvite = async (resId: string) => {
+    setInvitingId(resId)
+    try {
+      const result = await sendCheckinInvitationAction(resId)
+      if (result.success) {
+        alert(`Invito inviato. Link check-in: ${result.checkinUrl}`)
+      } else {
+        alert(`Errore: ${result.error}`)
+      }
+    } finally {
+      setInvitingId(null)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-900">Prenotazioni</h1>
@@ -178,6 +193,16 @@ export default function EntityBookingsPage() {
                 </p>
               </div>
               <div className="flex gap-2">
+                {(r.status === 'confirmed' || r.status === 'checked_in') && r.guest_email && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={invitingId === r.id}
+                    onClick={() => handleSendCheckinInvite(r.id)}
+                  >
+                    {invitingId === r.id ? 'Invio...' : 'Invia invito check-in'}
+                  </Button>
+                )}
                 {VALID_TRANSITIONS[r.status]?.map((nextStatus) => (
                   <Button
                     key={nextStatus}

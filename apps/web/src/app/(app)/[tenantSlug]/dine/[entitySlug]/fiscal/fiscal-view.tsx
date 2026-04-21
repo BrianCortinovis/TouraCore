@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { FileText, ShieldCheck, Plus, RefreshCw } from 'lucide-react'
-import { triggerADESubmission, createB2BInvoice, savRetentionPolicy } from './actions'
+import { triggerADESubmission, createB2BInvoice, savRetentionPolicy, voidRTReceiptAction } from './actions'
 
 interface Receipt {
   id: string
@@ -12,6 +12,7 @@ interface Receipt {
   vatTotal: number
   lotteryCode: string | null
   adeStatus: string
+  rtStatus: string
 }
 
 interface ADESubmission {
@@ -164,13 +165,15 @@ export function FiscalView(props: Props) {
                 <th className="px-3 py-1.5 text-left">N°</th>
                 <th className="px-3 py-1.5 text-right">€</th>
                 <th className="px-3 py-1.5 text-left">Lotteria</th>
+                <th className="px-3 py-1.5 text-left">RT</th>
                 <th className="px-3 py-1.5 text-left">Stato ADE</th>
+                <th className="px-3 py-1.5 text-right">Azioni</th>
               </tr>
             </thead>
             <tbody>
               {receipts.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-3 py-4 text-center text-gray-400">
+                  <td colSpan={7} className="px-3 py-4 text-center text-gray-400">
                     Nessuno scontrino
                   </td>
                 </tr>
@@ -182,9 +185,36 @@ export function FiscalView(props: Props) {
                     <td className="px-3 py-1.5 text-right">€ {r.amountTotal.toFixed(2)}</td>
                     <td className="px-3 py-1.5 text-[10px] text-gray-500">{r.lotteryCode ?? '—'}</td>
                     <td className="px-3 py-1.5">
+                      <span className={`rounded px-1.5 py-0.5 text-[9px] ${r.rtStatus === 'voided' ? 'bg-red-50 text-red-700 border border-red-200' : r.rtStatus === 'printed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'border border-gray-300 bg-gray-50'}`}>
+                        {r.rtStatus}
+                      </span>
+                    </td>
+                    <td className="px-3 py-1.5">
                       <span className="rounded border border-gray-300 bg-gray-50 px-1.5 py-0.5 text-[9px]">
                         {r.adeStatus}
                       </span>
+                    </td>
+                    <td className="px-3 py-1.5 text-right">
+                      {r.rtStatus === 'printed' && (
+                        <button
+                          onClick={() => {
+                            if (!confirm(`Annullare scontrino ${r.receiptNumber}?`)) return
+                            startTransition(async () => {
+                              const res = await voidRTReceiptAction({
+                                restaurantId,
+                                tenantSlug,
+                                entitySlug,
+                                receiptId: r.id,
+                              })
+                              if (!res.ok) alert(`Errore: ${res.error}`)
+                            })
+                          }}
+                          className="rounded border border-red-300 bg-red-50 px-2 py-0.5 text-[10px] text-red-700 hover:bg-red-100"
+                          disabled={pending}
+                        >
+                          Annulla
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

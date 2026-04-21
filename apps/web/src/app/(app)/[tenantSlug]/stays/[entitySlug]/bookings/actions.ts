@@ -339,6 +339,13 @@ export async function cancelReservationAction(input: { reservationId: string; en
     .eq('entity_id', entity.id)
   if (error) return { success: false, error: error.message }
 
+  try {
+    const { revokePinsForReservation } = await import('../locks/actions')
+    await revokePinsForReservation(input.reservationId)
+  } catch (e) {
+    console.error('[cancel] revokePins failed:', e)
+  }
+
   revalidatePath('/bookings')
   return { success: true }
 }
@@ -400,5 +407,17 @@ export async function refundReservationAction(input: z.infer<typeof RefundSchema
 
   revalidatePath('/bookings')
   return { success: true, refundId: refund.id as string }
+}
+
+export async function sendCheckinInvitationAction(reservationId: string): Promise<{ success: boolean; error?: string; checkinUrl?: string }> {
+  if (!reservationId) return { success: false, error: 'Reservation id mancante' }
+  try {
+    const { sendCheckinInvitation } = await import('@touracore/hospitality/src/actions/checkin')
+    const r = await sendCheckinInvitation(reservationId)
+    revalidatePath('/bookings')
+    return { success: true, checkinUrl: r.checkinUrl }
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : 'Errore invio invito' }
+  }
 }
 

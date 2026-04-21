@@ -6,6 +6,7 @@ import { ConsentModeScript } from "@/components/consent/ConsentModeScript";
 import { GlobalSchemaLd } from "@/components/seo/GlobalSchemaLd";
 import { SkipToContent } from "@/components/a11y/SkipToContent";
 import { WebVitalsCollector } from "@/components/perf/WebVitalsCollector";
+import { CookieBannerWrapper } from "@touracore/hospitality/src/components/compliance/cookie-banner-wrapper";
 
 export const metadata: Metadata = {
   title: "TouraCore",
@@ -27,6 +28,7 @@ export default function RootLayout({
         <SkipToContent />
         {children}
         <WebVitalsCollector />
+        <CookieBannerWrapper />
         <Analytics />
         <SpeedInsights />
       </body>

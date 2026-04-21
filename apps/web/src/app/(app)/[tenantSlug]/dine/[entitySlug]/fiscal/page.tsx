@@ -25,7 +25,7 @@ export default async function FiscalPage({ params }: Props) {
   const [{ data: receipts }, { data: ade }, { data: invoices }, { data: retentionPolicies }] = await Promise.all([
     supabase
       .from('fiscal_receipts')
-      .select('id, receipt_number, fiscal_date, amount_total, vat_total, lottery_code, ade_submission_status')
+      .select('id, receipt_number, fiscal_date, amount_total, vat_total, lottery_code, ade_submission_status, rt_status')
       .eq('restaurant_id', entity.id)
       .gte('fiscal_date', since.toISOString().slice(0, 10))
       .order('fiscal_date', { ascending: false })
@@ -67,6 +67,7 @@ export default async function FiscalPage({ params }: Props) {
           vatTotal: Number(r.vat_total),
           lotteryCode: r.lottery_code as string | null,
           adeStatus: r.ade_submission_status as string,
+          rtStatus: (r.rt_status as string) ?? 'pending',
         }))}
         adeSubmissions={(ade ?? []).map((s) => ({
           id: s.id as string,
