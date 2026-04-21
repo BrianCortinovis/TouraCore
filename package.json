@@ -21,7 +21,6 @@
   },
   "packageManager": "pnpm@10.33.0",
   "dependencies": {
-    "qrcode": "^1.5.4",
     "react-qr-code": "^2.0.18"
   }
 }
