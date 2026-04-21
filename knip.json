@@ -1,0 +1,45 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": ["turbo.json"],
+      "project": ["*.{js,ts,json}"]
+    },
+    "apps/web": {
+      "entry": [
+        "src/app/**/{page,layout,loading,error,not-found,template,default,route}.{ts,tsx}",
+        "src/app/**/{opengraph-image,twitter-image,icon,apple-icon,manifest,sitemap,robots}.{ts,tsx}",
+        "src/app/**/actions.ts",
+        "src/app/**/actions/**/*.ts",
+        "src/middleware.ts",
+        "src/instrumentation.ts",
+        "next.config.{js,mjs,ts}",
+        "tailwind.config.{js,ts}",
+        "postcss.config.{js,mjs}"
+      ],
+      "project": ["src/**/*.{ts,tsx}"],
+      "next": {
+        "entry": [
+          "next.config.{js,mjs,ts}",
+          "src/middleware.ts",
+          "src/app/**/{page,layout,loading,error,not-found,template,default,route}.{ts,tsx}",
+          "src/app/**/actions.ts"
+        ]
+      },
+      "ignoreDependencies": ["server-only", "tailwindcss"]
+    },
+    "packages/*": {
+      "entry": ["src/index.ts", "src/index.tsx"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/core/*": {
+      "entry": ["src/index.ts", "src/index.tsx"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "verticals/*": {
+      "entry": ["src/index.ts", "src/index.tsx"],
+      "project": ["src/**/*.{ts,tsx}"]
+    }
+  },
+  "ignoreBinaries": ["turbo"]
+}
