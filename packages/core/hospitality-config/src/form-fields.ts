@@ -39,6 +39,11 @@ export type SidebarSection =
   | 'promotions'
   | 'locks'
   | 'guidebooks'
+  | 'housekeeping-templates'
+  | 'supplies'
+  | 'competitive'
+  | 'accounting'
+  | 'fx-rates'
 
 // ---------------------------------------------------------------------------
 // Gruppi navigazione (stile Gest)
@@ -126,9 +131,15 @@ export function getNavigation(
     sections: [
       'media',
       'channels',
-      ...(nav.showHousekeeping ? ['operations' as SidebarSection] : []),
+      ...(nav.showHousekeeping ? ['operations' as SidebarSection, 'housekeeping-templates' as SidebarSection, 'supplies' as SidebarSection] : []),
       'settings',
     ],
+  })
+
+  groups.push({
+    key: 'avanzato',
+    label: 'Avanzato',
+    sections: ['competitive', 'accounting', 'fx-rates'],
   })
 
   return groups

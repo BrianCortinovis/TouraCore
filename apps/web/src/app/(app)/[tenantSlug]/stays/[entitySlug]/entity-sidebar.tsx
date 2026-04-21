@@ -87,6 +87,11 @@ const STATIC_SECTION_META: Record<SidebarSection, { label: string; icon: LucideI
   'promotions': { label: 'Promozioni', icon: Tag, agencyHidden: true },
   'locks': { label: 'Smart lock', icon: KeyRound, agencyHidden: true },
   'guidebooks': { label: 'Guide locali', icon: MapPin },
+  'housekeeping-templates': { label: 'Checklist pulizie', icon: Sparkles },
+  'supplies': { label: 'Inventory pulizie', icon: ShoppingCart },
+  'competitive': { label: 'Pricing concorrenti', icon: TrendingUp, agencyHidden: true },
+  'accounting': { label: 'Contabilità', icon: FileText, agencyHidden: true },
+  'fx-rates': { label: 'Cambio valute', icon: Banknote, agencyHidden: true },
 }
 
 function capitalize(value: string): string {
@@ -100,6 +105,7 @@ function sectionToHref(base: string, section: SidebarSection, _tenantSlug: strin
     case 'compliance-tourist-tax': return `${base}/compliance/tourist-tax`
     case 'compliance-istat': return `${base}/compliance/istat`
     case 'booking-engine': return `${base}/booking-engine`
+    case 'housekeeping-templates': return `${base}/housekeeping-templates`
     default: return `${base}/${section}`
   }
 }
