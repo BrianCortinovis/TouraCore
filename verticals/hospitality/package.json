@@ -9,12 +9,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.1",
     "@touracore/auth": "workspace:*",
     "@touracore/db": "workspace:*",
     "@touracore/hospitality-config": "workspace:*",
     "@touracore/integrations": "workspace:*",
-    "@touracore/types": "workspace:*",
     "@touracore/ui": "workspace:*",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.469.0",

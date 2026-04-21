@@ -15,12 +15,6 @@ importers:
       '@next/eslint-plugin-next':
         specifier: ^16.2.3
         version: 16.2.3
-      '@typescript-eslint/eslint-plugin':
-        specifier: ^8.58.1
-        version: 8.58.1(@typescript-eslint/parser@8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
-      '@typescript-eslint/parser':
-        specifier: ^8.58.1
-        version: 8.58.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
       eslint:
         specifier: ^9.39.4
         version: 9.39.4(jiti@2.6.1)
@@ -231,9 +225,6 @@ importers:
 
   packages/core/agency:
     dependencies:
-      '@supabase/supabase-js':
-        specifier: ^2.49.1
-        version: 2.103.0
       '@touracore/db':
         specifier: workspace:*
         version: link:../../db
@@ -246,9 +237,6 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.49.1
         version: 2.103.0
-      '@touracore/db':
-        specifier: workspace:*
-        version: link:../../db
     devDependencies:
       '@types/node':
         specifier: ^25.6.0
@@ -296,9 +284,6 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.49.4
         version: 2.103.0
-      '@touracore/db':
-        specifier: workspace:*
-        version: link:../../db
       stripe:
         specifier: ^17.7.0
         version: 17.7.0
@@ -321,12 +306,6 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.103.0
         version: 2.103.0
-      '@touracore/db':
-        specifier: workspace:*
-        version: link:../../db
-      zod:
-        specifier: ^3.22.0
-        version: 3.25.76
 
   packages/core/compliance:
     dependencies:
@@ -356,11 +335,7 @@ importers:
         specifier: 5.6.3
         version: 5.6.3
 
-  packages/core/hospitality-config:
-    dependencies:
-      zod:
-        specifier: ^3.23.0
-        version: 3.25.76
+  packages/core/hospitality-config: {}
 
   packages/core/integrations:
     dependencies:
@@ -445,18 +420,12 @@ importers:
 
   packages/core/partners:
     dependencies:
-      '@supabase/supabase-js':
-        specifier: ^2.49.1
-        version: 2.103.0
       '@touracore/db':
         specifier: workspace:*
         version: link:../../db
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
-      zod:
-        specifier: ^3.24.2
-        version: 3.25.76
     devDependencies:
       '@types/bcryptjs':
         specifier: ^2.4.6
@@ -551,24 +520,15 @@ importers:
 
   packages/core/vouchers:
     dependencies:
-      '@supabase/supabase-js':
-        specifier: ^2.49.1
-        version: 2.103.0
       '@touracore/db':
         specifier: workspace:*
         version: link:../../db
-      '@touracore/types':
-        specifier: workspace:*
-        version: link:../../types
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
       jose:
         specifier: ^5.9.6
         version: 5.10.0
-      zod:
-        specifier: ^3.24.2
-        version: 3.25.76
     devDependencies:
       '@types/bcryptjs':
         specifier: ^2.4.6
@@ -599,12 +559,6 @@ importers:
 
   verticals/bike-rental:
     dependencies:
-      '@supabase/supabase-js':
-        specifier: ^2.49.1
-        version: 2.103.0
-      '@touracore/auth':
-        specifier: workspace:*
-        version: link:../../packages/core/auth
       '@touracore/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -614,24 +568,9 @@ importers:
       '@touracore/pricing':
         specifier: workspace:*
         version: link:../../packages/core/pricing
-      '@touracore/types':
-        specifier: workspace:*
-        version: link:../../packages/types
-      '@touracore/ui':
-        specifier: workspace:*
-        version: link:../../packages/core/ui
       '@touracore/vouchers':
         specifier: workspace:*
         version: link:../../packages/core/vouchers
-      date-fns:
-        specifier: ^4.1.0
-        version: 4.1.0
-      lucide-react:
-        specifier: ^0.469.0
-        version: 0.469.0(react@19.2.5)
-      zod:
-        specifier: ^3.24.2
-        version: 3.25.76
     devDependencies:
       typescript:
         specifier: ^5.5.0
@@ -639,36 +578,9 @@ importers:
 
   verticals/experiences:
     dependencies:
-      '@supabase/supabase-js':
-        specifier: ^2.49.1
-        version: 2.103.0
-      '@touracore/auth':
-        specifier: workspace:*
-        version: link:../../packages/core/auth
       '@touracore/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@touracore/partners':
-        specifier: workspace:*
-        version: link:../../packages/core/partners
-      '@touracore/pricing':
-        specifier: workspace:*
-        version: link:../../packages/core/pricing
-      '@touracore/types':
-        specifier: workspace:*
-        version: link:../../packages/types
-      '@touracore/ui':
-        specifier: workspace:*
-        version: link:../../packages/core/ui
-      '@touracore/vouchers':
-        specifier: workspace:*
-        version: link:../../packages/core/vouchers
-      date-fns:
-        specifier: ^4.1.0
-        version: 4.1.0
-      lucide-react:
-        specifier: ^0.469.0
-        version: 0.469.0(react@19.2.5)
       zod:
         specifier: ^3.24.2
         version: 3.25.76
@@ -679,9 +591,6 @@ importers:
 
   verticals/hospitality:
     dependencies:
-      '@supabase/supabase-js':
-        specifier: ^2.49.1
-        version: 2.103.0
       '@touracore/auth':
         specifier: workspace:*
         version: link:../../packages/core/auth
@@ -694,9 +603,6 @@ importers:
       '@touracore/integrations':
         specifier: workspace:*
         version: link:../../packages/core/integrations
-      '@touracore/types':
-        specifier: workspace:*
-        version: link:../../packages/types
       '@touracore/ui':
         specifier: workspace:*
         version: link:../../packages/core/ui

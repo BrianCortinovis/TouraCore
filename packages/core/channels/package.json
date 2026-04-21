@@ -14,8 +14,6 @@
   },
   "scripts": { "build": "true" },
   "dependencies": {
-    "@supabase/supabase-js": "^2.103.0",
-    "@touracore/db": "workspace:*",
-    "zod": "^3.22.0"
+    "@supabase/supabase-js": "^2.103.0"
   }
 }
