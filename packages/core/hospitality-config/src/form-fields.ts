@@ -36,7 +36,6 @@ export type SidebarSection =
   | 'reviews'
   | 'reportistica'
   | 'operations'
-  | 'promotions'
   | 'locks'
   | 'guidebooks'
   | 'housekeeping-templates'
@@ -94,7 +93,6 @@ export function getNavigation(
       sections: [
         ...(config.hasRatePlans ? ['rate-plans' as SidebarSection] : []),
         ...(config.hasSeasons ? ['seasons' as SidebarSection] : []),
-        'promotions',
         'booking-engine',
         'services',
         ...(nav.showRestaurant ? ['restaurant' as SidebarSection] : []),

@@ -372,7 +372,7 @@ export async function listUpsellOrdersAction(entityId: string) {
   const supabase = await createServiceRoleClient()
   const { data } = await supabase
     .from('upsell_orders')
-    .select('*, upsell_offers(name, category), reservations(reservation_code, guest_name)')
+    .select('*, upsell_offers(name, category), reservations(reservation_code, guest:guest_id(first_name, last_name))')
     .eq('entity_id', entityId)
     .order('created_at', { ascending: false })
     .limit(200)

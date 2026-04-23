@@ -118,7 +118,7 @@ export async function loadTaxRecordsAction(month: number, year: number): Promise
       .from('tourist_tax_records')
       .select(`
         *,
-        booking:reservation_id (guest_name, check_in, check_out),
+        booking:reservation_id (reservation_code, check_in, check_out),
         guest:guest_id (first_name, last_name)
       `)
       .eq('entity_id', property.id)
@@ -180,7 +180,7 @@ export async function exportMonthlyReportAction(month: number, year: number): Pr
       .from('tourist_tax_records')
       .select(`
         *,
-        booking:reservation_id (guest_name, check_in, check_out),
+        booking:reservation_id (reservation_code, check_in, check_out),
         guest:guest_id (first_name, last_name)
       `)
       .eq('entity_id', property.id)
@@ -230,7 +230,7 @@ export async function exportMonthlyReportAction(month: number, year: number): Pr
     for (const r of records) {
       const guestName = r.guest
         ? `${(r.guest as { first_name: string }).first_name} ${(r.guest as { last_name: string }).last_name}`
-        : (r.booking as { guest_name: string })?.guest_name ?? '—'
+        : (r.booking as { reservation_code?: string })?.reservation_code ?? '—'
       const status = r.is_exempt ? 'Esente' : r.is_collected ? 'Riscossa' : 'Da riscuotere'
 
       lines.push(

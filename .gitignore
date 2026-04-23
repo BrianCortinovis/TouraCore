@@ -35,4 +35,6 @@ test-results/
 playwright-report/
 e2e/.auth/
 **/e2e/.auth/
-.claude/
+.claude/settings.local.json
+.claude/projects/
+testsprite_tests/

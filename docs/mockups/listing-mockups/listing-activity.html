@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Kayak al tramonto sul Lago di Como — Bellagio · Lario Outdoor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+<style>
+  :root{
+    --bg:#f5f7fa;
+    --card:#fff;
+    --ink:#0b1220;
+    --ink-2:#1f2937;
+    --muted:#6b7280;
+    --line:#e5e7eb;
+    --line-2:#d1d5db;
+    --brand:#ff5533;
+    --brand-ink:#d64421;
+    --brand-soft:#ffe8e1;
+    --good:#008009;
+    --star:#febb02;
+    --chip:#f3f4f6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:"Inter",-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5}
+  body{overflow-x:hidden}
+  a{color:var(--brand);text-decoration:none}
+  a:hover{text-decoration:underline}
+  button{font-family:inherit;cursor:pointer;border:0;background:none}
+  h1,h2,h3{letter-spacing:-0.01em;color:var(--ink)}
+  h1{font-size:28px;font-weight:700;line-height:1.2}
+  h2{font-size:22px;font-weight:700;margin-bottom:16px}
+  h3{font-size:16px;font-weight:600}
+  .wrap{max-width:1280px;margin:0 auto;padding:0 24px}
+  @media(max-width:720px){.wrap{padding:0 16px}}
+
+  .topbar{background:#1a1a1a;color:#fff;padding:10px 0;font-size:13px}
+  .topbar .row{display:flex;justify-content:space-between;align-items:center}
+  .topbar .brand{font-weight:700;font-size:20px}
+  .topbar .r{display:flex;gap:14px;align-items:center}
+  .topbar .r .pill{padding:5px 10px;border:1px solid #333;border-radius:2px;font-size:12px}
+
+  .subnav{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--line)}
+  .subnav .row{display:flex;gap:4px;height:52px;align-items:stretch;overflow-x:auto;scrollbar-width:none}
+  .subnav .row::-webkit-scrollbar{display:none}
+  .subnav a{color:var(--ink-2);font-weight:500;font-size:14px;padding:0 16px;display:flex;align-items:center;border-bottom:3px solid transparent;white-space:nowrap}
+  .subnav a.active{color:var(--brand);border-bottom-color:var(--brand);font-weight:600}
+  .subnav a:hover{background:var(--chip);text-decoration:none}
+  .subnav .bk{margin-left:auto;display:flex;align-items:center;padding:10px 0}
+  .subnav .bk .cta{background:var(--brand);color:#fff;padding:8px 18px;font-weight:600;font-size:14px;border-radius:4px}
+
+  .crumb{padding:14px 0;font-size:13px;color:var(--muted)}
+  .crumb a{color:var(--brand);text-decoration:underline}
+  .crumb span{margin:0 6px;color:var(--line-2)}
+
+  .title-row{display:grid;grid-template-columns:1fr auto;gap:20px;padding:6px 0 20px;align-items:flex-start}
+  .chips-top{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .chip-top{font-size:11px;font-weight:600;background:var(--chip);padding:4px 10px;border-radius:12px;color:var(--ink-2);text-transform:uppercase;letter-spacing:.03em}
+  .chip-top.hi{background:#fff3cd;color:#664d03}
+  .chip-top.brand{background:var(--brand-soft);color:var(--brand)}
+  .chip-top.live{background:#dcfce7;color:#065f46;display:flex;align-items:center;gap:6px}
+  .chip-top.live::before{content:"";width:6px;height:6px;background:#10b981;border-radius:50%;animation:blink 1.2s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+  .title-row .addr{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);align-items:center}
+  .title-row .addr .dot{color:var(--line-2)}
+  .title-row .addr a{text-decoration:underline}
+  .score-inline{display:flex;gap:10px;align-items:center;font-size:13px;margin-top:6px}
+  .score-inline .sc{background:var(--brand);color:#fff;font-weight:700;padding:4px 8px;border-radius:4px 4px 4px 0}
+  .actions{display:flex;gap:8px}
+  .btn-ic{width:40px;height:40px;border:1px solid var(--line-2);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:var(--brand)}
+  .btn-ic svg{width:18px;height:18px}
+
+  .gal{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:200px 200px;gap:2px;border-radius:8px;overflow:hidden;position:relative;margin-bottom:8px}
+  .gal .big{grid-row:span 2}
+  .gal > div{background:linear-gradient(180deg,#1d3427,#2d5a3d 50%,#e29f3a);position:relative;overflow:hidden;cursor:pointer}
+  .gal > div::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(255,255,255,.03) 0 14px, transparent 14px 28px)}
+  .gal > div .tag{position:absolute;bottom:8px;left:10px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;padding:3px 8px;border-radius:2px}
+  .gal .video-slot::before{content:"▶";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;background:rgba(0,0,0,.55);width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px}
+  .gal-more{position:absolute;bottom:14px;right:14px;background:#fff;color:var(--ink);font-weight:600;padding:10px 16px;border-radius:4px;font-size:13px;border:1px solid var(--line-2);display:flex;align-items:center;gap:8px}
+  .gal-more svg{width:16px;height:16px}
+  @media(max-width:900px){.gal{grid-template-columns:1fr 1fr;grid-template-rows:160px 160px 160px}.gal .big{grid-column:span 2;grid-row:auto}}
+
+  .main{display:grid;grid-template-columns:1fr 340px;gap:24px;padding:20px 0 60px;align-items:start}
+  @media(max-width:1100px){.main{grid-template-columns:1fr}}
+
+  /* Quick info bar */
+  .qinfo{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:16px 20px;display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:16px}
+  .qinfo .i{display:flex;gap:10px;align-items:flex-start}
+  .qinfo .ic{width:32px;height:32px;border-radius:6px;background:var(--brand-soft);color:var(--brand);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+  .qinfo .ic svg{width:18px;height:18px}
+  .qinfo .t{font-weight:600;font-size:13px}
+  .qinfo .s{color:var(--muted);font-size:12px;margin-top:1px}
+  @media(max-width:900px){.qinfo{grid-template-columns:1fr 1fr}}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:24px;margin-bottom:16px;scroll-margin-top:80px}
+  .card .lede{font-size:15px;color:var(--ink-2);line-height:1.65}
+
+  /* included/excluded */
+  .inex-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .inex-col h3{margin-bottom:10px;font-size:14px}
+  .inex{display:flex;gap:10px;padding:6px 0;font-size:14px;align-items:flex-start}
+  .inex svg{width:18px;height:18px;flex-shrink:0;margin-top:2px}
+  .inex.yes svg{color:var(--good)}
+  .inex.no svg{color:var(--muted)}
+  .inex.no{color:var(--muted);text-decoration:line-through}
+  @media(max-width:720px){.inex-grid{grid-template-columns:1fr}}
+
+  /* Timeline / itinerary */
+  .tl{margin-top:8px;position:relative}
+  .tl::before{content:"";position:absolute;left:28px;top:10px;bottom:10px;width:2px;background:var(--line)}
+  .tl-step{display:grid;grid-template-columns:60px 1fr;gap:16px;padding:14px 0;position:relative}
+  .tl-step .dot{width:56px;height:56px;border-radius:50%;background:var(--brand-soft);color:var(--brand);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;position:relative;z-index:1;border:2px solid var(--bg)}
+  .tl-step .dot small{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.04em}
+  .tl-step.done .dot{background:var(--brand);color:#fff}
+  .tl-step h4{font-weight:600;font-size:15px}
+  .tl-step p{color:var(--ink-2);font-size:13px;margin-top:4px;line-height:1.55}
+  .tl-step .meta{font-size:11px;color:var(--muted);margin-top:6px;text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+
+  /* Kit grid */
+  .kit-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .kit{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;background:var(--bg);border:1px solid var(--line);border-radius:6px;font-size:14px}
+  .kit .b{width:20px;height:20px;border-radius:4px;background:var(--good);color:#fff;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+  .kit .b svg{width:13px;height:13px}
+  .kit.opt .b{background:var(--line-2);color:#fff}
+  .kit .t{font-weight:500}
+  .kit .s{color:var(--muted);font-size:12px;margin-top:2px}
+  @media(max-width:720px){.kit-grid{grid-template-columns:1fr}}
+
+  /* guide */
+  .guide{display:grid;grid-template-columns:100px 1fr auto;gap:16px;align-items:center}
+  .guide .av{width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#2d5a3d,#1a3324);color:#fff;font-weight:700;font-size:30px;display:flex;align-items:center;justify-content:center}
+  .guide .n{font-weight:700;font-size:17px}
+  .guide .role{font-size:12px;color:var(--brand);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-top:2px}
+  .guide p{font-size:13px;color:var(--ink-2);margin-top:8px;line-height:1.55;max-width:60ch}
+  .guide .langs{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .guide .langs span{font-size:11px;padding:3px 8px;background:var(--chip);border-radius:10px;font-weight:500}
+  .guide .sc{background:var(--brand);color:#fff;font-weight:700;padding:6px 10px;border-radius:4px 4px 4px 0;font-size:14px;align-self:flex-start}
+  .guide .sc small{display:block;font-size:10px;font-weight:500;opacity:.9}
+  @media(max-width:720px){.guide{grid-template-columns:1fr;text-align:center}.guide .av{margin:0 auto}.guide .sc{align-self:center}}
+
+  /* Score */
+  .score-head{display:flex;gap:14px;align-items:center;margin-bottom:18px}
+  .score-badge{background:var(--brand);color:#fff;font-weight:700;font-size:18px;padding:8px 12px;border-radius:4px 4px 4px 0;min-width:54px;text-align:center}
+  .score-badge small{display:block;font-size:11px;font-weight:500;opacity:.9}
+  .score-label{font-weight:700;font-size:18px}
+  .score-label small{display:block;color:var(--muted);font-weight:400;font-size:13px;margin-top:2px}
+  .score-bars{display:grid;grid-template-columns:1fr 1fr;gap:10px 36px}
+  .bar{display:grid;grid-template-columns:110px 1fr 40px;gap:12px;align-items:center;font-size:13px}
+  .bar .b{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+  .bar .b i{display:block;height:100%;background:var(--good);border-radius:3px}
+  .bar .v{text-align:right;font-weight:600}
+  @media(max-width:720px){.score-bars{grid-template-columns:1fr}}
+
+  .rev-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+  .rev{border:1px solid var(--line);border-radius:6px;padding:16px}
+  .rev .u{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+  .rev .u .av{width:36px;height:36px;border-radius:50%;background:var(--brand-soft);color:var(--brand);font-weight:700;display:flex;align-items:center;justify-content:center}
+  .rev .u .n{font-weight:600;font-size:14px}
+  .rev .u .n small{display:block;color:var(--muted);font-weight:400;font-size:12px}
+  .rev .u .sc{margin-left:auto;background:var(--brand);color:#fff;font-weight:700;padding:4px 8px;border-radius:4px 4px 4px 0;font-size:13px}
+  .rev .q{font-size:14px;color:var(--ink-2);line-height:1.5}
+  .rev .src{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:10px;font-weight:600}
+  @media(max-width:720px){.rev-grid{grid-template-columns:1fr}}
+
+  /* map */
+  .map-slot{aspect-ratio:16/7;background:linear-gradient(160deg,#b8cfb3,#506b51);border:1px solid var(--line);border-radius:6px;position:relative;overflow:hidden}
+  .map-slot::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 40% 60%,rgba(200,230,255,.3),transparent 40%),repeating-linear-gradient(0deg,transparent 0 22px,rgba(0,0,0,.04) 22px 23px)}
+  .pin{position:absolute;top:52%;left:42%;width:36px;height:36px;background:var(--brand);border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;z-index:2}
+  .pin.end{top:38%;left:58%;background:#2d5a3d}
+  .map-line{position:absolute;top:44%;left:44%;width:16%;height:2px;background:#fff;z-index:1;transform:rotate(-15deg);opacity:.7}
+
+  /* FAQ */
+  details{border-bottom:1px solid var(--line)}
+  details:last-of-type{border-bottom:0}
+  details > summary{list-style:none;padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-weight:600;font-size:15px}
+  details > summary::-webkit-details-marker{display:none}
+  details > summary::after{content:"+";font-size:22px;font-weight:300;color:var(--brand)}
+  details[open] > summary::after{content:"−"}
+  details p{padding:0 0 14px;font-size:14px;color:var(--ink-2);line-height:1.6}
+
+  /* SIDEBAR booking */
+  aside .book{position:sticky;top:68px;background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+  .book .head{padding:16px 18px;background:var(--brand-soft);display:flex;justify-content:space-between;align-items:center}
+  .book .head b{font-weight:700}
+  .book .head .prc{font-weight:700;font-size:22px}
+  .book .head .prc small{font-size:12px;color:var(--muted);font-weight:400}
+  .book .body{padding:18px}
+  .book-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600;display:block;margin:14px 0 6px}
+  .inp,.select{width:100%;padding:10px 12px;border:1px solid var(--line-2);border-radius:4px;font-size:14px;color:var(--ink);font-family:inherit;background:#fff}
+  .pax{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:8px 12px;border:1px solid var(--line-2);border-radius:4px;margin-top:6px}
+  .pax .c{display:flex;gap:4px;align-items:center}
+  .pax .c button{width:28px;height:28px;border-radius:50%;border:1px solid var(--line-2);font-size:16px;color:var(--brand);font-weight:700}
+  .pax .c .n{font-weight:700;min-width:20px;text-align:center}
+  .dates-list{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+  .dr{display:grid;grid-template-columns:1fr auto;padding:10px 12px;border:1px solid var(--line-2);border-radius:4px;cursor:pointer;font-size:13px;align-items:center}
+  .dr.sel{border-color:var(--brand);background:var(--brand-soft)}
+  .dr .d{font-weight:700}
+  .dr .d small{display:block;color:var(--muted);font-weight:400}
+  .dr .av{color:var(--good);font-weight:700;font-size:12px}
+  .dr.low .av{color:var(--brand)}
+  .dr.sold .av{color:var(--muted)}
+  .dr.sold{opacity:.5;cursor:not-allowed}
+  .cta{display:block;width:100%;text-align:center;padding:14px;background:var(--brand);color:#fff;font-weight:700;font-size:15px;border-radius:4px;margin-top:16px}
+  .cta:hover{background:var(--brand-ink);text-decoration:none}
+  .trust{padding:14px 18px;background:#f0f9f1;border-top:1px solid var(--line);font-size:12px;color:var(--ink-2)}
+  .trust div{display:flex;gap:8px;align-items:center;padding:3px 0}
+  .trust svg{width:14px;height:14px;color:var(--good);flex-shrink:0}
+
+  .mcta{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:10px 16px;z-index:50;align-items:center;justify-content:space-between;gap:12px}
+  .mcta .p{font-weight:700;font-size:17px}
+  .mcta .p small{display:block;color:var(--muted);font-weight:400;font-size:11px}
+  .mcta .cta{padding:10px 22px;width:auto;font-size:14px;margin-top:0}
+  @media(max-width:1100px){.mcta{display:flex}main{padding-bottom:80px}}
+
+  footer{background:#1a1a1a;color:#ccc;padding:40px 0 20px;margin-top:40px;font-size:13px}
+  footer .fg{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:32px}
+  footer h4{color:#fff;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px}
+  footer ul{list-style:none}
+  footer li{padding:3px 0}
+  footer a{color:#ccc}
+  footer .bot{margin-top:30px;padding-top:20px;border-top:1px solid #333;display:flex;justify-content:space-between;color:#888;font-size:12px;flex-wrap:wrap;gap:10px}
+  @media(max-width:720px){footer .fg{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></symbol>
+    <symbol id="i-diff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+    <symbol id="i-lang" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+    <symbol id="i-award" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/></symbol>
+    <symbol id="i-loc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51L8.59 10.49"/></symbol>
+    <symbol id="i-img" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
+    <symbol id="i-mobile" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+  </defs>
+</svg>
+
+<div class="topbar">
+  <div class="wrap row">
+    <div><span class="brand">TouraCore</span></div>
+    <div class="r">
+      <span class="pill">EUR · €</span>
+      <span class="pill"><b>IT</b> · EN · DE · FR</span>
+      <span class="pill">Accedi</span>
+    </div>
+  </div>
+</div>
+
+<div class="subnav">
+  <div class="wrap row">
+    <a href="#overview" class="active">Panoramica</a>
+    <a href="#info">Informazioni</a>
+    <a href="#itinerary">Itinerario</a>
+    <a href="#kit">Cosa portare</a>
+    <a href="#meet">Meeting point</a>
+    <a href="#guide">Guida</a>
+    <a href="#reviews">Recensioni (523)</a>
+    <a href="#faq">FAQ</a>
+    <div class="bk"><a href="#book" class="cta">Prenota data</a></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <nav class="crumb">
+    <a href="#">Home</a> <span>›</span>
+    <a href="#">Esperienze</a> <span>›</span>
+    <a href="#">Lago di Como</a> <span>›</span>
+    <a href="#">Sport acquatici</a> <span>›</span>
+    Kayak al tramonto
+  </nav>
+
+  <section class="title-row" id="overview">
+    <div>
+      <div class="chips-top">
+        <span class="chip-top live">3 posti · venerdì</span>
+        <span class="chip-top brand">✓ Top rated</span>
+        <span class="chip-top hi">Best seller</span>
+        <span class="chip-top">Cancellazione gratuita</span>
+        <span class="chip-top">Mobile voucher</span>
+      </div>
+      <h1>Kayak al tramonto sul Lago di Como</h1>
+      <div class="score-inline">
+        <span class="sc">9.6</span>
+        <b>Eccezionale</b>
+        <span style="color:var(--muted)">· 523 recensioni</span>
+        <span style="color:var(--line-2)">·</span>
+        <span style="color:var(--muted)">2.100+ partecipanti dal 2019</span>
+      </div>
+      <div class="addr">
+        <svg width="14" height="14"><use href="#i-loc"/></svg>
+        <a href="#meet">Pontile di San Giovanni, Bellagio</a>
+        <span class="dot">·</span>
+        <a href="#meet">Vedi mappa</a>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn-ic"><svg><use href="#i-heart"/></svg></button>
+      <button class="btn-ic"><svg><use href="#i-share"/></svg></button>
+    </div>
+  </section>
+
+  <section class="gal">
+    <div class="big"><span class="tag">1 / 28 · tramonto sul Lago</span></div>
+    <div><span class="tag">2 · kayak flotta</span></div>
+    <div><span class="tag">3 · Punta Spartivento</span></div>
+    <div><span class="tag">4 · brindisi al pontile</span></div>
+    <div class="video-slot"><span class="tag">reel 22" · pagaiata tramonto</span></div>
+    <button class="gal-more"><svg><use href="#i-img"/></svg>Vedi tutte le 28 foto</button>
+  </section>
+
+  <div class="main">
+    <div>
+
+      <div class="qinfo">
+        <div class="i"><span class="ic"><svg><use href="#i-clock"/></svg></span><div><div class="t">3 ore</div><div class="s">briefing + tour</div></div></div>
+        <div class="i"><span class="ic"><svg><use href="#i-diff"/></svg></span><div><div class="t">Facile</div><div class="s">principianti OK</div></div></div>
+        <div class="i"><span class="ic"><svg><use href="#i-users"/></svg></span><div><div class="t">Max 8 pax</div><div class="s">gruppo piccolo</div></div></div>
+        <div class="i"><span class="ic"><svg><use href="#i-lang"/></svg></span><div><div class="t">IT · EN · DE</div><div class="s">guida multilingue</div></div></div>
+        <div class="i"><span class="ic"><svg><use href="#i-award"/></svg></span><div><div class="t">Cert. AIKW</div><div class="s">guida diplomata</div></div></div>
+      </div>
+
+      <section class="card" id="info">
+        <h2>Informazioni sull'esperienza</h2>
+        <p class="lede">Tre ore di kayak al tramonto da Bellagio. Partenza dal pontile di San Giovanni, pagaiata lenta lungo la sponda est protetta, sosta a Punta Spartivento per fotografare i tre rami del lago. Rientro con l'acqua color rame e un calice di prosecco al pontile.</p>
+        <p class="lede" style="margin-top:10px">Adatto a principianti assoluti: kayak sit-on-top stabili, briefing tecnico di 15 minuti, guida certificata AIKW che affianca il gruppo. Età minima 10 anni, saper nuotare non obbligatorio (giubbotto salvagente sempre indossato).</p>
+
+        <h3 style="margin-top:20px;margin-bottom:10px">Punti chiave</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="inex yes"><svg><use href="#i-check"/></svg><span><b>Gruppo piccolo</b> · massimo 8 persone per tour, attenzione dedicata</span></div>
+          <div class="inex yes"><svg><use href="#i-check"/></svg><span><b>Kayak stabili</b> · sit-on-top moderni, pensati per principianti</span></div>
+          <div class="inex yes"><svg><use href="#i-check"/></svg><span><b>Momento d'oro</b> · partenza calibrata sull'orario del tramonto</span></div>
+          <div class="inex yes"><svg><use href="#i-check"/></svg><span><b>Brindisi finale</b> · prosecco Valdobbiadene DOCG + salatini inclusi</span></div>
+        </div>
+      </section>
+
+      <section class="card" id="included">
+        <h2>Cosa è incluso · cosa non è incluso</h2>
+        <div class="inex-grid">
+          <div class="inex-col">
+            <h3>✓ Incluso</h3>
+            <div class="inex yes"><svg><use href="#i-check"/></svg><span>Guida certificata AIKW in IT/EN/DE</span></div>
+            <div class="inex yes"><svg><use href="#i-check"/></svg><span>Kayak sit-on-top doppio o singolo</span></div>
+            <div class="inex yes"><svg><use href="#i-check"/></svg><span>Pagaia, giubbotto salvagente, dry-bag</span></div>
+            <div class="inex yes"><svg><use href="#i-check"/></svg><span>Briefing di sicurezza pre-partenza</span></div>
+            <div class="inex yes"><svg><use href="#i-check"/></svg><span>Brindisi finale · prosecco &amp; salatini</span></div>
+            <div class="inex yes"><svg><use href="#i-check"/></svg><span>Assicurazione RC terzi</span></div>
+            <div class="inex yes"><svg><use href="#i-check"/></svg><span>Foto di gruppo digitali via WhatsApp</span></div>
+          </div>
+          <div class="inex-col">
+            <h3>✗ Non incluso</h3>
+            <div class="inex no"><svg><use href="#i-x"/></svg><span>Trasferimento da/per Bellagio</span></div>
+            <div class="inex no"><svg><use href="#i-x"/></svg><span>Cena dopo l'esperienza</span></div>
+            <div class="inex no"><svg><use href="#i-x"/></svg><span>Mancia per la guida (opzionale)</span></div>
+            <div class="inex no"><svg><use href="#i-x"/></svg><span>Cambio asciutto / doccia</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" id="itinerary">
+        <h2>Itinerario · 5 tappe</h2>
+        <div class="tl">
+          <div class="tl-step done">
+            <div class="dot">0h00<small>start</small></div>
+            <div>
+              <h4>Accoglienza &amp; briefing</h4>
+              <p>Incontro al pontile di San Giovanni, 15 minuti di briefing tecnico e sicurezza. Distribuzione attrezzatura. Prova di equilibrio sulla riva.</p>
+              <div class="meta">15 min · a terra</div>
+            </div>
+          </div>
+          <div class="tl-step done">
+            <div class="dot">0h30</div>
+            <div>
+              <h4>Partenza verso Punta Spartivento</h4>
+              <p>Pagaiata di riscaldamento lungo la sponda protetta. Passaggio davanti a Villa Melzi e ai suoi giardini. La guida affianca i principianti.</p>
+              <div class="meta">45 min · in kayak</div>
+            </div>
+          </div>
+          <div class="tl-step">
+            <div class="dot">1h15</div>
+            <div>
+              <h4>Sosta contemplativa &amp; foto</h4>
+              <p>Breve sosta sulla riva sassosa di Punta Spartivento. La guida racconta la storia dei tre rami del lago. Tempo libero per fotografie.</p>
+              <div class="meta">25 min · sosta a terra</div>
+            </div>
+          </div>
+          <div class="tl-step">
+            <div class="dot">2h00</div>
+            <div>
+              <h4>Ritorno al tramonto</h4>
+              <p>Pagaiata di ritorno con il sole basso. Momento più scenografico. Consigliato dry-bag per custodia cellulare per scatti.</p>
+              <div class="meta">50 min · in kayak</div>
+            </div>
+          </div>
+          <div class="tl-step">
+            <div class="dot">3h00<small>end</small></div>
+            <div>
+              <h4>Brindisi al pontile</h4>
+              <p>Rientro al pontile, restituzione attrezzatura. Calice di prosecco Valdobbiadene DOCG offerto, salatini del forno Garzoni.</p>
+              <div class="meta">20 min · a terra</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" id="kit">
+        <h2>Cosa portare</h2>
+        <div class="kit-grid">
+          <div class="kit"><span class="b"><svg><use href="#i-check"/></svg></span><div><div class="t">Costume da bagno o short asciutti</div><div class="s">indossato direttamente · asciutto</div></div></div>
+          <div class="kit"><span class="b"><svg><use href="#i-check"/></svg></span><div><div class="t">Magliettina tecnica di ricambio</div><div class="s">traspirante, non cotone</div></div></div>
+          <div class="kit"><span class="b"><svg><use href="#i-check"/></svg></span><div><div class="t">Scarpe da acqua o sandali chiusi</div><div class="s">no infradito</div></div></div>
+          <div class="kit"><span class="b"><svg><use href="#i-check"/></svg></span><div><div class="t">Crema solare biodegradabile</div><div class="s">SPF 30+ · reef-safe</div></div></div>
+          <div class="kit"><span class="b"><svg><use href="#i-check"/></svg></span><div><div class="t">Cappellino con visiera</div><div class="s">con laccetto consigliato</div></div></div>
+          <div class="kit"><span class="b"><svg><use href="#i-check"/></svg></span><div><div class="t">Asciugamano piccolo</div><div class="s">microfibra consigliata</div></div></div>
+          <div class="kit opt"><span class="b"><svg><use href="#i-check"/></svg></span><div><div class="t">GoPro o smartphone (opz.)</div><div class="s">dry-bag da noi · 10L</div></div></div>
+          <div class="kit opt"><span class="b"><svg><use href="#i-check"/></svg></span><div><div class="t">Giacca leggera (opz.)</div><div class="s">per il rientro, quando cala la temperatura</div></div></div>
+        </div>
+      </section>
+
+      <section class="card" id="meet">
+        <h2>Meeting point</h2>
+        <div class="map-slot">
+          <div class="map-line"></div>
+          <div class="pin">S</div>
+          <div class="pin end">E</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px">
+          <div style="padding:12px 14px;background:var(--bg);border:1px solid var(--line);border-radius:6px">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:600">Partenza</div>
+            <div style="font-weight:600;font-size:14px;margin-top:4px">Pontile San Giovanni</div>
+            <div style="color:var(--ink-2);font-size:13px;margin-top:4px">Via Vicolo Campanile 3, 22021 Bellagio · 4 min dall'imbarcadero battelli</div>
+          </div>
+          <div style="padding:12px 14px;background:var(--bg);border:1px solid var(--line);border-radius:6px">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:600">Arrivo</div>
+            <div style="font-weight:600;font-size:14px;margin-top:4px">Punta Spartivento</div>
+            <div style="color:var(--ink-2);font-size:13px;margin-top:4px">Riva sassosa pubblica · panorama sui tre rami del lago</div>
+          </div>
+        </div>
+        <div style="margin-top:12px;padding:10px 14px;background:#fff3cd;border:1px solid #ffeeba;border-radius:6px;font-size:13px;color:#664d03;display:flex;gap:8px;align-items:center">
+          <svg width="14" height="14"><use href="#i-info"/></svg>
+          Presentarsi 15 minuti prima · parcheggio pubblico gratuito a 80m · accesso PRM disponibile
+        </div>
+      </section>
+
+      <section class="card" id="guide">
+        <h2>La vostra guida</h2>
+        <div class="guide">
+          <div class="av">FG</div>
+          <div>
+            <div class="n">Federico Gatti</div>
+            <div class="role">Guida AIKW · dal 2017</div>
+            <p>Federico pagaia sul Lario da quando aveva dieci anni. Ex campione regionale di kayak fluviale, ha accompagnato più di 2.100 persone in tramonto. Certificato AIKW, BLS e CPR/AED.</p>
+            <div class="langs">
+              <span>🇮🇹 Italiano</span>
+              <span>🇬🇧 English</span>
+              <span>🇩🇪 Deutsch</span>
+              <span>🇫🇷 Français (base)</span>
+            </div>
+          </div>
+          <div class="sc">9.8<small>guida</small></div>
+        </div>
+      </section>
+
+      <section class="card" id="reviews">
+        <h2>Recensioni partecipanti</h2>
+        <div class="score-head">
+          <div class="score-badge">9.6<small>/10</small></div>
+          <div class="score-label">Eccezionale<small>523 recensioni verificate · multi-canale</small></div>
+        </div>
+        <div class="score-bars">
+          <div class="bar"><span>Esperienza</span><span class="b"><i style="width:98%"></i></span><span class="v">9.8</span></div>
+          <div class="bar"><span>Guida</span><span class="b"><i style="width:98%"></i></span><span class="v">9.8</span></div>
+          <div class="bar"><span>Organizzazione</span><span class="b"><i style="width:95%"></i></span><span class="v">9.5</span></div>
+          <div class="bar"><span>Attrezzatura</span><span class="b"><i style="width:94%"></i></span><span class="v">9.4</span></div>
+          <div class="bar"><span>Rapporto qualità/prezzo</span><span class="b"><i style="width:93%"></i></span><span class="v">9.3</span></div>
+          <div class="bar"><span>Sicurezza</span><span class="b"><i style="width:99%"></i></span><span class="v">9.9</span></div>
+        </div>
+        <div class="rev-grid">
+          <div class="rev">
+            <div class="u"><div class="av">E</div><div class="n">Emma &amp; Tom<small>🇬🇧 UK · coppia · 2 pax</small></div><div class="sc">10</div></div>
+            <p class="q">"Tre ore magiche. Federico sa esattamente quando fermarsi per farvi fotografare la luce giusta. Consigliatissimo."</p>
+            <div class="src">Via TripAdvisor · ott 2025</div>
+          </div>
+          <div class="rev">
+            <div class="u"><div class="av">R</div><div class="n">Famiglia Rizzo<small>🇮🇹 Roma · famiglia · 4 pax</small></div><div class="sc">9.8</div></div>
+            <p class="q">"Esperienza perfetta per chi viene al lago la prima volta. Sicuri anche in coppia con bimbi di 10 anni."</p>
+            <div class="src">Via GetYourGuide · ago 2025</div>
+          </div>
+          <div class="rev">
+            <div class="u"><div class="av">H</div><div class="n">Hans &amp; Greta<small>🇩🇪 Monaco · coppia · 2 pax</small></div><div class="sc">9.6</div></div>
+            <p class="q">"Il prosecco finale è un gesto piccolo ma fa la differenza. Torneremo nel 2026."</p>
+            <div class="src">Via TouraCore · lug 2025</div>
+          </div>
+          <div class="rev">
+            <div class="u"><div class="av">S</div><div class="n">Sophie L.<small>🇫🇷 Parigi · amici · 6 pax</small></div><div class="sc">9.4</div></div>
+            <p class="q">"Activity parfaite pour un groupe d'amis. Federico est très drôle et professionnel. Le coucher de soleil... wow."</p>
+            <div class="src">Via Viator · giu 2025</div>
+          </div>
+        </div>
+        <a href="#" style="display:inline-block;margin-top:16px;font-weight:600">Mostra tutte le 523 recensioni →</a>
+      </section>
+
+      <section class="card" id="faq">
+        <h2>Domande frequenti</h2>
+        <details open>
+          <summary>Devo saper nuotare?</summary>
+          <p>Non obbligatorio. Il giubbotto salvagente è sempre indossato, i kayak sit-on-top sono autodrenanti e molto stabili. Consigliamo comunque almeno una base di acquaticità.</p>
+        </details>
+        <details>
+          <summary>Cosa succede in caso di maltempo?</summary>
+          <p>Se le condizioni meteo non sono sicure (vento > 25 km/h, temporali) il tour viene spostato a un'altra data o rimborsato al 100%. Decisione comunicata entro le 14:00 del giorno stesso.</p>
+        </details>
+        <details>
+          <summary>Qual è l'età minima?</summary>
+          <p>10 anni per partecipare autonomamente in kayak singolo · 6 anni in kayak doppio accompagnati da un adulto. Sotto i 14 anni serve autorizzazione firmata dal genitore.</p>
+        </details>
+        <details>
+          <summary>Posso portare la mia macchina fotografica?</summary>
+          <p>Sì, ti forniamo un dry-bag da 10L impermeabile. Per GoPro accettiamo anche attacchi su casco. Raccomandiamo un laccetto per cellulari.</p>
+        </details>
+        <details>
+          <summary>È possibile prenotare privatamente?</summary>
+          <p>Sì, tour privati fino a 8 persone disponibili. Supplemento €120/tour. Ideale per eventi, anniversari, team building aziendali.</p>
+        </details>
+      </section>
+
+    </div>
+
+    <!-- SIDEBAR -->
+    <aside id="book">
+      <div class="book">
+        <div class="head">
+          <div><b>Da</b><br><small style="color:var(--muted);font-size:12px">per persona, tasse incluse</small></div>
+          <div class="prc">€65</div>
+        </div>
+        <div class="body">
+          <label class="book-lbl">Data</label>
+          <input class="inp" value="Venerdì 24 aprile 2026" />
+
+          <label class="book-lbl">Orario partenza</label>
+          <div class="dates-list">
+            <div class="dr sel">
+              <div class="d">18:20<small>start · sunset 20:15</small></div>
+              <div class="av">3 posti</div>
+            </div>
+          </div>
+
+          <label class="book-lbl">Partecipanti</label>
+          <div class="pax">
+            <div>Adulti <small style="color:var(--muted)">14+ anni</small></div>
+            <div class="c"><button>−</button><span class="n">2</span><button>+</button></div>
+          </div>
+          <div class="pax" style="margin-top:6px">
+            <div>Bambini <small style="color:var(--muted)">10–13 anni</small></div>
+            <div class="c"><button>−</button><span class="n">0</span><button>+</button></div>
+          </div>
+
+          <label class="book-lbl">Altre date disponibili</label>
+          <div class="dates-list">
+            <div class="dr"><div class="d">Mer 22 apr<small>18:15</small></div><div class="av">5 posti</div></div>
+            <div class="dr low"><div class="d">Sab 25 apr<small>18:22</small></div><div class="av">1 posto</div></div>
+            <div class="dr"><div class="d">Dom 26 apr<small>18:24</small></div><div class="av">7 posti</div></div>
+            <div class="dr sold"><div class="d">Lun 27 apr<small>18:25</small></div><div class="av">Esaurito</div></div>
+          </div>
+
+          <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:14px">
+            <div style="display:flex;justify-content:space-between;padding:4px 0"><span>2 × €65 adulti</span><span>€130</span></div>
+            <div style="display:flex;justify-content:space-between;padding:4px 0"><span>Tasse &amp; commissioni</span><span style="color:var(--good)">incluse</span></div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:700;font-size:16px;border-top:1px solid var(--line);margin-top:6px"><span>Totale</span><span>€130</span></div>
+          </div>
+
+          <a class="cta" href="#book-multi">Prenota · non pagare ora</a>
+        </div>
+
+        <div class="trust">
+          <div><svg><use href="#i-check"/></svg>Conferma immediata</div>
+          <div><svg><use href="#i-check"/></svg>Cancellazione gratuita fino a 24h prima</div>
+          <div><svg><use href="#i-check"/></svg>Voucher mobile accettato sul posto</div>
+          <div><svg><use href="#i-check"/></svg>Assicurazione RC inclusa</div>
+          <div><svg><use href="#i-check"/></svg>Pagamento sicuro Stripe</div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<div class="mcta">
+  <div class="p">€130<br><small>ven 24 · 18:20 · 2 pax</small></div>
+  <a class="cta" href="#book-multi">Prenota</a>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="fg">
+      <div>
+        <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:8px">Lario Outdoor</div>
+        <p>Via Vicolo Campanile 3, 22021 Bellagio (CO)<br>P.IVA 03612480132 · Assicurazione Groupama n.22/A</p>
+      </div>
+      <div><h4>Esperienze</h4><ul><li><a href="#">Kayak tramonto</a></li><li><a href="#">Alba silenziosa</a></li><li><a href="#">Tour 2 giorni</a></li><li><a href="#">Tour privati</a></li></ul></div>
+      <div><h4>Info</h4><ul><li><a href="#">Sicurezza</a></li><li><a href="#">Cancellazione</a></li><li><a href="#">Gruppi</a></li><li><a href="#">Gift card</a></li></ul></div>
+      <div><h4>Distribuito con</h4><ul><li><a href="#">TouraCore</a></li><li><a href="#">GetYourGuide</a></li><li><a href="#">Viator</a></li></ul></div>
+    </div>
+    <div class="bot">
+      <div>© 2026 Lario Outdoor. All rights reserved.</div>
+      <div>Distribuito con <b style="color:#fff">TouraCore</b> · Listing ID #LO-KT1</div>
+    </div>
+  </div>
+</footer>
+
+</body></html>

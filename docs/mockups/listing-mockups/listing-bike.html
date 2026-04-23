@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>E-bike Premium Trek Allant+ — Greenway Lago di Como · Lario Cycling</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+<style>
+  :root{
+    --bg:#f5f7fa;
+    --card:#fff;
+    --ink:#0b1220;
+    --ink-2:#1f2937;
+    --muted:#6b7280;
+    --line:#e5e7eb;
+    --line-2:#d1d5db;
+    --brand:#0ea5e9;
+    --brand-ink:#0369a1;
+    --brand-soft:#e0f2fe;
+    --good:#008009;
+    --warn:#f59e0b;
+    --chip:#f3f4f6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:"Inter",-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5}
+  body{overflow-x:hidden}
+  a{color:var(--brand);text-decoration:none}
+  a:hover{text-decoration:underline}
+  button{font-family:inherit;cursor:pointer;border:0;background:none}
+  h1,h2,h3{letter-spacing:-0.01em;color:var(--ink)}
+  h1{font-size:28px;font-weight:700;line-height:1.2}
+  h2{font-size:22px;font-weight:700;margin-bottom:16px}
+  h3{font-size:16px;font-weight:600}
+  .wrap{max-width:1280px;margin:0 auto;padding:0 24px}
+  @media(max-width:720px){.wrap{padding:0 16px}}
+
+  .topbar{background:#1a1a1a;color:#fff;padding:10px 0;font-size:13px}
+  .topbar .row{display:flex;justify-content:space-between;align-items:center}
+  .topbar .brand{font-weight:700;font-size:20px}
+  .topbar .r{display:flex;gap:14px;align-items:center}
+  .topbar .r .pill{padding:5px 10px;border:1px solid #333;border-radius:2px;font-size:12px}
+
+  .subnav{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--line)}
+  .subnav .row{display:flex;gap:4px;height:52px;align-items:stretch;overflow-x:auto;scrollbar-width:none}
+  .subnav .row::-webkit-scrollbar{display:none}
+  .subnav a{color:var(--ink-2);font-weight:500;font-size:14px;padding:0 16px;display:flex;align-items:center;border-bottom:3px solid transparent;white-space:nowrap}
+  .subnav a.active{color:var(--brand);border-bottom-color:var(--brand);font-weight:600}
+  .subnav a:hover{background:var(--chip)}
+  .subnav .bk{margin-left:auto;display:flex;align-items:center;padding:10px 0}
+  .subnav .bk .cta{background:var(--brand);color:#fff;padding:8px 18px;font-weight:600;font-size:14px;border-radius:4px}
+
+  .crumb{padding:14px 0;font-size:13px;color:var(--muted)}
+  .crumb a{color:var(--brand);text-decoration:underline}
+  .crumb span{margin:0 6px;color:var(--line-2)}
+
+  .title-row{display:grid;grid-template-columns:1fr auto;gap:20px;padding:6px 0 20px;align-items:flex-start}
+  .chips-top{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .chip-top{font-size:11px;font-weight:600;background:var(--chip);padding:4px 10px;border-radius:12px;color:var(--ink-2);text-transform:uppercase;letter-spacing:.03em}
+  .chip-top.brand{background:var(--brand-soft);color:var(--brand-ink)}
+  .chip-top.hi{background:#fff3cd;color:#664d03}
+  .title-row .addr{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);align-items:center}
+  .title-row .addr .dot{color:var(--line-2)}
+  .title-row .addr a{text-decoration:underline}
+  .score-inline{display:flex;gap:10px;align-items:center;font-size:13px;margin-top:6px}
+  .score-inline .sc{background:var(--brand);color:#fff;font-weight:700;padding:4px 8px;border-radius:4px 4px 4px 0}
+  .actions{display:flex;gap:8px}
+  .btn-ic{width:40px;height:40px;border:1px solid var(--line-2);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:var(--brand)}
+  .btn-ic svg{width:18px;height:18px}
+
+  .gal{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:200px 200px;gap:2px;border-radius:8px;overflow:hidden;position:relative;margin-bottom:8px}
+  .gal .big{grid-row:span 2}
+  .gal > div{background:linear-gradient(135deg,#0ea5e9,#0369a1 60%,#1f1611);position:relative;overflow:hidden;cursor:pointer}
+  .gal > div::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(255,255,255,.04) 0 14px, transparent 14px 28px)}
+  .gal > div .tag{position:absolute;bottom:8px;left:10px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;padding:3px 8px;border-radius:2px}
+  .gal .video-slot::before{content:"▶";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;background:rgba(0,0,0,.55);width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px}
+  .gal-more{position:absolute;bottom:14px;right:14px;background:#fff;color:var(--ink);font-weight:600;padding:10px 16px;border-radius:4px;font-size:13px;border:1px solid var(--line-2);display:flex;align-items:center;gap:8px}
+  .gal-more svg{width:16px;height:16px}
+  @media(max-width:900px){.gal{grid-template-columns:1fr 1fr;grid-template-rows:160px 160px 160px}.gal .big{grid-column:span 2;grid-row:auto}}
+
+  .main{display:grid;grid-template-columns:1fr 340px;gap:24px;padding:20px 0 60px;align-items:start}
+  @media(max-width:1100px){.main{grid-template-columns:1fr}}
+
+  /* Quick info bar */
+  .qinfo{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:16px 20px;display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:16px}
+  .qinfo .i{display:flex;gap:10px;align-items:flex-start}
+  .qinfo .ic{width:32px;height:32px;border-radius:6px;background:var(--brand-soft);color:var(--brand-ink);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+  .qinfo .ic svg{width:18px;height:18px}
+  .qinfo .t{font-weight:600;font-size:13px}
+  .qinfo .s{color:var(--muted);font-size:12px;margin-top:1px}
+  @media(max-width:900px){.qinfo{grid-template-columns:1fr 1fr}}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:24px;margin-bottom:16px;scroll-margin-top:80px}
+  .card .lede{font-size:15px;color:var(--ink-2);line-height:1.65}
+
+  /* Spec table */
+  .spec{display:grid;grid-template-columns:200px 1fr;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .spec .k{padding:12px 16px;background:var(--bg);border-bottom:1px solid var(--line);border-right:1px solid var(--line);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted)}
+  .spec .v{padding:12px 16px;border-bottom:1px solid var(--line);font-size:14px}
+  .spec .v b{font-weight:600;color:var(--brand-ink)}
+  .spec > :nth-last-child(-n+2){border-bottom:0}
+  @media(max-width:720px){.spec{grid-template-columns:1fr}.spec .k{border-right:0}}
+
+  /* Addons */
+  .addons{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .addon{padding:16px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer;position:relative;transition:border-color .15s}
+  .addon.sel{border-color:var(--brand);background:var(--brand-soft)}
+  .addon.sel::after{content:"✓";position:absolute;top:8px;right:10px;width:22px;height:22px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+  .addon .ic{width:40px;height:40px;border-radius:8px;background:var(--brand-soft);color:var(--brand-ink);display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+  .addon .ic svg{width:22px;height:22px}
+  .addon.sel .ic{background:#fff}
+  .addon h4{font-size:14px;margin-bottom:4px}
+  .addon p{font-size:12px;color:var(--muted);line-height:1.45}
+  .addon .pr{font-weight:700;font-size:15px;margin-top:8px;color:var(--brand-ink)}
+  .addon .pr small{font-weight:500;color:var(--muted);font-size:11px}
+  @media(max-width:720px){.addons{grid-template-columns:1fr}}
+
+  /* Routes cards */
+  .routes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .route{border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;flex-direction:column}
+  .route .ph{aspect-ratio:3/2;background:linear-gradient(135deg,#0ea5e9,#06618a);position:relative}
+  .route .ph::after{content:attr(data-tag);position:absolute;bottom:8px;left:10px;background:rgba(0,0,0,.5);color:#fff;font-size:11px;padding:3px 8px;border-radius:2px}
+  .route .ph .diff{position:absolute;top:10px;left:10px;background:rgba(255,255,255,.95);color:var(--ink);font-size:10px;padding:3px 8px;border-radius:3px;font-weight:700;text-transform:uppercase}
+  .route .ph .diff.easy{background:#dcfce7;color:#005a1c}
+  .route .ph .diff.medium{background:#fff3cd;color:#664d03}
+  .route .b{padding:14px;flex:1;display:flex;flex-direction:column}
+  .route h4{font-size:16px;margin-bottom:6px}
+  .route .meta{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;padding:10px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .route .meta .m{font-size:12px}
+  .route .meta .m b{display:block;font-weight:700;font-size:14px;color:var(--ink)}
+  .route .meta .m span{color:var(--muted)}
+  .route p{font-size:13px;color:var(--ink-2);margin-top:10px;line-height:1.5;flex:1}
+  .route .gpx{margin-top:10px;font-size:12px;color:var(--brand);font-weight:600;display:flex;align-items:center;gap:6px}
+  .route .gpx svg{width:14px;height:14px}
+  @media(max-width:900px){.routes{grid-template-columns:1fr}}
+
+  /* pickup box */
+  .pickup{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .pb{padding:16px;background:var(--bg);border:1px solid var(--line);border-radius:6px}
+  .pb h4{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+  .pb h4 svg{width:18px;height:18px;color:var(--brand-ink)}
+  .pb p{font-size:13px;color:var(--ink-2);line-height:1.55}
+  .pb .r{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .pb .r:last-child{border-bottom:0}
+  .pb .r b{font-weight:600}
+  @media(max-width:720px){.pickup{grid-template-columns:1fr}}
+
+  /* reviews */
+  .score-head{display:flex;gap:14px;align-items:center;margin-bottom:18px}
+  .score-badge{background:var(--brand);color:#fff;font-weight:700;font-size:18px;padding:8px 12px;border-radius:4px 4px 4px 0;min-width:54px;text-align:center}
+  .score-badge small{display:block;font-size:11px;font-weight:500;opacity:.9}
+  .score-label{font-weight:700;font-size:18px}
+  .score-label small{display:block;color:var(--muted);font-weight:400;font-size:13px;margin-top:2px}
+  .score-bars{display:grid;grid-template-columns:1fr 1fr;gap:10px 36px}
+  .bar{display:grid;grid-template-columns:110px 1fr 40px;gap:12px;align-items:center;font-size:13px}
+  .bar .b{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+  .bar .b i{display:block;height:100%;background:var(--good);border-radius:3px}
+  .bar .v{text-align:right;font-weight:600}
+  @media(max-width:720px){.score-bars{grid-template-columns:1fr}}
+
+  .rev-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+  .rev{border:1px solid var(--line);border-radius:6px;padding:16px}
+  .rev .u{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+  .rev .u .av{width:36px;height:36px;border-radius:50%;background:var(--brand-soft);color:var(--brand-ink);font-weight:700;display:flex;align-items:center;justify-content:center}
+  .rev .u .n{font-weight:600;font-size:14px}
+  .rev .u .n small{display:block;color:var(--muted);font-weight:400;font-size:12px}
+  .rev .u .sc{margin-left:auto;background:var(--brand);color:#fff;font-weight:700;padding:4px 8px;border-radius:4px 4px 4px 0;font-size:13px}
+  .rev .q{font-size:14px;color:var(--ink-2);line-height:1.5}
+  @media(max-width:720px){.rev-grid{grid-template-columns:1fr}}
+
+  /* safety row */
+  .safety-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .sfi{padding:14px;background:var(--bg);border:1px solid var(--line);border-radius:6px;text-align:center}
+  .sfi .ic{width:40px;height:40px;border-radius:50%;background:var(--brand-soft);color:var(--brand-ink);display:flex;align-items:center;justify-content:center;margin:0 auto 8px}
+  .sfi .ic svg{width:22px;height:22px}
+  .sfi b{display:block;font-weight:700;font-size:13px}
+  .sfi p{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.4}
+  @media(max-width:720px){.safety-grid{grid-template-columns:1fr 1fr}}
+
+  /* SIDEBAR booking */
+  aside .book{position:sticky;top:68px;background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+  .book .head{padding:16px 18px;background:var(--brand-soft);display:flex;justify-content:space-between;align-items:center}
+  .book .head b{font-weight:700}
+  .book .head .prc{font-weight:700;font-size:22px}
+  .book .head .prc small{font-size:12px;color:var(--muted);font-weight:400}
+  .book .body{padding:18px}
+  .book-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600;display:block;margin:14px 0 6px}
+  .inp{width:100%;padding:10px 12px;border:1px solid var(--line-2);border-radius:4px;font-size:14px;color:var(--ink);font-family:inherit;background:#fff}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .mini-add{display:flex;flex-direction:column;gap:6px}
+  .mini-add label{display:grid;grid-template-columns:20px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line-2);border-radius:4px;cursor:pointer;font-size:13px}
+  .mini-add label.sel{border-color:var(--brand);background:var(--brand-soft)}
+  .mini-add label input{accent-color:var(--brand)}
+  .mini-add label b{font-weight:600}
+  .break{margin-top:16px;padding-top:12px;border-top:1px solid var(--line);font-size:13px}
+  .break div{display:flex;justify-content:space-between;padding:4px 0}
+  .break .tot{font-weight:700;padding-top:8px;margin-top:6px;border-top:1px solid var(--line);font-size:16px}
+  .cta{display:block;width:100%;text-align:center;padding:14px;background:var(--brand);color:#fff;font-weight:700;font-size:15px;border-radius:4px;margin-top:14px}
+  .cta:hover{background:var(--brand-ink);text-decoration:none}
+  .trust{padding:14px 18px;background:#f0f9f1;border-top:1px solid var(--line);font-size:12px;color:var(--ink-2)}
+  .trust div{display:flex;gap:8px;align-items:center;padding:3px 0}
+  .trust svg{width:14px;height:14px;color:var(--good);flex-shrink:0}
+
+  .mcta{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:10px 16px;z-index:50;align-items:center;justify-content:space-between;gap:12px}
+  .mcta .p{font-weight:700;font-size:16px}
+  .mcta .p small{display:block;color:var(--muted);font-weight:400;font-size:11px}
+  .mcta .cta{padding:10px 22px;width:auto;font-size:14px;margin-top:0}
+  @media(max-width:1100px){.mcta{display:flex}main{padding-bottom:80px}}
+
+  footer{background:#1a1a1a;color:#ccc;padding:40px 0 20px;margin-top:40px;font-size:13px}
+  footer .fg{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:32px}
+  footer h4{color:#fff;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px}
+  footer ul{list-style:none}
+  footer li{padding:3px 0}
+  footer a{color:#ccc}
+  footer .bot{margin-top:30px;padding-top:20px;border-top:1px solid #333;display:flex;justify-content:space-between;color:#888;font-size:12px;flex-wrap:wrap;gap:10px}
+  @media(max-width:720px){footer .fg{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-bike" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="15" r="4"/><circle cx="18" cy="15" r="4"/><path d="M6 15l4-10h4M18 15l-5-8h-3M14 5l4 0"/></symbol>
+    <symbol id="i-battery" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2M6 10v4M10 10v4M14 10v4"/></symbol>
+    <symbol id="i-motor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 4v4M12 16v4M4 12h4M16 12h4M7 7l3 3M14 14l3 3M7 17l3-3M14 10l3-3"/></symbol>
+    <symbol id="i-route" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="19" r="3"/><circle cx="18" cy="5" r="3"/><path d="M8 17S12 17 13 12s2-8 5-8"/></symbol>
+    <symbol id="i-helmet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 14a9 9 0 1 1 18 0v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4zM3 14h18M7 20v-4M12 20v-6M17 20v-4"/></symbol>
+    <symbol id="i-gps" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0"/></symbol>
+    <symbol id="i-baby" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="6" r="3"/><path d="M12 9v4M8 13h8l-2 8h-4z"/></symbol>
+    <symbol id="i-picnic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="10" width="18" height="10" rx="1"/><path d="M7 10V6a5 5 0 0 1 10 0v4M7 15h10"/></symbol>
+    <symbol id="i-rain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 14a6 6 0 1 1 12 0 4 4 0 0 1 0 8H7a4 4 0 0 1-1-8zM8 19v3M12 19v3M16 19v3"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
+    <symbol id="i-tool" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3l2 2L8 17l-4 1 1-4 9.7-8.7zM11 9l4 4"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+    <symbol id="i-loc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51L8.59 10.49"/></symbol>
+    <symbol id="i-img" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></symbol>
+    <symbol id="i-ship" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 16l9 5 9-5M3 12l9-5 9 5M12 7v10"/></symbol>
+  </defs>
+</svg>
+
+<div class="topbar">
+  <div class="wrap row">
+    <div><span class="brand">TouraCore</span></div>
+    <div class="r">
+      <span class="pill">EUR · €</span>
+      <span class="pill"><b>IT</b> · EN · DE · FR</span>
+      <span class="pill">Accedi</span>
+    </div>
+  </div>
+</div>
+
+<div class="subnav">
+  <div class="wrap row">
+    <a href="#overview" class="active">Panoramica</a>
+    <a href="#specs">Specifiche</a>
+    <a href="#addons">Add-on</a>
+    <a href="#routes">Itinerari</a>
+    <a href="#pickup">Ritiro</a>
+    <a href="#safety">Sicurezza</a>
+    <a href="#reviews">Recensioni (412)</a>
+    <div class="bk"><a href="#book" class="cta">Prenota e-bike</a></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <nav class="crumb">
+    <a href="#">Home</a> <span>›</span>
+    <a href="#">Noleggio bici</a> <span>›</span>
+    <a href="#">Lago di Como</a> <span>›</span>
+    <a href="#">E-bike</a> <span>›</span>
+    E-bike Premium Trek Allant+ 7S
+  </nav>
+
+  <section class="title-row" id="overview">
+    <div>
+      <div class="chips-top">
+        <span class="chip-top brand">✓ Rivenditore Trek ufficiale</span>
+        <span class="chip-top hi">Top rated 2026</span>
+        <span class="chip-top">Modello 2026</span>
+        <span class="chip-top">Bosch Performance CX</span>
+        <span class="chip-top">Rientro battello incluso</span>
+      </div>
+      <h1>E-bike Premium · Greenway Lago di Como</h1>
+      <div class="score-inline">
+        <span class="sc">9.5</span>
+        <b>Eccellente</b>
+        <span style="color:var(--muted)">· 412 recensioni</span>
+        <span style="color:var(--line-2)">·</span>
+        <span style="color:var(--muted)">1.850+ noleggi dal 2018</span>
+      </div>
+      <div class="addr">
+        <svg width="14" height="14"><use href="#i-loc"/></svg>
+        <a href="#pickup">Via Roma 18, Bellagio</a>
+        <span class="dot">·</span>
+        <a href="tel:+390319876543">+39 031 987 65 43</a>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn-ic"><svg><use href="#i-heart"/></svg></button>
+      <button class="btn-ic"><svg><use href="#i-share"/></svg></button>
+    </div>
+  </section>
+
+  <section class="gal">
+    <div class="big"><span class="tag">1 / 16 · Trek Allant+ 7S</span></div>
+    <div><span class="tag">2 · display Bosch Kiox</span></div>
+    <div><span class="tag">3 · greenway panorama</span></div>
+    <div><span class="tag">4 · negozio Bellagio</span></div>
+    <div class="video-slot"><span class="tag">video 30" · test ride</span></div>
+    <button class="gal-more"><svg><use href="#i-img"/></svg>Vedi tutte le 16 foto</button>
+  </section>
+
+  <div class="main">
+    <div>
+
+      <div class="qinfo">
+        <div class="i"><span class="ic"><svg><use href="#i-bike"/></svg></span><div><div class="t">Trek Allant+ 7S</div><div class="s">2026 edition</div></div></div>
+        <div class="i"><span class="ic"><svg><use href="#i-motor"/></svg></span><div><div class="t">85 Nm</div><div class="s">Bosch CX</div></div></div>
+        <div class="i"><span class="ic"><svg><use href="#i-battery"/></svg></span><div><div class="t">625 Wh</div><div class="s">autonomia 120km</div></div></div>
+        <div class="i"><span class="ic"><svg><use href="#i-route"/></svg></span><div><div class="t">45 km</div><div class="s">percorso classico</div></div></div>
+        <div class="i"><span class="ic"><svg><use href="#i-clock"/></svg></span><div><div class="t">9h noleggio</div><div class="s">8:30 → 19:00</div></div></div>
+      </div>
+
+      <section class="card" id="about">
+        <h2>Informazioni sul noleggio</h2>
+        <p class="lede">Trek Allant+ 7S modello 2026, la nostra e-bike top di gamma per il Lago di Como. Motore Bosch Performance Line CX con 85 Nm di coppia, batteria PowerTube 625 Wh rimovibile, display Kiox 300 con navigatore GPS integrato. Autonomia reale 85–120 km anche con dislivelli.</p>
+        <p class="lede" style="margin-top:10px">Ideale per la Greenway (45 km asfalto protetto) e per le salite verso Madonna del Ghisallo. Include casco MIPS, assicurazione RC terzi fino a €1M, copertura furto con tracker GPS antifurto attivo.</p>
+      </section>
+
+      <!-- SPEC TABLE -->
+      <section class="card" id="specs">
+        <h2>Specifiche tecniche</h2>
+        <div class="spec">
+          <div class="k">Modello</div><div class="v"><b>Trek Allant+ 7S</b> · taglie S / M / L / XL</div>
+          <div class="k">Motore</div><div class="v"><b>Bosch Performance Line CX</b> · 85 Nm · 4 modalità (Eco/Tour/Sport/Turbo)</div>
+          <div class="k">Batteria</div><div class="v"><b>Bosch PowerTube 625 Wh</b> · rimovibile · autonomia 85–120 km</div>
+          <div class="k">Trasmissione</div><div class="v">Shimano Deore 10 velocità · pignone 11-42</div>
+          <div class="k">Freni</div><div class="v">Shimano BR-MT420 · dischi idraulici 180 mm</div>
+          <div class="k">Pneumatici</div><div class="v">Bontrager GR1 Comp 700×45 · tubeless ready</div>
+          <div class="k">Peso</div><div class="v">22,4 kg</div>
+          <div class="k">Display</div><div class="v"><b>Bosch Kiox 300</b> · GPS integrato · navigazione via app eBike Flow</div>
+          <div class="k">Luci</div><div class="v">Supernova E3 integrate · 205 lumen frontali · posteriore con freno</div>
+          <div class="k">Portapacchi</div><div class="v">Bontrager Pannier · portata 25 kg · compatibile borse Ortlieb</div>
+          <div class="k">Forcella</div><div class="v">SR Suntour Mobie A32 · 63 mm travel · lockout manubrio</div>
+          <div class="k">Sella</div><div class="v">Bontrager Commuter Comp · ergonomica</div>
+        </div>
+      </section>
+
+      <!-- ADDONS -->
+      <section class="card" id="addons">
+        <h2>Equipaggiamento &amp; add-on</h2>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:16px">3 inclusi · 5 opzionali · aggiungi al noleggio</p>
+        <div class="addons">
+          <div class="addon sel">
+            <div class="ic"><svg><use href="#i-helmet"/></svg></div>
+            <h4>Casco MIPS</h4>
+            <p>Bontrager Starvos MIPS · luce LED posteriore integrata · taglie S/M/L</p>
+            <div class="pr">Incluso <small>obbligatorio</small></div>
+          </div>
+          <div class="addon sel">
+            <div class="ic"><svg><use href="#i-shield"/></svg></div>
+            <h4>Assicurazione RC</h4>
+            <p>Copertura fino a €1M terzi · franchigia 0 · gestita da Groupama Italia</p>
+            <div class="pr">Inclusa <small>sempre attiva</small></div>
+          </div>
+          <div class="addon sel">
+            <div class="ic"><svg><use href="#i-ship"/></svg></div>
+            <h4>Rientro in battello</h4>
+            <p>Biglietto battello Menaggio→Bellagio delle 17:10 · supplemento bici incluso</p>
+            <div class="pr">Incluso <small>stagione apr–ott</small></div>
+          </div>
+          <div class="addon">
+            <div class="ic"><svg><use href="#i-gps"/></svg></div>
+            <h4>GPS Garmin Edge 540</h4>
+            <p>Navigatore con traccia Greenway precaricata · 18h autonomia · turn-by-turn</p>
+            <div class="pr">+€15 <small>al giorno</small></div>
+          </div>
+          <div class="addon">
+            <div class="ic"><svg><use href="#i-bag"/></svg></div>
+            <h4>Borsa Ortlieb 7L</h4>
+            <p>Ortlieb Ultimate Six impermeabile · attacco rapido · tasca mappa superiore</p>
+            <div class="pr">+€8 <small>al giorno</small></div>
+          </div>
+          <div class="addon">
+            <div class="ic"><svg><use href="#i-baby"/></svg></div>
+            <h4>Seggiolino bimbo</h4>
+            <p>Thule Yepp Maxi posteriore · 9–22 kg · casco bimbo incluso</p>
+            <div class="pr">+€12 <small>al giorno</small></div>
+          </div>
+          <div class="addon sel">
+            <div class="ic"><svg><use href="#i-picnic"/></svg></div>
+            <h4>Picnic lunch box</h4>
+            <p>Focaccia forno Garzoni · formaggi locali · frutta · acqua 1L</p>
+            <div class="pr">+€10 <small>una tantum</small></div>
+          </div>
+          <div class="addon">
+            <div class="ic"><svg><use href="#i-rain"/></svg></div>
+            <h4>Kit pioggia</h4>
+            <p>Giacca + copripantaloni antipioggia · taglie S–XXL · utile ott–mar</p>
+            <div class="pr">+€8 <small>al giorno</small></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ROUTES -->
+      <section class="card" id="routes">
+        <h2>Itinerari suggeriti</h2>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:16px">3 tracce con GPX scaricabile · mappa Kiox precaricata</p>
+        <div class="routes">
+          <div class="route">
+            <div class="ph" data-tag="greenway classica"><span class="diff easy">Facile</span></div>
+            <div class="b">
+              <h4>Greenway classica</h4>
+              <div class="meta">
+                <div class="m"><b>45 km</b><span>distanza</span></div>
+                <div class="m"><b>+180 m</b><span>dislivello</span></div>
+                <div class="m"><b>4–5h</b><span>durata</span></div>
+              </div>
+              <p>Colonno → Griante. Percorso classico tra ville storiche, lungolago protetto, borghi lacustri. Rientro in battello a Bellagio.</p>
+              <a class="gpx" href="#"><svg><use href="#i-download"/></svg>Scarica GPX</a>
+            </div>
+          </div>
+          <div class="route">
+            <div class="ph" data-tag="madonna del ghisallo"><span class="diff medium">Medio</span></div>
+            <div class="b">
+              <h4>Madonna del Ghisallo</h4>
+              <div class="meta">
+                <div class="m"><b>58 km</b><span>distanza</span></div>
+                <div class="m"><b>+980 m</b><span>dislivello</span></div>
+                <div class="m"><b>6h</b><span>durata</span></div>
+              </div>
+              <p>Santuario dei ciclisti, salita mitica del Giro di Lombardia. Panorami 360° sui due rami del lago.</p>
+              <a class="gpx" href="#"><svg><use href="#i-download"/></svg>Scarica GPX</a>
+            </div>
+          </div>
+          <div class="route">
+            <div class="ph" data-tag="strada regia"><span class="diff easy">Facile</span></div>
+            <div class="b">
+              <h4>Strada Regia</h4>
+              <div class="meta">
+                <div class="m"><b>28 km</b><span>distanza</span></div>
+                <div class="m"><b>+320 m</b><span>dislivello</span></div>
+                <div class="m"><b>3h</b><span>durata</span></div>
+              </div>
+              <p>Bellagio → Nesso → Pognana. L'antica strada della sponda orientale, più selvaggia. Mezza giornata.</p>
+              <a class="gpx" href="#"><svg><use href="#i-download"/></svg>Scarica GPX</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PICKUP -->
+      <section class="card" id="pickup">
+        <h2>Ritiro &amp; riconsegna</h2>
+        <div class="pickup">
+          <div class="pb">
+            <h4><svg><use href="#i-clock"/></svg> Orari</h4>
+            <div class="r"><span>Ritiro</span><b>08:30 — 11:00</b></div>
+            <div class="r"><span>Riconsegna</span><b>entro 19:00</b></div>
+            <div class="r"><span>Chiusura</span><b>lunedì</b></div>
+            <div class="r"><span>Stagione</span><b>aprile — ottobre</b></div>
+          </div>
+          <div class="pb">
+            <h4><svg><use href="#i-loc"/></svg> Indirizzo</h4>
+            <p><b>Via Roma 18, 22021 Bellagio (CO)</b></p>
+            <p style="margin-top:6px">2 minuti dall'imbarcadero battelli · 4 minuti dal parcheggio centrale · accessibile via ascensore PRM</p>
+            <a href="#" style="font-weight:600;margin-top:8px;display:inline-block">Apri in Google Maps →</a>
+          </div>
+          <div class="pb">
+            <h4><svg><use href="#i-tool"/></svg> Cosa serve</h4>
+            <p>Documento d'identità valido · caparra €100 con carta di credito (non addebitata) · esperienza minima saper pedalare · età min 14 anni</p>
+          </div>
+          <div class="pb">
+            <h4><svg><use href="#i-phone"/></svg> Assistenza</h4>
+            <p>Chiama <b>+39 348 1234567</b>, il nostro tecnico raggiunge qualsiasi punto della Greenway entro 45 minuti. Forature e problemi elettrici coperti.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SAFETY -->
+      <section class="card" id="safety">
+        <h2>Sicurezza · tutto incluso</h2>
+        <div class="safety-grid">
+          <div class="sfi"><div class="ic"><svg><use href="#i-shield"/></svg></div><b>RC fino €1M</b><p>Terzi · franchigia 0</p></div>
+          <div class="sfi"><div class="ic"><svg><use href="#i-gps"/></svg></div><b>Tracker GPS</b><p>Antifurto sempre attivo</p></div>
+          <div class="sfi"><div class="ic"><svg><use href="#i-phone"/></svg></div><b>Assistenza 9–20</b><p>Tecnico in 45 min</p></div>
+          <div class="sfi"><div class="ic"><svg><use href="#i-tool"/></svg></div><b>Kit riparazione</b><p>Con video istruzioni</p></div>
+        </div>
+      </section>
+
+      <!-- REVIEWS -->
+      <section class="card" id="reviews">
+        <h2>Recensioni clienti</h2>
+        <div class="score-head">
+          <div class="score-badge">9.5<small>/10</small></div>
+          <div class="score-label">Eccellente<small>412 recensioni verificate · Trek Allant+</small></div>
+        </div>
+        <div class="score-bars">
+          <div class="bar"><span>Qualità bici</span><span class="b"><i style="width:97%"></i></span><span class="v">9.7</span></div>
+          <div class="bar"><span>Autonomia</span><span class="b"><i style="width:95%"></i></span><span class="v">9.5</span></div>
+          <div class="bar"><span>Ritiro/riconsegna</span><span class="b"><i style="width:96%"></i></span><span class="v">9.6</span></div>
+          <div class="bar"><span>Staff</span><span class="b"><i style="width:98%"></i></span><span class="v">9.8</span></div>
+          <div class="bar"><span>Rapporto qualità/prezzo</span><span class="b"><i style="width:91%"></i></span><span class="v">9.1</span></div>
+          <div class="bar"><span>Sicurezza</span><span class="b"><i style="width:96%"></i></span><span class="v">9.6</span></div>
+        </div>
+        <div class="rev-grid">
+          <div class="rev">
+            <div class="u"><div class="av">M</div><div class="n">Marco B.<small>🇮🇹 Milano · Greenway · 1 giorno</small></div><div class="sc">10</div></div>
+            <p class="q">"E-bike nuovissima, motore Bosch perfetto anche in salita sul Ghisallo. Staff gentilissimo, tutto pronto all'orario concordato."</p>
+          </div>
+          <div class="rev">
+            <div class="u"><div class="av">A</div><div class="n">Anna &amp; Tim<small>🇬🇧 UK · Greenway · 2 giorni</small></div><div class="sc">9.6</div></div>
+            <p class="q">"Great bikes, very well maintained. The return by ferry is a nice touch. Picnic box was delicious!"</p>
+          </div>
+          <div class="rev">
+            <div class="u"><div class="av">F</div><div class="n">Familie Schmidt<small>🇩🇪 Berlino · famiglia · 1 giorno</small></div><div class="sc">9.8</div></div>
+            <p class="q">"Kinderanhänger war perfekt, Qualität top. Kiox GPS funktioniert super. Gerne wieder!"</p>
+          </div>
+          <div class="rev">
+            <div class="u"><div class="av">L</div><div class="n">Luca &amp; Paola<small>🇮🇹 Torino · Ghisallo · 1 giorno</small></div><div class="sc">9.2</div></div>
+            <p class="q">"Abbiamo fatto il Ghisallo con le e-bike — esperienza incredibile, la batteria ha retto benissimo. Consigliato Turbo mode solo in salita finale."</p>
+          </div>
+        </div>
+        <a href="#" style="display:inline-block;margin-top:16px;font-weight:600">Mostra tutte le 412 recensioni →</a>
+      </section>
+
+    </div>
+
+    <!-- SIDEBAR -->
+    <aside id="book">
+      <div class="book">
+        <div class="head">
+          <div><b>Da</b><br><small style="color:var(--muted);font-size:12px">al giorno · tasse incl.</small></div>
+          <div class="prc">€55</div>
+        </div>
+        <div class="body">
+          <label class="book-lbl">Giorno ritiro</label>
+          <input class="inp" value="Venerdì 24 aprile 2026" />
+
+          <label class="book-lbl">Taglia &amp; ora</label>
+          <div class="row2">
+            <select class="inp"><option>Taglia M</option><option>S</option><option>L</option><option>XL</option></select>
+            <select class="inp"><option>09:00</option><option>09:30</option><option>10:00</option></select>
+          </div>
+
+          <label class="book-lbl">Durata noleggio</label>
+          <select class="inp">
+            <option>1 giorno · €55</option>
+            <option>2 giorni · €100 (−€10)</option>
+            <option>3 giorni · €145 (−€20)</option>
+            <option>Settimana · €280 (−€105)</option>
+          </select>
+
+          <label class="book-lbl">Add-on opzionali</label>
+          <div class="mini-add">
+            <label class="sel"><input type="checkbox" checked /><div><b>GPS Garmin Edge</b><div style="font-size:11px;color:var(--muted)">Navigatore con GPX precaricati</div></div><b>+€15</b></label>
+            <label class="sel"><input type="checkbox" checked /><div><b>Picnic lunch box</b><div style="font-size:11px;color:var(--muted)">Focaccia + formaggi + acqua</div></div><b>+€10</b></label>
+            <label><input type="checkbox" /><div><b>Borsa Ortlieb 7L</b><div style="font-size:11px;color:var(--muted)">Impermeabile, tasca mappa</div></div><b>+€8</b></label>
+            <label><input type="checkbox" /><div><b>Kit pioggia</b><div style="font-size:11px;color:var(--muted)">Giacca + copripantaloni</div></div><b>+€8</b></label>
+          </div>
+
+          <div class="break">
+            <div><span>1 × e-bike Trek</span><span>€55</span></div>
+            <div><span>GPS Garmin</span><span>€15</span></div>
+            <div><span>Picnic box</span><span>€10</span></div>
+            <div><span>Casco + RC + tracker</span><span style="color:var(--good)">inclusi</span></div>
+            <div class="tot"><span>Totale</span><span>€80</span></div>
+          </div>
+
+          <a class="cta" href="#book-multi">Prenota e-bike</a>
+        </div>
+
+        <div class="trust">
+          <div><svg><use href="#i-check"/></svg>Cancellazione gratuita fino a 48h</div>
+          <div><svg><use href="#i-check"/></svg>RC terzi €1M · copertura furto</div>
+          <div><svg><use href="#i-check"/></svg>Caparra €100 non addebitata</div>
+          <div><svg><use href="#i-check"/></svg>Rientro in battello incluso</div>
+          <div><svg><use href="#i-check"/></svg>Pagamento sicuro · Stripe</div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<div class="mcta">
+  <div class="p">€80 totale<br><small>ven 24 · 09:00 · 1 giorno</small></div>
+  <a class="cta" href="#book-multi">Prenota</a>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="fg">
+      <div>
+        <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:8px">Lario Cycling</div>
+        <p>Via Roma 18, 22021 Bellagio (CO)<br>P.IVA 03789540138 · Rivenditore Trek ufficiale dal 2018</p>
+      </div>
+      <div><h4>Noleggio</h4><ul><li><a href="#">E-bike</a></li><li><a href="#">City bike</a></li><li><a href="#">MTB</a></li><li><a href="#">Tandem</a></li></ul></div>
+      <div><h4>Tour</h4><ul><li><a href="#">Greenway</a></li><li><a href="#">Ghisallo</a></li><li><a href="#">Strada Regia</a></li><li><a href="#">Tour privati</a></li></ul></div>
+      <div><h4>Distribuito con</h4><ul><li><a href="#">TouraCore</a></li><li><a href="#">Strava club</a></li><li><a href="#">Newsletter</a></li></ul></div>
+    </div>
+    <div class="bot">
+      <div>© 2026 Lario Cycling. All rights reserved.</div>
+      <div>Distribuito con <b style="color:#fff">TouraCore</b> · Listing ID #LC-EB1</div>
+    </div>
+  </div>
+</footer>
+
+</body></html>

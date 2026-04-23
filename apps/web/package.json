@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test",
+    "test:e2e:public": "playwright test -c playwright.public.config.ts",
+    "test:e2e:m080": "playwright test -c playwright.m080.config.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.0",

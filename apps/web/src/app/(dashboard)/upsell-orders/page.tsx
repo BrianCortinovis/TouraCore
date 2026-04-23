@@ -16,7 +16,10 @@ interface UpsellOrder {
   created_at: string
   delivered_at: string | null
   upsell_offers: { name: string; category: string } | { name: string; category: string }[] | null
-  reservations: { reservation_code: string; guest_name: string } | { reservation_code: string; guest_name: string }[] | null
+  reservations:
+    | { reservation_code: string; guest: { first_name: string; last_name: string } | { first_name: string; last_name: string }[] | null }
+    | { reservation_code: string; guest: { first_name: string; last_name: string } | { first_name: string; last_name: string }[] | null }[]
+    | null
 }
 
 const statusColor: Record<string, string> = {
@@ -57,7 +60,10 @@ export default function UpsellOrdersPage() {
       const r = pickFirst(o.reservations)
       return <span className="font-mono text-xs">{r?.reservation_code ?? '-'}</span>
     }},
-    { key: 'guest', header: 'Ospite', render: (o: UpsellOrder) => pickFirst(o.reservations)?.guest_name ?? '-' },
+    { key: 'guest', header: 'Ospite', render: (o: UpsellOrder) => {
+      const g = pickFirst(pickFirst(o.reservations)?.guest ?? null)
+      return g ? `${g.first_name} ${g.last_name}` : '-'
+    }},
     { key: 'offer', header: 'Servizio', render: (o: UpsellOrder) => pickFirst(o.upsell_offers)?.name ?? '-' },
     { key: 'qty', header: 'Qta', render: (o: UpsellOrder) => o.quantity },
     { key: 'total', header: 'Totale', render: (o: UpsellOrder) => `€${Number(o.total).toFixed(2)}` },

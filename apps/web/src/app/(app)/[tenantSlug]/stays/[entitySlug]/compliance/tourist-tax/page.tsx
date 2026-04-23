@@ -37,7 +37,7 @@ interface TaxRecord {
   is_collected: boolean
   collected_at: string | null
   payment_method: string | null
-  booking: { guest_name: string; check_in: string; check_out: string } | null
+  booking: { reservation_code: string; check_in: string; check_out: string } | null
   guest: { first_name: string; last_name: string } | null
 }
 
@@ -336,7 +336,7 @@ export default function TouristTaxPage() {
               {records.map((rec) => {
                 const guestName = rec.guest
                   ? `${rec.guest.first_name} ${rec.guest.last_name}`
-                  : rec.booking?.guest_name ?? '—'
+                  : rec.booking?.reservation_code ?? '—'
 
                 return (
                   <div key={rec.id} className="p-3 flex items-center justify-between">

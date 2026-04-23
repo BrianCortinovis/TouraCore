@@ -5,7 +5,12 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "test:unit": "pnpm -F @touracore/compliance test",
+    "test:e2e": "pnpm --dir apps/web run test:e2e",
+    "test:e2e:public": "pnpm --dir apps/web run test:e2e:public",
+    "test:e2e:m080": "pnpm --dir apps/web run test:e2e:m080",
+    "verify": "pnpm lint && pnpm typecheck && pnpm test:unit"
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^16.2.3",

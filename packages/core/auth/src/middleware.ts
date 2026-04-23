@@ -153,6 +153,20 @@ export async function updateSession(request: NextRequest) {
     return response
   }
 
+  // Estrai tenant/entity slug dal pathname per permettere a bootstrap
+  // di risolvere l'entity attiva in base all'URL (non solo al cookie).
+  // Pattern: /[tenantSlug]/{stays,dine,rides,activities}/[entitySlug]/...
+  const entityPathMatch = pathname.match(
+    /^\/([^/]+)\/(stays|dine|rides|activities)\/([^/]+)(?:\/|$)/
+  )
+  if (entityPathMatch) {
+    const [, tenantSlug, , entitySlug] = entityPathMatch
+    if (tenantSlug && entitySlug && !tenantSlug.startsWith('_')) {
+      request.headers.set('x-touracore-tenant-slug', tenantSlug)
+      request.headers.set('x-touracore-entity-slug', entitySlug)
+    }
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(

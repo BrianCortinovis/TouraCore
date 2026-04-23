@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createServerSupabaseClient } from '@touracore/db/server'
+import { PrintButton } from './print-button'
 
 interface Props {
   params: Promise<{ tenantSlug: string; entitySlug: string }>
@@ -46,7 +47,7 @@ export default async function ManifestPage({ params, searchParams }: Props) {
           <form>
             <input name="date" type="date" defaultValue={date} className="rounded-md border border-gray-300 px-2 py-1 text-sm" />
           </form>
-          <button onClick={() => { if (typeof window !== 'undefined') window.print() }} className="rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800">Stampa</button>
+          <PrintButton />
         </div>
       </div>
 

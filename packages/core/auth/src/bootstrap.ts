@@ -1,5 +1,5 @@
 import { cache } from 'react'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { createServerSupabaseClient } from '@touracore/db/server'
 import type {
   AuthUser,
@@ -95,14 +95,32 @@ const getSelectedEntityId = cache(async () => {
   return cookieStore.get('touracore_selected_entity')?.value ?? null
 })
 
+// Legge gli slug scritti dal middleware per route /[tenantSlug]/{vertical}/[entitySlug]/...
+// Permette a bootstrap di preferire l'entity dell'URL rispetto al cookie
+// (fix scope: layout RSC non può mutare cookie in Next 15).
+const getUrlEntityHint = cache(async (): Promise<{ tenantSlug: string; entitySlug: string } | null> => {
+  try {
+    const h = await headers()
+    const tenantSlug = h.get('x-touracore-tenant-slug')
+    const entitySlug = h.get('x-touracore-entity-slug')
+    if (!tenantSlug || !entitySlug) return null
+    return { tenantSlug, entitySlug }
+  } catch {
+    return null
+  }
+})
+
 export const getAuthBootstrapData = cache(async (): Promise<AuthBootstrapData> => {
   try {
     const user = await getCurrentAuthUser()
     if (!user) return EMPTY_BOOTSTRAP
 
-    // Cache cross-request: se questo user ha bootstrappato negli ultimi 15s,
-    // ritorna i dati senza colpire il DB (3 query risparmiate)
-    const cached = getCachedBootstrap(user.id)
+    const urlHint = await getUrlEntityHint()
+    // Cache key include URL scope: navigare tra entity diverse dello stesso user
+    // deve ricaricare per avere la property corretta.
+    const scopeKey = urlHint ? `${urlHint.tenantSlug}/${urlHint.entitySlug}` : '__cookie__'
+    const cacheKey = `${user.id}::${scopeKey}`
+    const cached = getCachedBootstrap(cacheKey)
     if (cached) return cached
 
     const selectedEntityId = await getSelectedEntityId()
@@ -139,7 +157,10 @@ export const getAuthBootstrapData = cache(async (): Promise<AuthBootstrapData> =
         fallbackEntities = (entityRows ?? []) as typeof fallbackEntities
       }
       const selectedFallback =
-        fallbackEntities.find((e) => e.id === selectedEntityId) ?? fallbackEntities[0] ?? null
+        (urlHint ? fallbackEntities.find((e) => e.slug === urlHint.entitySlug) : null) ??
+        fallbackEntities.find((e) => e.id === selectedEntityId) ??
+        fallbackEntities[0] ??
+        null
       const activeFallback = selectedFallback
         ? (() => {
             const acc = Array.isArray(selectedFallback.accommodation)
@@ -170,13 +191,23 @@ export const getAuthBootstrapData = cache(async (): Promise<AuthBootstrapData> =
           return { ...rest, property_type: acc?.property_type ?? e.property_type ?? null } as Entity
         }),
       }
-      setCachedBootstrap(user.id, result)
+      setCachedBootstrap(cacheKey, result)
       return result
     }
 
+    // Priorità URL hint (da middleware) > cookie > prima staff entry.
+    // Matcha sia su entity.slug sia, quando disponibile, sul tenant.slug per evitare
+    // di selezionare entity omonime di tenant diversi.
+    const urlMatchStaff = urlHint
+      ? typedStaff.find(
+          (s) =>
+            s.entity?.slug === urlHint.entitySlug &&
+            (s.entity?.tenant?.slug ?? null) === urlHint.tenantSlug
+        ) ?? typedStaff.find((s) => s.entity?.slug === urlHint.entitySlug)
+      : null
     const selectedStaff = typedStaff.find((s) => s.entity_id === selectedEntityId)
     // typedStaff.length > 0 verificato sopra
-    const activeStaff = selectedStaff ?? typedStaff[0]!
+    const activeStaff = urlMatchStaff ?? selectedStaff ?? typedStaff[0]!
 
     const entities = typedStaff
       .map((s) => s.entity)
@@ -226,7 +257,7 @@ export const getAuthBootstrapData = cache(async (): Promise<AuthBootstrapData> =
       staffMemberships: typedStaff.map(({ entity: _e, ...rest }) => rest),
       properties: entities.map(({ tenant: _t, ...rest }) => rest) as Entity[],
     }
-    setCachedBootstrap(user.id, result)
+    setCachedBootstrap(cacheKey, result)
     return result
   } catch {
     return EMPTY_BOOTSTRAP

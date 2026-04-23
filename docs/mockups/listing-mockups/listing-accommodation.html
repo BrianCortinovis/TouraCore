@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Villa Irabo — Suite Vista Lago · Bellagio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+<style>
+  :root{
+    --bg:#f5f7fa;
+    --card:#ffffff;
+    --ink:#0b1220;
+    --ink-2:#1f2937;
+    --muted:#6b7280;
+    --line:#e5e7eb;
+    --line-2:#d1d5db;
+    --brand:#003b95;
+    --brand-ink:#002468;
+    --brand-soft:#e7f0ff;
+    --good:#008009;
+    --warn:#f59e0b;
+    --bad:#d70015;
+    --star:#febb02;
+    --chip:#f3f4f6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5}
+  body{overflow-x:hidden}
+  a{color:var(--brand);text-decoration:none}
+  a:hover{text-decoration:underline}
+  button{font-family:inherit;cursor:pointer;border:0;background:none}
+  h1,h2,h3,h4{letter-spacing:-0.01em;color:var(--ink)}
+  h1{font-size:28px;font-weight:700;line-height:1.2}
+  h2{font-size:22px;font-weight:700;margin-bottom:16px}
+  h3{font-size:17px;font-weight:600}
+  .wrap{max-width:1280px;margin:0 auto;padding:0 24px}
+  @media(max-width:720px){.wrap{padding:0 16px}}
+
+  /* ——— top bar brand (dark) ——— */
+  .topbar{background:var(--brand);color:#fff;padding:10px 0;font-size:13px}
+  .topbar .row{display:flex;justify-content:space-between;align-items:center;gap:16px}
+  .topbar .brand{font-weight:700;font-size:20px;letter-spacing:-0.01em}
+  .topbar .brand::after{content:"·";margin-left:8px;opacity:.4}
+  .topbar .brand-sub{font-weight:400;opacity:.9;margin-left:8px;font-size:13px}
+  .topbar .r{display:flex;gap:14px;align-items:center}
+  .topbar .r .pill{padding:5px 10px;border:1px solid rgba(255,255,255,.3);border-radius:2px;font-size:12px}
+  .topbar .r .curr{font-weight:600}
+  .topbar .langs b{font-weight:600}
+
+  /* ——— sticky sub nav ——— */
+  .subnav{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--line)}
+  .subnav .row{display:flex;gap:4px;height:52px;align-items:stretch;overflow-x:auto;scrollbar-width:none}
+  .subnav .row::-webkit-scrollbar{display:none}
+  .subnav a{color:var(--ink-2);font-weight:500;font-size:14px;padding:0 16px;display:flex;align-items:center;border-bottom:3px solid transparent;white-space:nowrap;text-decoration:none}
+  .subnav a.active{color:var(--brand);border-bottom-color:var(--brand);font-weight:600}
+  .subnav a:hover{background:var(--chip);text-decoration:none}
+  .subnav .bk{margin-left:auto;display:flex;align-items:center;padding:10px 0}
+  .subnav .bk .cta{background:var(--brand);color:#fff;padding:8px 18px;font-weight:600;font-size:14px;border-radius:4px}
+
+  /* ——— breadcrumb ——— */
+  .crumb{padding:14px 0;font-size:13px;color:var(--muted)}
+  .crumb a{color:var(--brand);text-decoration:underline}
+  .crumb span{margin:0 6px;color:var(--line-2)}
+
+  /* ——— title block ——— */
+  .title-row{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:flex-start;padding:6px 0 18px}
+  .title-row .stars{color:var(--star);font-size:13px;letter-spacing:1px;margin-right:6px}
+  .title-row .chain{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:6px}
+  .title-row .chain .verif{background:var(--brand-soft);color:var(--brand);padding:2px 6px;border-radius:2px;margin-left:6px;font-weight:700}
+  .title-row h1 .s{color:var(--star);font-size:20px;letter-spacing:1px;margin-left:8px;vertical-align:2px}
+  .title-row .addr{margin-top:8px;color:var(--ink-2);font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .title-row .addr a{font-weight:500;text-decoration:underline}
+  .title-row .addr .dot{color:var(--line-2)}
+  .title-row .actions{display:flex;gap:8px}
+  .btn-ic{width:40px;height:40px;border:1px solid var(--line-2);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:var(--brand)}
+  .btn-ic:hover{background:var(--chip)}
+  .btn-ic svg{width:18px;height:18px}
+
+  /* ——— hero gallery (Booking style 2+4) ——— */
+  .gal{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:200px 200px;gap:2px;border-radius:8px;overflow:hidden;position:relative;margin-bottom:8px}
+  .gal .big{grid-row:span 2;position:relative}
+  .gal > div{background:linear-gradient(135deg,#4b6a8f,#1f3c64);position:relative;overflow:hidden;cursor:pointer}
+  .gal > div::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(255,255,255,.03) 0 14px, transparent 14px 28px)}
+  .gal > div .tag{position:absolute;bottom:8px;left:10px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;padding:3px 8px;border-radius:2px;letter-spacing:.02em}
+  .gal > div:hover::after{content:"";position:absolute;inset:0;background:rgba(0,59,149,.15)}
+  .gal .video-slot::before{content:"▶";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;background:rgba(0,0,0,.55);width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;z-index:1}
+  .gal-more{position:absolute;bottom:14px;right:14px;background:#fff;color:var(--ink);font-weight:600;padding:10px 16px;border-radius:4px;font-size:13px;border:1px solid var(--line-2);box-shadow:0 1px 2px rgba(0,0,0,.08);display:flex;align-items:center;gap:8px}
+  .gal-more svg{width:16px;height:16px}
+  @media(max-width:900px){.gal{grid-template-columns:1fr 1fr;grid-template-rows:160px 160px 160px}.gal .big{grid-column:span 2;grid-row:auto}}
+
+  /* ——— main grid ——— */
+  .main{display:grid;grid-template-columns:1fr 340px;gap:24px;padding-top:20px;padding-bottom:60px;align-items:start}
+  @media(max-width:1100px){.main{grid-template-columns:1fr}}
+
+  /* ——— highlights strip ——— */
+  .highlights{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:16px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+  .highlights .h{display:flex;gap:12px;align-items:flex-start}
+  .highlights .h .ic{width:32px;height:32px;border-radius:6px;background:var(--brand-soft);color:var(--brand);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+  .highlights .h .ic svg{width:18px;height:18px}
+  .highlights .h .t{font-weight:600;font-size:13px}
+  .highlights .h .s{color:var(--muted);font-size:12px;margin-top:2px;line-height:1.4}
+  @media(max-width:720px){.highlights{grid-template-columns:1fr 1fr}}
+
+  /* ——— card section ——— */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:24px;margin-bottom:16px;scroll-margin-top:80px}
+  .card .lede{font-size:15px;color:var(--ink-2);line-height:1.65;margin-bottom:10px}
+
+  /* ——— amenities icons grid (Booking/Airbnb style) ——— */
+  .amen-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px 28px;margin-top:8px}
+  .amen{display:flex;gap:12px;align-items:center;font-size:14px}
+  .amen svg{width:20px;height:20px;color:var(--good);flex-shrink:0}
+  .amen.paid svg{color:var(--muted)}
+  .amen small{color:var(--muted);margin-left:6px;font-size:12px}
+  @media(max-width:720px){.amen-grid{grid-template-columns:1fr}}
+
+  .amen-more{margin-top:18px;padding:10px 18px;border:1px solid var(--ink);color:var(--ink);font-weight:600;border-radius:4px;display:inline-block}
+
+  /* ——— room types ——— */
+  .room-table{border:1px solid var(--line);border-radius:4px;overflow:hidden}
+  .room-row{display:grid;grid-template-columns:2fr 1fr 1fr;padding:16px;border-bottom:1px solid var(--line);gap:16px;align-items:center}
+  .room-row:last-child{border-bottom:0}
+  .room-row .rn{font-weight:600}
+  .room-row .rn small{display:block;color:var(--muted);font-weight:400;margin-top:2px;font-size:12px}
+  .room-row .rg{display:flex;gap:4px;color:var(--muted);font-size:14px}
+  .room-row .rp{text-align:right}
+  .room-row .rp b{font-size:18px;font-weight:700}
+  .room-row .rp small{display:block;color:var(--muted);font-size:11px}
+
+  /* ——— score block ——— */
+  .score-head{display:flex;gap:14px;align-items:center;margin-bottom:18px}
+  .score-badge{background:var(--brand);color:#fff;font-weight:700;font-size:18px;padding:8px 12px;border-radius:4px 4px 4px 0;min-width:54px;text-align:center}
+  .score-badge small{display:block;font-size:11px;font-weight:500;opacity:.9}
+  .score-label{font-weight:700;font-size:18px}
+  .score-label small{display:block;color:var(--muted);font-weight:400;font-size:13px;margin-top:2px}
+
+  .score-bars{display:grid;grid-template-columns:1fr 1fr;gap:10px 36px;margin-top:8px}
+  .bar{display:grid;grid-template-columns:110px 1fr 40px;gap:12px;align-items:center;font-size:13px}
+  .bar .b{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+  .bar .b i{display:block;height:100%;background:var(--good);border-radius:3px}
+  .bar .v{text-align:right;font-weight:600}
+  @media(max-width:720px){.score-bars{grid-template-columns:1fr}}
+
+  /* ——— reviews ——— */
+  .rev-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+  .rev{border:1px solid var(--line);border-radius:6px;padding:16px}
+  .rev .u{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+  .rev .u .av{width:36px;height:36px;border-radius:50%;background:var(--brand-soft);color:var(--brand);font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .rev .u .n{font-weight:600;font-size:14px}
+  .rev .u .n small{display:block;color:var(--muted);font-weight:400;font-size:12px}
+  .rev .u .sc{margin-left:auto;background:var(--brand);color:#fff;font-weight:700;padding:4px 8px;border-radius:4px 4px 4px 0;font-size:13px}
+  .rev .q{font-size:14px;color:var(--ink-2);line-height:1.5}
+  .rev .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .rev .tags span{font-size:11px;background:var(--chip);padding:3px 8px;border-radius:12px;color:var(--ink-2)}
+  @media(max-width:720px){.rev-grid{grid-template-columns:1fr}}
+
+  /* ——— location / map ——— */
+  .map-slot{aspect-ratio:16/7;background:
+    linear-gradient(160deg,#cdd9d4,#b2c2c8 50%,#9ab0b9),
+    repeating-linear-gradient(0deg,transparent 0 24px,rgba(0,0,0,.04) 24px 25px);
+    border:1px solid var(--line);border-radius:6px;position:relative;overflow:hidden}
+  .map-slot::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 36% 60%,rgba(0,59,149,.14),transparent 40%)}
+  .pin{position:absolute;top:52%;left:42%;width:36px;height:36px;background:var(--brand);border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px}
+  .pin::after{content:"";position:absolute;bottom:-12px;left:50%;transform:translateX(-50%);border:8px solid transparent;border-top-color:var(--brand)}
+  .map-lbl{position:absolute;bottom:16px;left:16px;background:#fff;padding:8px 14px;border-radius:4px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px}
+  .landmarks{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:16px;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .lm{padding:14px 16px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .lm:nth-child(even){border-right:0}
+  .lm:nth-last-child(-n+2){border-bottom:0}
+  .lm .a{display:flex;gap:10px;align-items:center;font-size:14px}
+  .lm .a svg{width:16px;height:16px;color:var(--muted)}
+  .lm .d{color:var(--muted);font-size:13px;white-space:nowrap}
+  @media(max-width:720px){.landmarks{grid-template-columns:1fr}.lm{border-right:0}}
+
+  /* ——— policies ——— */
+  .pol-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .pol{padding:16px;background:var(--bg);border-radius:6px;border:1px solid var(--line)}
+  .pol .i{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+  .pol .i svg{width:18px;height:18px;color:var(--brand)}
+  .pol .i b{font-weight:600}
+  .pol p{font-size:13px;color:var(--ink-2);line-height:1.5}
+  @media(max-width:900px){.pol-grid{grid-template-columns:1fr}}
+
+  /* ——— FAQ ——— */
+  details{border-bottom:1px solid var(--line)}
+  details:last-of-type{border-bottom:0}
+  details > summary{list-style:none;padding:16px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-weight:600;font-size:15px}
+  details > summary::-webkit-details-marker{display:none}
+  details > summary::after{content:"+";font-size:22px;font-weight:300;color:var(--brand);transition:transform .2s}
+  details[open] > summary::after{content:"−"}
+  details p{padding:0 0 16px;font-size:14px;color:var(--ink-2);line-height:1.6}
+
+  /* ——— booking card sticky ——— */
+  aside .book{position:sticky;top:68px;background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.05);overflow:hidden}
+  .book .head{padding:16px 18px;background:var(--brand-soft);display:flex;justify-content:space-between;align-items:center;font-size:13px;gap:10px}
+  .book .head .sc{background:var(--brand);color:#fff;font-weight:700;padding:4px 8px;border-radius:4px 4px 4px 0;font-size:13px}
+  .book .head b{font-weight:700}
+  .book .body{padding:18px}
+  .book .prc{display:flex;align-items:baseline;gap:8px}
+  .book .prc-was{color:var(--muted);text-decoration:line-through;font-size:14px}
+  .book .prc-now{font-size:26px;font-weight:700}
+  .book .prc-per{color:var(--muted);font-size:13px}
+  .book .tax{color:var(--muted);font-size:12px;margin-top:2px}
+  .book .disc{margin-top:8px;display:inline-block;background:#fdeeef;color:var(--bad);font-weight:600;font-size:12px;padding:3px 8px;border-radius:3px}
+
+  .fields{margin-top:14px;border:1px solid var(--line-2);border-radius:4px;overflow:hidden}
+  .fields .f{padding:10px 12px;display:grid;grid-template-columns:16px 1fr;gap:10px;align-items:center;border-bottom:1px solid var(--line-2);cursor:pointer}
+  .fields .f:last-child{border-bottom:0}
+  .fields .f svg{width:16px;height:16px;color:var(--muted)}
+  .fields .f .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+  .fields .f .val{font-size:14px;font-weight:600}
+  .cta{display:block;width:100%;text-align:center;padding:14px;background:var(--brand);color:#fff;font-weight:700;font-size:15px;border-radius:4px;margin-top:14px;transition:background .15s}
+  .cta:hover{background:var(--brand-ink);text-decoration:none}
+  .cta.ghost{background:#fff;color:var(--brand);border:2px solid var(--brand);margin-top:8px}
+  .cta.ghost:hover{background:var(--brand-soft)}
+
+  .break{margin-top:16px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-2)}
+  .break div{display:flex;justify-content:space-between;padding:4px 0}
+  .break .tot{font-weight:700;padding-top:8px;margin-top:6px;border-top:1px solid var(--line);font-size:15px}
+
+  .trust{padding:14px 18px;background:#f0f9f1;border-top:1px solid var(--line);font-size:12px;color:var(--ink-2)}
+  .trust div{display:flex;gap:8px;align-items:center;padding:3px 0}
+  .trust svg{width:14px;height:14px;color:var(--good);flex-shrink:0}
+
+  .urgency{padding:10px 18px;background:#fff3cd;color:#664d03;font-size:12px;border-top:1px solid #ffeeba;display:flex;gap:8px;align-items:center;font-weight:500}
+  .urgency svg{width:14px;height:14px}
+
+  /* ——— mobile sticky CTA ——— */
+  .mcta{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:10px 16px;z-index:50;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 -2px 10px rgba(0,0,0,.06)}
+  .mcta .p{font-weight:700;font-size:17px}
+  .mcta .p small{display:block;color:var(--muted);font-weight:400;font-size:11px}
+  .mcta .cta{margin-top:0;padding:10px 22px;width:auto;font-size:14px}
+  @media(max-width:1100px){.mcta{display:flex}main{padding-bottom:80px}}
+
+  /* ——— footer ——— */
+  footer{background:#1a1a1a;color:#ccc;padding:40px 0 20px;margin-top:40px;font-size:13px}
+  footer .fg{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:32px}
+  footer h4{color:#fff;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px}
+  footer ul{list-style:none}
+  footer li{padding:3px 0}
+  footer a{color:#ccc}
+  footer a:hover{color:#fff;text-decoration:underline}
+  footer .bot{margin-top:30px;padding-top:20px;border-top:1px solid #333;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;color:#888;font-size:12px}
+  @media(max-width:720px){footer .fg{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<!-- SVG icon sprite -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-wifi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></symbol>
+    <symbol id="i-pool" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20c1.2-.75 2.8-.75 4 0s2.8.75 4 0 2.8-.75 4 0 2.8.75 4 0 2.8-.75 4 0"/><path d="M2 16c1.2-.75 2.8-.75 4 0s2.8.75 4 0 2.8-.75 4 0 2.8.75 4 0 2.8-.75 4 0"/><path d="M7 14V5a2 2 0 0 1 2-2"/><path d="M17 14V5a2 2 0 0 0-2-2"/><path d="M7 10h10"/></symbol>
+    <symbol id="i-parking" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17V7h3.5a2.5 2.5 0 0 1 0 5H9"/></symbol>
+    <symbol id="i-ac" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M4.93 4.93l14.14 14.14M2 12h20M4.93 19.07L19.07 4.93"/></symbol>
+    <symbol id="i-tv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+    <symbol id="i-kitchen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 8h18M5 8v13a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M9 14h6"/></symbol>
+    <symbol id="i-pets" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="9" r="2"/><circle cx="10" cy="5" r="2"/><circle cx="14" cy="5" r="2"/><circle cx="19" cy="9" r="2"/><path d="M8 18c0-2 1.5-4 4-4s4 2 4 4-1 3-4 3-4-1-4-3Z"/></symbol>
+    <symbol id="i-smoke" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93l14.14 14.14"/></symbol>
+    <symbol id="i-view" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-breakfast" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 8h1a3 3 0 0 1 0 6h-1"/><path d="M2 8h15v7a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8Z"/><path d="M6 2v2M10 2v2M14 2v2"/></symbol>
+    <symbol id="i-balcony" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="12"/><path d="M3 15v6M21 15v6M8 15v6M16 15v6M3 21h18"/></symbol>
+    <symbol id="i-iron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18h18M5 18V11a4 4 0 0 1 4-4h9l3 4v7"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51L8.59 10.49"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-loc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-img" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
+    <symbol id="i-creditcard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></symbol>
+    <symbol id="i-fire" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5a2.5 2.5 0 1 0 5 0c0-1.38-1.12-2.5-2.5-2.5m2.5 2.5c0-3.5-2.5-5-2.5-9 0 0-3.5 1-3.5 5.5a5 5 0 0 0 5 5 5 5 0 0 0 5-5c0-2-1-3.5-2-5"/></symbol>
+    <symbol id="i-award" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+  </defs>
+</svg>
+
+<div class="topbar">
+  <div class="wrap row">
+    <div><span class="brand">TouraCore</span><span class="brand-sub">Distribuzione ufficiale</span></div>
+    <div class="r">
+      <span class="pill curr">EUR · €</span>
+      <span class="pill langs"><b>IT</b> · EN · DE · FR</span>
+      <span class="pill">Accedi</span>
+    </div>
+  </div>
+</div>
+
+<div class="subnav">
+  <div class="wrap row">
+    <a href="#overview" class="active">Panoramica</a>
+    <a href="#info">Informazioni</a>
+    <a href="#amenities">Servizi</a>
+    <a href="#rooms">Camere</a>
+    <a href="#reviews">Recensioni (147)</a>
+    <a href="#location">Posizione</a>
+    <a href="#policies">Regolamento</a>
+    <a href="#faq">FAQ</a>
+    <div class="bk"><a href="#book" class="cta">Prenota ora</a></div>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <nav class="crumb">
+    <a href="#">Home</a> <span>›</span>
+    <a href="#">Lombardia</a> <span>›</span>
+    <a href="#">Lago di Como</a> <span>›</span>
+    <a href="#">Bellagio</a> <span>›</span>
+    Villa Irabo — Suite Vista Lago
+  </nav>
+
+  <section class="title-row" id="overview">
+    <div>
+      <div class="chain">
+        <span class="stars">★★★★★</span> Villa · 4 stelle
+        <span class="verif">✓ Verificato</span>
+      </div>
+      <h1>Villa Irabo — Suite Vista Lago</h1>
+      <div class="addr">
+        <svg width="14" height="14"><use href="#i-loc"/></svg>
+        <a href="#location">Via del Lago 14, 22021 Bellagio, Como</a>
+        <span class="dot">·</span>
+        <a href="#location">Mostra sulla mappa</a>
+        <span class="dot">·</span>
+        <span>80m dal centro</span>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn-ic" title="Salva"><svg><use href="#i-heart"/></svg></button>
+      <button class="btn-ic" title="Condividi"><svg><use href="#i-share"/></svg></button>
+    </div>
+  </section>
+
+  <!-- HERO GALLERY -->
+  <section class="gal">
+    <div class="big"><span class="tag">1 / 24 · facciata &amp; lago</span></div>
+    <div><span class="tag">2 · salone principale</span></div>
+    <div><span class="tag">3 · suite master</span></div>
+    <div><span class="tag">4 · piscina infinity</span></div>
+    <div class="video-slot"><span class="tag">video tour · 1'32"</span></div>
+    <button class="gal-more"><svg><use href="#i-img"/></svg>Vedi tutte le 24 foto</button>
+  </section>
+
+  <div class="main">
+    <div>
+
+      <!-- HIGHLIGHTS strip -->
+      <div class="highlights">
+        <div class="h">
+          <span class="ic"><svg><use href="#i-view"/></svg></span>
+          <div><div class="t">Vista lago spettacolare</div><div class="s">Terrazza fronte acqua</div></div>
+        </div>
+        <div class="h">
+          <span class="ic"><svg><use href="#i-pool"/></svg></span>
+          <div><div class="t">Piscina infinity 14m</div><div class="s">Riscaldata apr–ott</div></div>
+        </div>
+        <div class="h">
+          <span class="ic"><svg><use href="#i-award"/></svg></span>
+          <div><div class="t">Superhost</div><div class="s">12 trimestri · 4.94/5</div></div>
+        </div>
+        <div class="h">
+          <span class="ic"><svg><use href="#i-check"/></svg></span>
+          <div><div class="t">Cancellazione gratuita</div><div class="s">fino a 14 giorni prima</div></div>
+        </div>
+      </div>
+
+      <!-- INFO / DESCRIZIONE -->
+      <section class="card" id="info">
+        <h2>Informazioni sulla struttura</h2>
+        <p class="lede">Villa privata del 1890 restaurata nel 2023, affacciata direttamente sul Lago di Como a Bellagio. La residenza si estende su 180 m² con tre camere da letto, due bagni in marmo Calacatta, piscina a sfioro riscaldata, pontile privato e servizio concierge dedicato 7/7.</p>
+        <p class="lede">La villa si trova a 80 metri dall'imbarcadero dei battelli, a 6 minuti a piedi dal centro storico di Bellagio. Ideale per famiglie, coppie e piccoli gruppi fino a 6 ospiti.</p>
+
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px">
+          <div style="padding:12px;border:1px solid var(--line);border-radius:6px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:.04em">Superficie</div><div style="font-weight:700;margin-top:2px;font-size:16px">180 m²</div></div>
+          <div style="padding:12px;border:1px solid var(--line);border-radius:6px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:.04em">Camere</div><div style="font-weight:700;margin-top:2px;font-size:16px">3 doppie</div></div>
+          <div style="padding:12px;border:1px solid var(--line);border-radius:6px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:.04em">Bagni</div><div style="font-weight:700;margin-top:2px;font-size:16px">2 privati</div></div>
+          <div style="padding:12px;border:1px solid var(--line);border-radius:6px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:.04em">Ospiti max</div><div style="font-weight:700;margin-top:2px;font-size:16px">6 persone</div></div>
+        </div>
+      </section>
+
+      <!-- AMENITIES icon grid -->
+      <section class="card" id="amenities">
+        <h2>Servizi più richiesti</h2>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:16px">32 servizi disponibili · 28 inclusi gratuitamente</p>
+        <div class="amen-grid">
+          <div class="amen"><svg><use href="#i-wifi"/></svg> Wi-Fi fibra 1 Gbps <small>gratuito</small></div>
+          <div class="amen"><svg><use href="#i-pool"/></svg> Piscina infinity 14m <small>riscaldata apr–ott</small></div>
+          <div class="amen"><svg><use href="#i-parking"/></svg> Parcheggio privato <small>gratuito · 3 posti</small></div>
+          <div class="amen"><svg><use href="#i-ac"/></svg> Aria condizionata <small>in tutte le stanze</small></div>
+          <div class="amen"><svg><use href="#i-kitchen"/></svg> Cucina Gaggenau <small>completa</small></div>
+          <div class="amen"><svg><use href="#i-breakfast"/></svg> Colazione inclusa <small>continentale &amp; à la carte</small></div>
+          <div class="amen"><svg><use href="#i-view"/></svg> Vista lago <small>da tutte le stanze</small></div>
+          <div class="amen"><svg><use href="#i-balcony"/></svg> Terrazza privata <small>45 m²</small></div>
+          <div class="amen"><svg><use href="#i-tv"/></svg> Smart TV 65" <small>Netflix, Spotify</small></div>
+          <div class="amen"><svg><use href="#i-iron"/></svg> Lavanderia completa <small>lavatrice, asciugatrice</small></div>
+          <div class="amen paid"><svg><use href="#i-fire"/></svg> Chef privato <small>a pagamento · €180/cena</small></div>
+          <div class="amen paid"><svg><use href="#i-pets"/></svg> Animali ammessi <small>su richiesta</small></div>
+        </div>
+        <button class="amen-more">Mostra tutti i 32 servizi</button>
+      </section>
+
+      <!-- ROOMS -->
+      <section class="card" id="rooms">
+        <h2>Camere disponibili</h2>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:16px">Scegli la sistemazione per il tuo soggiorno</p>
+        <div class="room-table">
+          <div class="room-row">
+            <div>
+              <div class="rn">Suite Master Vista Lago <small>2 ospiti · 45 m² · letto king size</small></div>
+              <div class="rg" style="margin-top:8px">
+                <span class="amen" style="font-size:12px"><svg><use href="#i-view"/></svg> Vista lago</span>
+                <span style="color:var(--line-2);margin:0 8px">·</span>
+                <span class="amen" style="font-size:12px"><svg><use href="#i-balcony"/></svg> Balcone</span>
+              </div>
+            </div>
+            <div class="rg"><svg width="16" height="16"><use href="#i-users"/></svg> 2 adulti</div>
+            <div class="rp"><b>€380</b><small>/ notte · tasse incl.</small></div>
+          </div>
+          <div class="room-row">
+            <div>
+              <div class="rn">Camera Deluxe Lago <small>2 ospiti · 28 m² · 2 letti singoli</small></div>
+              <div class="rg" style="margin-top:8px">
+                <span class="amen" style="font-size:12px"><svg><use href="#i-view"/></svg> Vista lago</span>
+              </div>
+            </div>
+            <div class="rg"><svg width="16" height="16"><use href="#i-users"/></svg> 2 adulti</div>
+            <div class="rp"><b>€280</b><small>/ notte · tasse incl.</small></div>
+          </div>
+          <div class="room-row">
+            <div>
+              <div class="rn">Camera Giardino <small>2 ospiti · 24 m² · letto matrimoniale</small></div>
+              <div class="rg" style="margin-top:8px">
+                <span class="amen" style="font-size:12px"><svg><use href="#i-view"/></svg> Vista giardino</span>
+              </div>
+            </div>
+            <div class="rg"><svg width="16" height="16"><use href="#i-users"/></svg> 2 adulti</div>
+            <div class="rp"><b>€220</b><small>/ notte · tasse incl.</small></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- REVIEWS -->
+      <section class="card" id="reviews">
+        <h2>Recensioni ospiti</h2>
+        <div class="score-head">
+          <div class="score-badge">9.4<small>/10</small></div>
+          <div class="score-label">Eccellente<small>147 recensioni verificate · ultima 3 giorni fa</small></div>
+        </div>
+        <div class="score-bars">
+          <div class="bar"><span>Pulizia</span><span class="b"><i style="width:96%"></i></span><span class="v">9.6</span></div>
+          <div class="bar"><span>Comfort</span><span class="b"><i style="width:94%"></i></span><span class="v">9.4</span></div>
+          <div class="bar"><span>Staff</span><span class="b"><i style="width:98%"></i></span><span class="v">9.8</span></div>
+          <div class="bar"><span>Posizione</span><span class="b"><i style="width:97%"></i></span><span class="v">9.7</span></div>
+          <div class="bar"><span>Wi-Fi gratis</span><span class="b"><i style="width:95%"></i></span><span class="v">9.5</span></div>
+          <div class="bar"><span>Rapporto qualità/prezzo</span><span class="b"><i style="width:88%"></i></span><span class="v">8.8</span></div>
+        </div>
+
+        <div class="rev-grid">
+          <div class="rev">
+            <div class="u"><div class="av">M</div><div class="n">Matteo &amp; Irene<small>🇮🇹 Italia · famiglia · 3 notti</small></div><div class="sc">10</div></div>
+            <p class="q">"Un silenzio che non avevamo mai ascoltato. La colazione sulla terrazza, con le barche che passavano lente, resterà un ricordo preciso. Claudia ha curato ogni dettaglio."</p>
+            <div class="tags"><span>Pulizia 10</span><span>Posizione 10</span><span>Staff 10</span></div>
+          </div>
+          <div class="rev">
+            <div class="u"><div class="av">H</div><div class="n">Helena K.<small>🇩🇪 Germania · coppia · 4 notti</small></div><div class="sc">9.8</div></div>
+            <p class="q">"La villa è esattamente come nelle fotografie, forse più bella. Il pontile privato e la piscina al tramonto sono il punto forte. Torneremo."</p>
+            <div class="tags"><span>Comfort 10</span><span>Wi-Fi 10</span></div>
+          </div>
+          <div class="rev">
+            <div class="u"><div class="av">J</div><div class="n">Jean &amp; Clara<small>🇫🇷 Francia · coppia · 5 notti</small></div><div class="sc">9.6</div></div>
+            <p class="q">"Prenotato per tre notti, siamo rimasti cinque. È un posto che ti rallenta — nel senso migliore della parola. Il concierge suggerisce tutto il meglio di Bellagio."</p>
+          </div>
+          <div class="rev">
+            <div class="u"><div class="av">R</div><div class="n">Robert T.<small>🇺🇸 USA · famiglia · 7 notti</small></div><div class="sc">9.2</div></div>
+            <p class="q">"Amazing villa. Kids loved the pool. Only minor complaint: driveway is narrow for large cars. Everything else perfect."</p>
+          </div>
+        </div>
+        <a href="#" style="display:inline-block;margin-top:16px;font-weight:600">Mostra tutte le 147 recensioni →</a>
+      </section>
+
+      <!-- LOCATION -->
+      <section class="card" id="location">
+        <h2>Posizione</h2>
+        <div class="score-head" style="margin-bottom:12px">
+          <div class="score-badge">9.7</div>
+          <div class="score-label">Posizione eccellente<small>147 ospiti hanno valutato la posizione</small></div>
+        </div>
+        <div class="map-slot">
+          <div class="pin">1</div>
+          <div class="map-lbl"><svg width="14" height="14"><use href="#i-loc"/></svg> Bellagio 22021 · Lago di Como</div>
+        </div>
+
+        <h3 style="margin:18px 0 10px;font-size:15px">Cosa c'è nei dintorni</h3>
+        <div class="landmarks">
+          <div class="lm"><span class="a"><svg><use href="#i-loc"/></svg> Imbarcadero Bellagio</span><span class="d">80 m</span></div>
+          <div class="lm"><span class="a"><svg><use href="#i-loc"/></svg> Centro storico di Bellagio</span><span class="d">400 m · 6 min a piedi</span></div>
+          <div class="lm"><span class="a"><svg><use href="#i-loc"/></svg> Villa Melzi (Giardini)</span><span class="d">650 m · 9 min</span></div>
+          <div class="lm"><span class="a"><svg><use href="#i-loc"/></svg> Punta Spartivento</span><span class="d">1,1 km · 15 min</span></div>
+          <div class="lm"><span class="a"><svg><use href="#i-loc"/></svg> Villa del Balbianello</span><span class="d">18 km · battello</span></div>
+          <div class="lm"><span class="a"><svg><use href="#i-loc"/></svg> Como città</span><span class="d">30 km · 40 min auto</span></div>
+        </div>
+
+        <h3 style="margin:18px 0 10px;font-size:15px">Aeroporti più vicini</h3>
+        <div class="landmarks">
+          <div class="lm"><span class="a"><svg><use href="#i-loc"/></svg> Milano Malpensa (MXP)</span><span class="d">88 km · 1h 30</span></div>
+          <div class="lm"><span class="a"><svg><use href="#i-loc"/></svg> Milano Linate (LIN)</span><span class="d">76 km · 1h 10</span></div>
+          <div class="lm"><span class="a"><svg><use href="#i-loc"/></svg> Bergamo Orio al Serio (BGY)</span><span class="d">82 km · 1h 20</span></div>
+          <div class="lm"><span class="a"><svg><use href="#i-loc"/></svg> Lugano-Agno (LUG)</span><span class="d">62 km · 1h · Svizzera</span></div>
+        </div>
+      </section>
+
+      <!-- POLICIES -->
+      <section class="card" id="policies">
+        <h2>Regolamento struttura</h2>
+        <div class="pol-grid">
+          <div class="pol">
+            <div class="i"><svg><use href="#i-clock"/></svg><b>Check-in</b></div>
+            <p>Dalle 15:00 alle 21:00 · anticipato disponibile su richiesta · accoglienza di persona</p>
+          </div>
+          <div class="pol">
+            <div class="i"><svg><use href="#i-clock"/></svg><b>Check-out</b></div>
+            <p>Entro le 11:00 · late check-out gratuito su disponibilità fino alle 14:00</p>
+          </div>
+          <div class="pol">
+            <div class="i"><svg><use href="#i-cal"/></svg><b>Cancellazione</b></div>
+            <p>Gratuita fino a 14 giorni prima · dopo 50% · rimborso integrale per forza maggiore</p>
+          </div>
+          <div class="pol">
+            <div class="i"><svg><use href="#i-creditcard"/></svg><b>Pagamento</b></div>
+            <p>Carte Visa, MasterCard, Amex · caparra 30% alla prenotazione, saldo al check-in</p>
+          </div>
+          <div class="pol">
+            <div class="i"><svg><use href="#i-pets"/></svg><b>Animali</b></div>
+            <p>Ammessi taglia piccola e media · senza costi aggiuntivi · segnalare in prenotazione</p>
+          </div>
+          <div class="pol">
+            <div class="i"><svg><use href="#i-smoke"/></svg><b>Vietato fumare</b></div>
+            <p>Interni non fumatori · consentito in terrazza esterna · sanzione €200 se violato</p>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding:12px 16px;background:#fff3cd;border:1px solid #ffeeba;border-radius:6px;font-size:13px;color:#664d03;display:flex;gap:10px;align-items:center">
+          <svg width="16" height="16"><use href="#i-info"/></svg>
+          <span>Tassa di soggiorno <b>€3,50</b> per persona a notte, da pagare all'arrivo. Codice CIN <b>IT-013011-12345-XQ</b> verificato Regione Lombardia.</span>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section class="card" id="faq">
+        <h2>Domande frequenti</h2>
+        <details open>
+          <summary>Qual è il soggiorno minimo?</summary>
+          <p>2 notti in bassa stagione, 3 notti in alta stagione (giugno–settembre), 5 notti nelle settimane di Ferragosto e Capodanno.</p>
+        </details>
+        <details>
+          <summary>La colazione è inclusa?</summary>
+          <p>Sì, colazione continentale inclusa nel prezzo. Possibilità di richiedere menu à la carte con supplemento €15/persona. Allergie e intolleranze segnalabili in prenotazione.</p>
+        </details>
+        <details>
+          <summary>È possibile organizzare trasferimenti dall'aeroporto?</summary>
+          <p>Sì, su richiesta organizziamo transfer privati da Milano Malpensa, Linate e Bergamo. Prezzi da €120 a €180 a tratta per veicolo Mercedes Classe V (fino a 7 passeggeri).</p>
+        </details>
+        <details>
+          <summary>Il pontile privato è utilizzabile dagli ospiti?</summary>
+          <p>Sì, il pontile è a uso esclusivo della villa. Possibilità di ormeggio per imbarcazioni fino a 8 metri. Noleggio tender con skipper su richiesta (€280/mezza giornata).</p>
+        </details>
+        <details>
+          <summary>Ci sono supermercati o ristoranti nelle vicinanze?</summary>
+          <p>Sì, a 400 metri (centro storico Bellagio) trovate supermercato Carrefour Express, forno Garzoni, oltre 15 ristoranti di vario livello e bar. Su richiesta forniamo una guida stampata con i nostri consigliati.</p>
+        </details>
+      </section>
+
+    </div>
+
+    <!-- SIDEBAR BOOKING -->
+    <aside id="book">
+      <div class="book">
+        <div class="head">
+          <div>
+            <b>Eccellente</b><br>
+            <small style="color:var(--muted);font-size:12px">147 recensioni</small>
+          </div>
+          <div class="sc">9.4</div>
+        </div>
+        <div class="body">
+          <div class="prc">
+            <span class="prc-was">€450</span>
+            <span class="prc-now">€380</span>
+            <span class="prc-per">/ notte</span>
+          </div>
+          <div class="tax">+ €90 tasse &amp; servizi</div>
+          <span class="disc">−16% sconto 4+ notti</span>
+
+          <div class="fields">
+            <div class="f">
+              <svg><use href="#i-cal"/></svg>
+              <div>
+                <div class="lbl">Check-in</div>
+                <div class="val">Ven 18 apr 2026</div>
+              </div>
+            </div>
+            <div class="f">
+              <svg><use href="#i-cal"/></svg>
+              <div>
+                <div class="lbl">Check-out</div>
+                <div class="val">Mar 22 apr 2026</div>
+              </div>
+            </div>
+            <div class="f">
+              <svg><use href="#i-users"/></svg>
+              <div>
+                <div class="lbl">Ospiti</div>
+                <div class="val">2 adulti · 0 bambini</div>
+              </div>
+            </div>
+          </div>
+
+          <a class="cta" href="#book-multi">Controlla disponibilità</a>
+          <a class="cta ghost" href="#">Contatta host</a>
+
+          <div class="break">
+            <div><span>€380 × 4 notti</span><span>€1.520</span></div>
+            <div><span>Sconto 4+ notti</span><span style="color:var(--good)">−€140</span></div>
+            <div><span>Pulizia finale</span><span>€90</span></div>
+            <div><span>Tassa soggiorno</span><span>€28</span></div>
+            <div class="tot"><span>Totale</span><span>€1.498</span></div>
+          </div>
+        </div>
+
+        <div class="urgency">
+          <svg><use href="#i-fire"/></svg>
+          Richiesto 8 volte nelle ultime 24h
+        </div>
+
+        <div class="trust">
+          <div><svg><use href="#i-check"/></svg>Cancellazione gratuita fino al 04 aprile</div>
+          <div><svg><use href="#i-check"/></svg>Niente anticipo · pagamento al check-in</div>
+          <div><svg><use href="#i-check"/></svg>Identità host verificata TouraCore</div>
+          <div><svg><use href="#i-check"/></svg>CIN IT-013011-12345-XQ</div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<div class="mcta">
+  <div class="p">€380 <small>/ notte · 4 notti · totale €1.498</small></div>
+  <a class="cta" href="#book-multi">Prenota</a>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="fg">
+      <div>
+        <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:8px">Villa Irabo</div>
+        <p>Via del Lago 14, 22021 Bellagio (CO)<br>P.IVA 03214560138 · CIN IT-013011-12345-XQ</p>
+      </div>
+      <div><h4>Struttura</h4><ul><li><a href="#">Camere</a></li><li><a href="#">Servizi</a></li><li><a href="#">Esperienze</a></li><li><a href="#">Gallery</a></li></ul></div>
+      <div><h4>Info</h4><ul><li><a href="#">Come arrivare</a></li><li><a href="#">Policy</a></li><li><a href="#">Contatti</a></li><li><a href="#">FAQ</a></li></ul></div>
+      <div><h4>Distribuito con</h4><ul><li><a href="#">TouraCore</a></li><li><a href="#">Partner portale</a></li><li><a href="#">Newsletter</a></li></ul></div>
+    </div>
+    <div class="bot">
+      <div>© 2026 Villa Irabo. All rights reserved.</div>
+      <div>Distribuito con <b style="color:#fff">TouraCore</b> · Listing ID #VI-001</div>
+    </div>
+  </div>
+</footer>
+
+</body></html>

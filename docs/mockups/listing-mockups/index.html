@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TouraCore · Listing Mockups · Preview Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+<style>
+  :root{
+    --bg:#f5f7fa;
+    --card:#fff;
+    --ink:#0b1220;
+    --ink-2:#1f2937;
+    --muted:#6b7280;
+    --line:#e5e7eb;
+    --brand:#003b95;
+    --chip:#f3f4f6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:"Inter",-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;font-size:14px}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1280px;margin:0 auto;padding:0 24px}
+  @media(max-width:720px){.wrap{padding:0 16px}}
+
+  .topbar{background:var(--brand);color:#fff;padding:10px 0;font-size:13px}
+  .topbar .row{display:flex;justify-content:space-between;align-items:center}
+  .topbar .brand{font-weight:700;font-size:20px}
+  .topbar .r{display:flex;gap:14px;align-items:center}
+
+  header{padding:40px 0 30px;background:#fff;border-bottom:1px solid var(--line)}
+  header .eyebrow{font-size:11px;color:var(--brand);font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+  header h1{font-size:36px;font-weight:800;letter-spacing:-0.02em;margin:12px 0 6px;line-height:1.1}
+  header p{color:var(--muted);font-size:15px;max-width:65ch;line-height:1.5}
+  header .meta{display:flex;gap:18px;margin-top:18px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+  header .meta b{color:var(--ink);font-weight:700;margin-right:4px}
+
+  .stats{background:#fff;border-bottom:1px solid var(--line);padding:20px 0}
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  .stat .n{font-size:26px;font-weight:700;color:var(--brand)}
+  .stat .l{color:var(--muted);font-size:13px;margin-top:2px}
+  @media(max-width:720px){.stats-grid{grid-template-columns:1fr 1fr}}
+
+  main{padding:28px 0 40px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:1000px){.grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:620px){.grid{grid-template-columns:1fr}}
+
+  .card{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;transition:transform .2s,box-shadow .2s}
+  .card:hover{transform:translateY(-3px);box-shadow:0 14px 30px -14px rgba(0,0,0,.2)}
+
+  .card .banner{aspect-ratio:16/9;position:relative;overflow:hidden}
+  .card .banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.55) 100%)}
+  .card.acc .banner{background:linear-gradient(135deg,#4b6a8f,#003b95)}
+  .card.rst .banner{background:linear-gradient(135deg,#7a1f2b,#3d1518)}
+  .card.act .banner{background:linear-gradient(180deg,#2d5a3d,#e29f3a)}
+  .card.bik .banner{background:linear-gradient(135deg,#0ea5e9,#0369a1 50%,#1f1611)}
+  .card.wel .banner{background:linear-gradient(160deg,#14b8a6,#405343)}
+  .card .banner::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(255,255,255,.04) 0 14px,transparent 14px 28px);z-index:1}
+
+  .card .top{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;z-index:2}
+  .card .kind{background:rgba(255,255,255,.95);color:var(--ink);font-size:10px;font-weight:700;padding:4px 8px;border-radius:3px;text-transform:uppercase;letter-spacing:.04em}
+  .card .sc{background:#003b95;color:#fff;font-weight:700;font-size:12px;padding:4px 8px;border-radius:4px 4px 4px 0}
+  .card.rst .sc{background:#da3743}
+  .card.act .sc{background:#ff5533}
+  .card.bik .sc{background:#0ea5e9}
+  .card.wel .sc{background:#14b8a6}
+  .card .t-content{position:absolute;bottom:12px;left:14px;right:14px;color:#fff;z-index:2}
+  .card .t-content h2{font-size:18px;font-weight:700;letter-spacing:-0.01em}
+  .card .t-content .addr{font-size:12px;opacity:.9;margin-top:2px}
+
+  .card .body{padding:16px;display:flex;flex-direction:column;gap:10px;flex:1}
+  .card .chips{display:flex;gap:4px;flex-wrap:wrap}
+  .card .chip{font-size:10px;font-weight:600;background:var(--chip);padding:3px 8px;border-radius:10px;color:var(--ink-2);text-transform:uppercase;letter-spacing:.02em}
+  .card .chip.hi{background:#fff3cd;color:#664d03}
+  .card p{font-size:13px;color:var(--ink-2);line-height:1.5;flex:1}
+  .card p b{color:var(--ink);font-weight:600}
+
+  .card .foot{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-top:1px solid var(--line);background:var(--bg)}
+  .card .prc{font-weight:700;font-size:17px}
+  .card .prc small{font-size:11px;color:var(--muted);font-weight:500;margin-left:2px}
+  .card .open{font-size:12px;font-weight:700;color:var(--brand);display:flex;align-items:center;gap:6px}
+  .card.rst .open{color:#da3743}
+  .card.act .open{color:#ff5533}
+  .card.bik .open{color:#0369a1}
+  .card.wel .open{color:#0f766e}
+  .card .open::after{content:"→";transition:transform .2s}
+  .card:hover .open::after{transform:translateX(3px)}
+
+  /* notes */
+  .notes{background:#fff;border-top:1px solid var(--line);padding:40px 0}
+  .notes h3{font-size:22px;font-weight:700;margin-bottom:18px}
+  .nt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .nt{padding:18px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+  .nt .l{font-size:10px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:.06em}
+  .nt h4{font-size:16px;margin:6px 0 10px;font-weight:700}
+  .nt ul{list-style:none;font-size:13px;color:var(--ink-2);line-height:1.7}
+  .nt ul li{padding-left:18px;position:relative}
+  .nt ul li::before{content:"✓";position:absolute;left:0;color:#008009;font-weight:700}
+  @media(max-width:900px){.nt-grid{grid-template-columns:1fr}}
+
+  footer{background:#1a1a1a;color:#888;padding:24px 0;font-size:12px;display:flex}
+  footer .row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;width:100%}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap row">
+    <div class="brand">TouraCore</div>
+    <div class="r">
+      <span style="font-size:12px;opacity:.8">Listing Mockups · Preview Environment</span>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow">Distribution system · v0.2</div>
+    <h1>Listing pubblici multi-vertical</h1>
+    <p>Schede pubbliche stile Booking/Airbnb/GetYourGuide, generate da CMS e distribuite su portale aggregatore, embed iframe per siti custom e PDF brochure. Design tecnico denso con icone servizi, score numerici, rating bars, sticky booking card e breadcrumb.</p>
+    <div class="meta">
+      <span><b>Stack</b> Next.js 16 · RSC · ISR 60s</span>
+      <span><b>Font</b> Inter (system-grade)</span>
+      <span><b>Dati demo</b> Villa Irabo · Bellagio</span>
+      <span><b>Versione</b> 2026-04-18 · commit e9229aa</span>
+    </div>
+  </div>
+</header>
+
+<section class="stats">
+  <div class="wrap">
+    <div class="stats-grid">
+      <div class="stat"><div class="n">5</div><div class="l">Template verticali</div></div>
+      <div class="stat"><div class="n">4</div><div class="l">Canali distribuzione</div></div>
+      <div class="stat"><div class="n">4</div><div class="l">Lingue (IT · EN · DE · FR)</div></div>
+      <div class="stat"><div class="n">100%</div><div class="l">SEO-ready · Schema.org</div></div>
+    </div>
+  </div>
+</section>
+
+<main class="wrap">
+  <div class="grid">
+
+    <a class="card acc" href="listing-accommodation.html">
+      <div class="banner">
+        <div class="top"><span class="kind">Accommodation</span><span class="sc">9.4</span></div>
+        <div class="t-content">
+          <h2>Villa Irabo — Suite Vista Lago</h2>
+          <div class="addr">Bellagio · Lago di Como</div>
+        </div>
+      </div>
+      <div class="body">
+        <div class="chips"><span class="chip hi">Superhost</span><span class="chip">Vista lago</span><span class="chip">Piscina</span></div>
+        <p><b>Booking-style.</b> Highlights strip con icone servizi, room types table con prezzi per notte, score breakdown 6 categorie (pulizia/comfort/staff/posizione), mappa con pin numerati + landmarks distanze, policies grid, FAQ collassabili, sticky booking card con breakdown prezzo totale.</p>
+      </div>
+      <div class="foot">
+        <div class="prc">€380<small>/ notte</small></div>
+        <div class="open">Apri scheda</div>
+      </div>
+    </a>
+
+    <a class="card rst" href="listing-restaurant.html">
+      <div class="banner">
+        <div class="top"><span class="kind">Restaurant</span><span class="sc">9.2</span></div>
+        <div class="t-content">
+          <h2>Trattoria del Borgo</h2>
+          <div class="addr">Bellagio · 20 coperti · ★ Espresso</div>
+        </div>
+      </div>
+      <div class="body">
+        <div class="chips"><span class="chip hi">★ Espresso 2026</span><span class="chip">Slow Food</span><span class="chip">€€€</span></div>
+        <p><b>OpenTable-style.</b> Quick info bar con 5 icone, menu a tab (antipasti/primi/secondi/dolci/cantina), piatti con foto thumbnail + badge (veg/GF/firma) + allergeni, form prenotazione tavolo con chip orari e preferenze (dehors/cucina), settimana orari con giorno corrente evidenziato.</p>
+      </div>
+      <div class="foot">
+        <div class="prc">€45<small>/ ticket medio</small></div>
+        <div class="open">Apri scheda</div>
+      </div>
+    </a>
+
+    <a class="card act" href="listing-activity.html">
+      <div class="banner">
+        <div class="top"><span class="kind">Activity</span><span class="sc">9.6</span></div>
+        <div class="t-content">
+          <h2>Kayak al tramonto</h2>
+          <div class="addr">Bellagio · 3h · max 8 pax</div>
+        </div>
+      </div>
+      <div class="body">
+        <div class="chips"><span class="chip hi">Best seller</span><span class="chip">3 posti ven</span><span class="chip">Mobile voucher</span></div>
+        <p><b>GetYourGuide-style.</b> Chip live "3 posti · venerdì", incluso/escluso a 2 colonne, timeline itinerario 5 step con pallini progressivi, kit checklist obbligatori/opzionali, card guida con punteggio dedicato 9.8, sidebar con date-list + ++/−− pax counter.</p>
+      </div>
+      <div class="foot">
+        <div class="prc">€65<small>/ pers</small></div>
+        <div class="open">Apri scheda</div>
+      </div>
+    </a>
+
+    <a class="card bik" href="listing-bike.html">
+      <div class="banner">
+        <div class="top"><span class="kind">Bike Rental</span><span class="sc">9.5</span></div>
+        <div class="t-content">
+          <h2>E-bike Trek Allant+ 7S</h2>
+          <div class="addr">Bellagio · Greenway 45km</div>
+        </div>
+      </div>
+      <div class="body">
+        <div class="chips"><span class="chip hi">Trek ufficiale</span><span class="chip">Bosch CX</span><span class="chip">Battello incl.</span></div>
+        <p><b>Tech-specs dense.</b> Quick info con motore/batteria/km, spec table completa (trasmissione/freni/display/forcella), 8 add-on con icone + toggle selezionato, 3 itinerari cards con GPX download, pickup box orari/indirizzo/caparra, safety grid 4 icone.</p>
+      </div>
+      <div class="foot">
+        <div class="prc">€55<small>/ giorno</small></div>
+        <div class="open">Apri scheda</div>
+      </div>
+    </a>
+
+    <a class="card wel" href="listing-wellness.html">
+      <div class="banner">
+        <div class="top"><span class="kind">Spa · Wellness</span><span class="sc">9.6</span></div>
+        <div class="t-content">
+          <h2>Spa Thermae</h2>
+          <div class="addr">Villa Irabo · 450 m²</div>
+        </div>
+      </div>
+      <div class="body">
+        <div class="chips"><span class="chip hi">Top rated 2026</span><span class="chip">Aut. ATS</span><span class="chip">Gift card</span></div>
+        <p><b>Spa tech-style.</b> Facilities grid 6 ambienti con icone (hammam/sauna/piscina), listino trattamenti 7 servizi con badge Firma/Novità + bottone prenota inline, 3 pacchetti con "Più prenotato", team 3 terapisti con lingue, policy regolamento 4 blocchi.</p>
+      </div>
+      <div class="foot">
+        <div class="prc">€95<small>/ massaggio 60'</small></div>
+        <div class="open">Apri scheda</div>
+      </div>
+    </a>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap row">
+    <div>© 2026 TouraCore · Listing Mockups v0.2</div>
+    <div>Commit baseline · e9229aa · 2026-04-18</div>
+  </div>
+</footer>
+
+</body></html>
