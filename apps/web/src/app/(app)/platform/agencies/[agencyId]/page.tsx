@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { SuspendButton, ReactivateButton } from './actions-buttons'
+import { AgencyBillingPanel, type AgencyPlatformBillingRecord } from './agency-billing-panel'
 
 interface Props {
   params: Promise<{ agencyId: string }>
@@ -20,10 +21,11 @@ export default async function PlatformAgencyDetailPage({ params }: Props) {
     .maybeSingle()
   if (!agency) notFound()
 
-  const [{ data: memberships }, { data: tenantLinks }, { data: audit }] = await Promise.all([
+  const [{ data: memberships }, { data: tenantLinks }, { data: audit }, { data: platformBilling }] = await Promise.all([
     supabase.from('agency_memberships').select('id, user_id, role, is_active, created_at').eq('agency_id', agencyId),
     supabase.from('agency_tenant_links').select('id, tenant_id, status, billing_mode').eq('agency_id', agencyId),
     supabase.from('agency_audit_logs').select('id, action, actor_email, status, created_at').eq('agency_id', agencyId).order('created_at', { ascending: false }).limit(20),
+    supabase.from('agency_platform_billing').select('billing_model, fee_monthly_eur, commission_pct, commission_base, commission_cap_monthly_eur, commission_min_monthly_eur, commission_threshold_eur, notes, valid_from, valid_until').eq('agency_id', agencyId).maybeSingle(),
   ])
 
   return (
@@ -40,9 +42,6 @@ export default async function PlatformAgencyDetailPage({ params }: Props) {
           </p>
         </div>
         <div className="flex gap-2">
-          <Link href={`/a/${agency.slug}`} className="rounded border border-slate-300 px-3 py-2 text-sm">
-            Impersonate (vai a /a/{agency.slug})
-          </Link>
           {agency.is_active ? (
             <SuspendButton agencyId={agency.id} />
           ) : (
@@ -56,6 +55,11 @@ export default async function PlatformAgencyDetailPage({ params }: Props) {
         <Card title="Tenant links" value={tenantLinks?.filter((l) => l.status === 'active').length ?? 0} />
         <Card title="Max tenants" value={agency.max_tenants ?? '∞'} />
       </section>
+
+      <AgencyBillingPanel
+        agencyId={agency.id}
+        billing={platformBilling as AgencyPlatformBillingRecord | null}
+      />
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Audit log (20 recenti)</h2>
