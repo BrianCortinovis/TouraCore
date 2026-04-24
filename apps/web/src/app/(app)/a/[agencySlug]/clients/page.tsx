@@ -25,9 +25,9 @@ export default async function ClientsPage({ params }: ClientsPageProps) {
 
   const { data: links } = await supabase
     .from('agency_tenant_links')
-    .select('id, tenant_id, status, billing_mode, default_management_mode, created_at')
+    .select('id, tenant_id, status, billing_mode, default_management_mode, invited_at')
     .eq('agency_id', agency.id)
-    .order('created_at', { ascending: false })
+    .order('invited_at', { ascending: false })
 
   const tenantIds = (links ?? []).map((l) => l.tenant_id as string)
   const { data: tenants } = tenantIds.length > 0
