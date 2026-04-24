@@ -1,5 +1,5 @@
 import { redirect, notFound } from 'next/navigation'
-import { createServerSupabaseClient, createServiceRoleClient } from '@touracore/db/server'
+import { createServerSupabaseClient } from '@touracore/db/server'
 import { getAuthBootstrapData } from '@touracore/auth/bootstrap'
 
 interface TenantLayoutProps {
@@ -15,16 +15,8 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
     redirect('/login')
   }
 
-  // Superadmin non accede al CMS dei tenant — usa /platform/clients per gestione
-  const adminClient = await createServiceRoleClient()
-  const { data: platformAdmin } = await adminClient
-    .from('platform_admins')
-    .select('id')
-    .eq('user_id', bootstrap.user.id)
-    .maybeSingle()
-  if (platformAdmin) {
-    redirect('/platform/clients')
-  }
+  // Superadmin block is handled at middleware level (migration 00140 + middleware.ts).
+  // No DB query needed here.
 
   // Risolvi tenantSlug → tenant
   const supabase = await createServerSupabaseClient()

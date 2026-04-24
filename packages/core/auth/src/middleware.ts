@@ -75,6 +75,53 @@ function isAuthRoute(pathname: string): boolean {
 }
 
 
+// Prefixes that are NOT tenant CMS routes (platform routes, agency routes, auth, public)
+const NON_TENANT_PREFIXES = [
+  '/platform',
+  '/a/',
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/reset-password',
+  '/superadmin-login',
+  '/api/',
+  '/_next/',
+  '/book',
+  '/book-table',
+  '/embed',
+  '/embed-table',
+  '/allergens',
+  '/checkin',
+  '/checkout',
+  '/portal',
+  '/portali',
+  '/property',
+  '/s/',
+  '/u/',
+  '/r/',
+  '/discover',
+  '/credits',
+  '/gift-card',
+  '/sitemap',
+  '/robots',
+  '/legal',
+  '/widget',
+  '/partner',
+  '/unsubscribe',
+  '/preferences',
+  '/auth/',
+  '/account',
+]
+
+function isTenantCmsRoute(pathname: string): boolean {
+  if (pathname === '/') return false
+  for (const prefix of NON_TENANT_PREFIXES) {
+    if (pathname === prefix || pathname.startsWith(prefix)) return false
+  }
+  // Must start with a slug segment (letter/digit, not underscore/dash-only)
+  return /^\/[a-zA-Z0-9][a-zA-Z0-9_-]*\//.test(pathname)
+}
+
 function isStaticAsset(pathname: string): boolean {
   return (
     pathname.startsWith('/_next/') ||
@@ -236,6 +283,21 @@ export async function updateSession(request: NextRequest) {
       isDev: process.env.NODE_ENV === 'development',
     })
     return redirect
+  }
+
+  // Block platform admins from entering tenant CMS routes.
+  // app_metadata.is_platform_admin is set by DB trigger (migration 00140)
+  // so no extra DB round-trip is needed here.
+  if (user && (user.app_metadata as Record<string, unknown>)?.is_platform_admin === true) {
+    if (isTenantCmsRoute(pathname)) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/platform/clients'
+      const redirect = NextResponse.redirect(url)
+      applySecurityHeaders(redirect.headers, {
+        isDev: process.env.NODE_ENV === 'development',
+      })
+      return redirect
+    }
   }
 
   return supabaseResponse
