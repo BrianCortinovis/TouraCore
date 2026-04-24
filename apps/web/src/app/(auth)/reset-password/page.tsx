@@ -40,7 +40,7 @@ export default function ResetPasswordPage() {
       })
 
       if (updateError) {
-        setError(updateError.message)
+        setError('Aggiornamento password non riuscito. Riprova o richiedi un nuovo link.')
         setIsLoading(false)
         return
       }

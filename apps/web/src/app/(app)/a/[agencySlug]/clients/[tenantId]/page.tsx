@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { getVisibilityContext, canAccessTenant } from '@touracore/auth/visibility'
 import { CrmPanel } from './crm-panel'
+import { EntityBillingPanel, type EntityBillingRecord } from './entity-billing-panel'
 
 interface ClientDetailProps {
   params: Promise<{ agencySlug: string; tenantId: string }>
@@ -56,6 +57,19 @@ export default async function ClientDetailPage({ params }: ClientDetailProps) {
     for (const r of resv ?? []) {
       revenueMonth += Number(r.total_amount ?? 0)
       bookings++
+    }
+  }
+
+  // Accordi commerciali per entity
+  let billingMap: Record<string, EntityBillingRecord> = {}
+  if (entityIds.length > 0) {
+    const { data: billingRows } = await supabase
+      .from('agency_entity_billing')
+      .select('entity_id, billing_model, fee_monthly_eur, commission_pct, commission_cap_eur, notes')
+      .eq('agency_id', agency.id)
+      .in('entity_id', entityIds)
+    for (const row of billingRows ?? []) {
+      billingMap[row.entity_id] = row as EntityBillingRecord
     }
   }
 
@@ -117,6 +131,12 @@ export default async function ClientDetailPage({ params }: ClientDetailProps) {
           )}
         </ul>
       </section>
+
+      <EntityBillingPanel
+        agencySlug={agencySlug}
+        entities={entities ?? []}
+        billingMap={billingMap}
+      />
 
       <section className="rounded-lg border border-slate-200 bg-white p-4">
         <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Moduli attivi</h2>

@@ -201,6 +201,76 @@ export async function revokeClientInviteAction(
   return { ok: true }
 }
 
+export async function saveEntityBillingAction(input: {
+  agencySlug: string
+  entityId: string
+  billingModel: 'subscription' | 'commission' | 'hybrid' | 'free'
+  feeMonthlyEur?: number | null
+  commissionPct?: number | null
+  commissionCapEur?: number | null
+  notes?: string | null
+}): Promise<{ ok: boolean; error?: string }> {
+  const ctx = await getVisibilityContext()
+  if (!ctx.user) return { ok: false, error: 'unauthenticated' }
+  if (!hasPermission(ctx, 'tenant.write')) return { ok: false, error: 'forbidden' }
+
+  const supabase = await createServiceRoleClient()
+
+  const { data: agency } = await supabase
+    .from('agencies')
+    .select('id')
+    .eq('slug', input.agencySlug)
+    .maybeSingle()
+  if (!agency) return { ok: false, error: 'agency_not_found' }
+  if (agency.id !== ctx.agencyId && !ctx.isPlatformAdmin) return { ok: false, error: 'forbidden' }
+
+  // Verifica che l'entity appartenga a un tenant linkato a questa agenzia
+  const { data: entity } = await supabase
+    .from('entities')
+    .select('id, tenant_id')
+    .eq('id', input.entityId)
+    .maybeSingle()
+  if (!entity) return { ok: false, error: 'entity_not_found' }
+
+  const { data: link } = await supabase
+    .from('agency_tenant_links')
+    .select('id')
+    .eq('agency_id', agency.id)
+    .eq('tenant_id', entity.tenant_id)
+    .eq('status', 'active')
+    .maybeSingle()
+  if (!link) return { ok: false, error: 'tenant_not_linked' }
+
+  const payload = {
+    agency_id: agency.id,
+    entity_id: input.entityId,
+    tenant_id: entity.tenant_id,
+    billing_model: input.billingModel,
+    fee_monthly_eur: input.feeMonthlyEur ?? null,
+    commission_pct: input.commissionPct ?? null,
+    commission_cap_eur: input.commissionCapEur ?? null,
+    notes: input.notes ?? null,
+  }
+
+  const { error } = await supabase
+    .from('agency_entity_billing')
+    .upsert(payload, { onConflict: 'agency_id,entity_id' })
+  if (error) return { ok: false, error: error.message }
+
+  await logAgencyAction({
+    action: 'entity.billing_updated',
+    actorUserId: ctx.user.id,
+    actorEmail: ctx.user.email,
+    actorRole: ctx.isPlatformAdmin ? 'platform_admin' : (ctx.agencyRole ?? 'agency_member'),
+    agencyId: agency.id,
+    tenantId: entity.tenant_id,
+    metadata: { entity_id: input.entityId, billing_model: input.billingModel },
+  })
+
+  revalidatePath(`/a/${input.agencySlug}/clients/${entity.tenant_id}`)
+  return { ok: true }
+}
+
 export async function unlinkTenantAction(input: {
   agencySlug: string
   linkId: string

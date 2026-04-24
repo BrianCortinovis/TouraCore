@@ -24,7 +24,7 @@ export default function ForgotPasswordPage() {
       })
 
       if (resetError) {
-        setError(resetError.message)
+        setError('Errore nell\'invio. Riprova tra qualche minuto.')
         setIsLoading(false)
         return
       }

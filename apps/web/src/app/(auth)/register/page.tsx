@@ -78,11 +78,7 @@ function RegisterPageInner() {
       })
 
       if (authError) {
-        if (authError.message.includes('already registered')) {
-          setError('Questa email è già registrata. Prova ad accedere.')
-        } else {
-          setError(authError.message)
-        }
+        setError('Registrazione non riuscita. Verifica i dati inseriti e riprova.')
         setIsLoading(false)
         return
       }

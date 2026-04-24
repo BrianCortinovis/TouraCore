@@ -41,12 +41,38 @@ export function resolveCommissionRate(type: ReservationType, monthlyRevenue: num
 export interface AccrueCommissionInput {
   agencyId: string
   tenantId: string
+  entityId?: string
   reservationType: ReservationType
   reservationId?: string
   reservationExternalRef?: string
   grossAmount: number
   currency?: string
   metadata?: Record<string, unknown>
+}
+
+async function resolveEntityRate(
+  supabase: Awaited<ReturnType<typeof createServiceRoleClient>>,
+  agencyId: string,
+  entityId: string | undefined,
+  reservationType: ReservationType,
+  monthRevenue: number,
+): Promise<{ rate: number; source: 'entity_override' | 'default_tiers' }> {
+  if (entityId) {
+    const { data: eb } = await supabase
+      .from('agency_entity_billing')
+      .select('billing_model, commission_pct, commission_cap_eur')
+      .eq('agency_id', agencyId)
+      .eq('entity_id', entityId)
+      .maybeSingle()
+
+    if (eb && eb.billing_model !== 'free' && eb.commission_pct != null) {
+      return { rate: eb.commission_pct / 100, source: 'entity_override' }
+    }
+    if (eb && eb.billing_model === 'free') {
+      return { rate: 0, source: 'entity_override' }
+    }
+  }
+  return { rate: resolveCommissionRate(reservationType, monthRevenue), source: 'default_tiers' }
 }
 
 export async function accrueCommission(input: AccrueCommissionInput): Promise<{ ok: boolean; commissionId?: string; error?: string }> {
@@ -62,7 +88,7 @@ export async function accrueCommission(input: AccrueCommissionInput): Promise<{ 
     .neq('status', 'reversed')
 
   const monthRevenue = (monthRows ?? []).reduce((sum, r) => sum + Number(r.gross_amount ?? 0), 0)
-  const rate = resolveCommissionRate(input.reservationType, monthRevenue)
+  const { rate } = await resolveEntityRate(supabase, input.agencyId, input.entityId, input.reservationType, monthRevenue)
   const commissionAmount = Number((input.grossAmount * rate).toFixed(2))
 
   const { data, error } = await supabase
@@ -78,7 +104,7 @@ export async function accrueCommission(input: AccrueCommissionInput): Promise<{ 
       commission_amount: commissionAmount,
       currency: input.currency ?? 'EUR',
       status: 'accrued',
-      metadata: input.metadata ?? {},
+      metadata: { ...(input.metadata ?? {}), entity_id: input.entityId ?? null },
     })
     .select('id')
     .single()
