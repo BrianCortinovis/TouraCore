@@ -10,14 +10,19 @@
     "test:e2e": "pnpm --dir apps/web run test:e2e",
     "test:e2e:public": "pnpm --dir apps/web run test:e2e:public",
     "test:e2e:m080": "pnpm --dir apps/web run test:e2e:m080",
-    "verify": "pnpm lint && pnpm typecheck && pnpm test:unit"
+    "verify": "pnpm lint && pnpm typecheck && pnpm test:unit",
+    "secrets": "tsx scripts/secrets/menu.ts"
   },
   "devDependencies": {
+    "@aws-sdk/client-s3": "^3.1029.0",
+    "@clack/prompts": "^1.2.0",
     "@next/eslint-plugin-next": "^16.2.3",
+    "dotenv": "^17.4.2",
     "eslint": "^9.39.4",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "knip": "^6.6.0",
+    "tsx": "^4.21.0",
     "turbo": "^2",
     "typescript": "^5",
     "typescript-eslint": "^8.58.1"

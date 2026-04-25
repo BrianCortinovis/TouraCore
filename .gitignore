@@ -38,3 +38,6 @@ e2e/.auth/
 .claude/settings.local.json
 .claude/projects/
 testsprite_tests/
+.secrets-rotations.log
+.secrets-backup/
+apps/web/.env.local.bak.*
