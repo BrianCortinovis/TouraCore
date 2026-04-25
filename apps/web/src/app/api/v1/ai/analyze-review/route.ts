@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceRoleClient } from '@touracore/db/server'
+import { z } from 'zod'
+import { getCurrentUser } from '@touracore/auth'
+import { createServerSupabaseClient, createServiceRoleClient } from '@touracore/db/server'
 
 export const dynamic = 'force-dynamic'
 
-interface AnalyzeRequest {
-  reviewId?: string
-  text: string
-  language?: string
-}
+const AnalyzeSchema = z.object({
+  reviewId: z.string().uuid().optional(),
+  text: z.string().min(1).max(10_000),
+  language: z.string().max(10).optional(),
+})
 
 interface SentimentResult {
   sentiment: 'positive' | 'neutral' | 'negative'
@@ -46,8 +48,7 @@ Return only valid JSON, no markdown.`
     const data = (await res.json()) as { content?: Array<{ text?: string }> }
     const responseText = data.content?.[0]?.text
     if (!responseText) return null
-    const parsed = JSON.parse(responseText) as SentimentResult
-    return parsed
+    return JSON.parse(responseText) as SentimentResult
   } catch {
     return null
   }
@@ -65,12 +66,28 @@ function heuristicFallback(text: string): SentimentResult {
 }
 
 export async function POST(request: NextRequest) {
-  const body = (await request.json()) as AnalyzeRequest
-  if (!body.text) return NextResponse.json({ error: 'text required' }, { status: 400 })
+  const user = await getCurrentUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const raw = await request.json().catch(() => null)
+  const parsed = AnalyzeSchema.safeParse(raw)
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid input', issues: parsed.error.issues }, { status: 400 })
+  }
+  const body = parsed.data
 
   const result = (await analyzeWithAnthropic(body.text, body.language ?? 'it')) ?? heuristicFallback(body.text)
 
   if (body.reviewId) {
+    const userClient = await createServerSupabaseClient()
+    const { data: review } = await userClient
+      .from('reviews')
+      .select('id, tenant_id')
+      .eq('id', body.reviewId)
+      .maybeSingle()
+    if (!review) {
+      return NextResponse.json({ error: 'Review not found or forbidden' }, { status: 404 })
+    }
     const supabase = await createServiceRoleClient()
     await supabase
       .from('reviews')
@@ -79,7 +96,8 @@ export async function POST(request: NextRequest) {
         sentiment_score: result.score,
         topics: result.topics,
       })
-      .eq('id', body.reviewId)
+      .eq('id', review.id)
+      .eq('tenant_id', review.tenant_id)
   }
 
   return NextResponse.json({ ok: true, ...result })

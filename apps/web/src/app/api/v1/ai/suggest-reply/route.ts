@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+import { getCurrentUser } from '@touracore/auth'
 
 export const dynamic = 'force-dynamic'
 
-interface SuggestRequest {
-  reviewBody: string
-  rating?: number
-  propertyName: string
-  language?: string
-  tone?: 'apology' | 'solution' | 'appreciation'
-}
+const SuggestSchema = z.object({
+  reviewBody: z.string().min(1).max(10_000),
+  rating: z.number().min(0).max(10).optional(),
+  propertyName: z.string().min(1).max(200),
+  language: z.string().max(10).optional(),
+  tone: z.enum(['apology', 'solution', 'appreciation']).optional(),
+})
+
+type SuggestRequest = z.infer<typeof SuggestSchema>
 
 async function generateWithAnthropic(input: SuggestRequest): Promise<string[] | null> {
   const apiKey = process.env.ANTHROPIC_API_KEY
@@ -65,10 +69,15 @@ function fallbackReplies(input: SuggestRequest): string[] {
 }
 
 export async function POST(request: NextRequest) {
-  const body = (await request.json()) as SuggestRequest
-  if (!body.reviewBody || !body.propertyName) {
-    return NextResponse.json({ error: 'reviewBody and propertyName required' }, { status: 400 })
+  const user = await getCurrentUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const raw = await request.json().catch(() => null)
+  const parsed = SuggestSchema.safeParse(raw)
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid input', issues: parsed.error.issues }, { status: 400 })
   }
+  const body = parsed.data
   const suggestions = (await generateWithAnthropic(body)) ?? fallbackReplies(body)
   return NextResponse.json({ ok: true, suggestions })
 }
