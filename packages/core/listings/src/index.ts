@@ -20,8 +20,9 @@ export {
   getPublicListing,
   listTenantPublicListings,
   listAllPublicListings,
+  listAllPublicListingsCards,
 } from './queries'
-export type { GetListingUrlOptions } from './queries'
+export type { GetListingUrlOptions, PublicListingCard } from './queries'
 
 // Shell component
 export { ListingShell } from './shell'

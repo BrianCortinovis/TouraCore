@@ -2,7 +2,8 @@ import { createServiceRoleClient } from '@touracore/db/server'
 import { notFound } from 'next/navigation'
 import { UnifiedBookingClient } from './unified-booking-client'
 
-export const dynamic = 'force-dynamic'
+// ISR: cache per slug, revalida ogni 60s.
+export const revalidate = 60
 
 interface Props {
   params: Promise<{ slug: string }>

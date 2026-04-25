@@ -2,11 +2,10 @@ import { notFound } from 'next/navigation'
 import {
   filterKnownAmenities,
   getBookingUrl,
-  getPublicListing,
   AMENITIES,
   type AmenityKey,
 } from '@touracore/listings'
-import { createPublicClient } from '@/lib/supabase-public'
+import { getPublicListingCached } from '@/lib/listings-cache'
 
 export const revalidate = 60
 export const dynamicParams = true
@@ -15,8 +14,7 @@ type Props = { params: Promise<{ tenantSlug: string; entitySlug: string }> }
 
 export default async function EmbedListingPage({ params }: Props) {
   const { tenantSlug, entitySlug } = await params
-  const supabase = createPublicClient()
-  const listing = await getPublicListing(supabase, tenantSlug, entitySlug)
+  const listing = await getPublicListingCached(tenantSlug, entitySlug)
   if (!listing) notFound()
 
   const amenities = filterKnownAmenities(listing.featured_amenities).slice(0, 6)

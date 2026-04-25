@@ -5,7 +5,9 @@ import { normalizeTheme } from '@touracore/hospitality/src/components/booking/co
 import { getPublicBookingContextAction } from './actions'
 import { BookingPageClient } from './booking-page-client'
 
-export const dynamic = 'force-dynamic'
+// ISR: cache per slug, revalida ogni 60s. Disponibilità live letta client-side
+// dall'API /api/public/booking/availability, quindi la SSR può essere cacheata.
+export const revalidate = 60
 
 export default async function BookPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params

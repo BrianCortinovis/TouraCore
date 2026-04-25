@@ -6,20 +6,22 @@ import {
   buildListingJsonLd,
   filterKnownAmenities,
   GenericVerticalTemplate,
-  getAccommodationDetails,
-  getBikeLocationsPublic,
-  getBikeRentalDetails,
-  getBikeTypesPublic,
   getBookingUrl,
-  getListingPhotos,
-  getPublicListing,
-  getRestaurantDetails,
   HospitalityTemplate,
   ListingGallery,
   ListingShell,
   RestaurantTemplate,
 } from '@touracore/listings'
-import { createPublicClient } from '@/lib/supabase-public'
+import {
+  getPublicListingCached,
+  getAccommodationDetailsCached,
+  getRestaurantDetailsCached,
+  getBikeRentalDetailsCached,
+  getBikeTypesPublicCached,
+  getBikeLocationsPublicCached,
+  getListingPhotosCached,
+  getExperienceData,
+} from '@/lib/listings-cache'
 import { getSiteBaseUrl } from '@/lib/site-url'
 
 export const revalidate = 60
@@ -30,8 +32,7 @@ type PageProps = { params: Promise<RouteParams> }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { tenantSlug, entitySlug } = await params
-  const supabase = createPublicClient()
-  const listing = await getPublicListing(supabase, tenantSlug, entitySlug)
+  const listing = await getPublicListingCached(tenantSlug, entitySlug)
 
   if (!listing) {
     return { title: 'Scheda non trovata · TouraCore', robots: { index: false } }
@@ -65,29 +66,28 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function PublicListingPage({ params }: PageProps) {
   const { tenantSlug, entitySlug } = await params
-  const supabase = createPublicClient()
-  const listing = await getPublicListing(supabase, tenantSlug, entitySlug)
+  const listing = await getPublicListingCached(tenantSlug, entitySlug)
 
   if (!listing) notFound()
 
   // Parallel fetch kind-specific details + photo gallery
   const [accommodation, restaurant, bikeRental, bikeTypes, bikeLocations, photos] = await Promise.all([
     listing.entity_kind === 'accommodation'
-      ? getAccommodationDetails(supabase, listing.entity_id)
+      ? getAccommodationDetailsCached(listing.entity_id)
       : Promise.resolve(null),
     listing.entity_kind === 'restaurant'
-      ? getRestaurantDetails(supabase, listing.entity_id)
+      ? getRestaurantDetailsCached(listing.entity_id)
       : Promise.resolve(null),
     listing.entity_kind === 'bike_rental'
-      ? getBikeRentalDetails(supabase, listing.entity_id)
+      ? getBikeRentalDetailsCached(listing.entity_id)
       : Promise.resolve(null),
     listing.entity_kind === 'bike_rental'
-      ? getBikeTypesPublic(supabase, listing.entity_id)
+      ? getBikeTypesPublicCached(listing.entity_id)
       : Promise.resolve([]),
     listing.entity_kind === 'bike_rental'
-      ? getBikeLocationsPublic(supabase, listing.entity_id)
+      ? getBikeLocationsPublicCached(listing.entity_id)
       : Promise.resolve([]),
-    getListingPhotos(supabase, listing.listing_id),
+    getListingPhotosCached(listing.listing_id),
   ])
 
   const featuredAmenities = filterKnownAmenities(listing.featured_amenities)
@@ -100,18 +100,7 @@ export default async function PublicListingPage({ params }: PageProps) {
 
   const experience =
     listing.entity_kind === 'activity'
-      ? await (async () => {
-          const { data } = await supabase
-            .from('public_experience_entities')
-            .select('category, city, address, languages, age_min_default, height_min_cm_default, difficulty_default, opening_hours')
-            .eq('id', listing.entity_id)
-            .maybeSingle()
-          const { data: prods } = await supabase
-            .from('public_experience_products')
-            .select('id, slug, name, booking_mode, duration_minutes, capacity_default, price_base_cents, currency, highlights, images, difficulty')
-            .eq('entity_id', listing.entity_id)
-          return { details: data, products: prods ?? [] }
-        })()
+      ? await getExperienceData(listing.entity_id)
       : null
   const shortId = listing.listing_id.slice(0, 8).toUpperCase()
 
