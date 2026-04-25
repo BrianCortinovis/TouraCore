@@ -1,5 +1,4 @@
-import { listAllPublicListings } from '@touracore/listings'
-import { createPublicClient } from '@/lib/supabase-public'
+import { listAllPublicListingsCached } from '@/lib/listings-cache'
 import { getSiteBaseUrl } from '@/lib/site-url'
 
 export const revalidate = 3600
@@ -14,8 +13,7 @@ function escapeXml(value: string): string {
 }
 
 export async function GET() {
-  const supabase = createPublicClient()
-  const listings = await listAllPublicListings(supabase, { limit: 5000 })
+  const listings = await listAllPublicListingsCached(5000)
   const baseUrl = getSiteBaseUrl()
 
   const urls = listings

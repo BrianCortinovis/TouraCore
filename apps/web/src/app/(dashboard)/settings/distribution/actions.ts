@@ -5,6 +5,7 @@ import { createServerSupabaseClient } from '@touracore/db/server'
 import { getAuthBootstrapData } from '@touracore/auth/bootstrap'
 import { logAudit } from '@touracore/audit'
 import { z } from 'zod'
+import { revalidateListing } from '@/lib/cache-tags'
 
 export type DistributionEntityRow = {
   entity_id: string
@@ -145,11 +146,19 @@ export async function togglePublicListingAction(
     // non-critical
   }
 
-  // Trigger ISR revalidation for affected public page
+  // Tag-based revalidation: instant invalidation across listing page,
+  // discover aggregator, and sitemap.
   const tenantSlug = bootstrap.tenant.slug
+  revalidateListing({
+    entityId: entity.id,
+    tenantId: bootstrap.tenant.id,
+    tenantSlug: tenantSlug ?? undefined,
+    entitySlug: entity.slug,
+  })
   if (tenantSlug) {
     revalidatePath(`/s/${tenantSlug}/${entity.slug}`)
     revalidatePath('/sitemap-listings.xml')
+    revalidatePath('/discover')
   }
 
   return { success: true, isPublic }
@@ -200,6 +209,12 @@ export async function updateListingCurationAction(
   } catch {}
 
   const tenantSlug = bootstrap.tenant.slug
+  revalidateListing({
+    entityId: entity.id,
+    tenantId: bootstrap.tenant.id,
+    tenantSlug: tenantSlug ?? undefined,
+    entitySlug: entity.slug,
+  })
   if (tenantSlug) {
     revalidatePath(`/s/${tenantSlug}/${entity.slug}`)
   }

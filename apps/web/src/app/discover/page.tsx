@@ -3,13 +3,12 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Image as ImageIcon, Search } from 'lucide-react'
 import {
-  listAllPublicListingsCards,
   type PublicListingCard,
   ENTITY_KINDS,
 } from '@touracore/listings'
-import { createPublicClient } from '@/lib/supabase-public'
+import { listAllPublicListingsCardsCached } from '@/lib/listings-cache'
 
-export const revalidate = 120
+export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'Discover · TouraCore',
@@ -42,8 +41,7 @@ const KIND_CHIP_COLOR: Record<string, { bg: string; fg: string }> = {
 
 export default async function DiscoverPage({ searchParams }: Props) {
   const { kind, q } = await searchParams
-  const supabase = createPublicClient()
-  const listings = await listAllPublicListingsCards(supabase, { limit: 200 })
+  const listings = (await listAllPublicListingsCardsCached(200)) as PublicListingCard[]
 
   const filtered = listings.filter((l) => {
     if (kind && l.entity_kind !== kind) return false

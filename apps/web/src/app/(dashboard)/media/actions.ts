@@ -15,6 +15,7 @@ import {
   listMedia,
   updateMediaAltText,
 } from '@touracore/media/server'
+import { CacheTags, bustTag } from '@/lib/cache-tags'
 
 interface ActionResult {
   success: boolean
@@ -84,6 +85,8 @@ export async function uploadMediaAction(formData: FormData): Promise<ActionResul
     })
 
     revalidatePath('/media')
+    bustTag(CacheTags.tenant(bootstrap.tenant.id))
+    bustTag(CacheTags.discover)
     return { success: true, data: result.media }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Errore upload sconosciuto'
@@ -119,6 +122,8 @@ export async function deleteMediaAction(mediaId: string): Promise<ActionResult> 
     })
 
     revalidatePath('/media')
+    bustTag(CacheTags.tenant(bootstrap.tenant.id))
+    bustTag(CacheTags.discover)
     return { success: true }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Errore eliminazione sconosciuto'
