@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createServerSupabaseClient, createServiceRoleClient } from '@touracore/db/server'
 import type { ReservationStatus } from '@touracore/hospitality/src/types/database'
+import { onReservationStatusChange } from '@touracore/agency'
 import { z } from 'zod'
 
 interface ReservationRow {
@@ -157,6 +158,13 @@ export async function updateReservationStatusAction(
     updateData.actual_check_out = new Date().toISOString()
   }
 
+  const { data: prev } = await supabase
+    .from('reservations')
+    .select('status')
+    .eq('id', reservationId)
+    .eq('entity_id', entity.id)
+    .maybeSingle()
+
   const { error } = await supabase
     .from('reservations')
     .update(updateData)
@@ -164,6 +172,13 @@ export async function updateReservationStatusAction(
     .eq('entity_id', entity.id)
 
   if (error) return { success: false, error: error.message }
+
+  await onReservationStatusChange({
+    vertical: 'hospitality',
+    reservationId,
+    newStatus,
+    previousStatus: (prev as { status?: string } | null)?.status ?? null,
+  })
 
   revalidatePath('/bookings')
   return { success: true }

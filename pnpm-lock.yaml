@@ -575,6 +575,9 @@ importers:
 
   verticals/bike-rental:
     dependencies:
+      '@touracore/agency':
+        specifier: workspace:*
+        version: link:../../packages/core/agency
       '@touracore/db':
         specifier: workspace:*
         version: link:../../packages/db

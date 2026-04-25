@@ -1,6 +1,7 @@
 'use server'
 
 import { createServerSupabaseClient } from '@touracore/db/server'
+import { onReservationStatusChange } from '@touracore/agency'
 
 export async function checkinByQrAction(params: { qr: string; tenantId: string; entityId: string }): Promise<
   { ok: true; guestName: string; productName: string } | { ok: false; error: string }
@@ -25,6 +26,13 @@ export async function checkinByQrAction(params: { qr: string; tenantId: string; 
 
   await supabase.from('experience_reservation_guests').update({ checked_in_at: new Date().toISOString() }).eq('id', g.id)
   await supabase.from('experience_reservations').update({ checked_in_at: new Date().toISOString(), status: 'checked_in' }).eq('id', g.reservation_id).eq('status', 'pending')
+
+  await onReservationStatusChange({
+    vertical: 'experience',
+    reservationId: g.reservation_id,
+    newStatus: 'checked_in',
+    previousStatus: res.status,
+  })
 
   const product = Array.isArray(res.experience_products) ? res.experience_products[0] : res.experience_products
   return { ok: true, guestName: `${g.first_name ?? ''} ${g.last_name ?? ''}`.trim(), productName: product?.name ?? '—' }

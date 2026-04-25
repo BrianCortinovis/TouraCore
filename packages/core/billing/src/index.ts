@@ -65,3 +65,5 @@ export {
   listBillingProfilesByScope,
   calculateCommission,
 } from './profiles'
+
+export { getStripe, getConnectClientId } from './stripe'

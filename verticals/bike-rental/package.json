@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@touracore/agency": "workspace:*",
     "@touracore/db": "workspace:*",
     "@touracore/pricing": "workspace:*",
     "@touracore/vouchers": "workspace:*",

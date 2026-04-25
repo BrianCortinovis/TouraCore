@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@touracore/db/server'
+import { onReservationStatusChange } from '@touracore/agency'
 import { z } from 'zod'
 import { autoAssignTables } from './auto-assign'
 import { assertUserOwnsRestaurant } from '@/lib/restaurant-guard'
@@ -138,6 +139,14 @@ export async function updateReservationStatus(input: z.infer<typeof UpdateStatus
     .update(update)
     .eq('id', parsed.reservationId)
   if (error) throw new Error(error.message)
+
+  await onReservationStatusChange({
+    vertical: 'restaurant',
+    reservationId: parsed.reservationId,
+    newStatus: parsed.status,
+    previousStatus: currentStatus,
+  })
+
   revalidatePath(pathFor(parsed))
 }
 

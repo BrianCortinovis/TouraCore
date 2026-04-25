@@ -1,4 +1,5 @@
 import { createServerSupabaseClient, createServiceRoleClient } from '@touracore/db'
+import { onReservationStatusChange } from '@touracore/agency'
 import type {
   BikeRentalReservationRow,
   BikeRentalReservationItemRow,
@@ -88,6 +89,13 @@ export async function updateReservationStatus(params: {
   actualReturnAt?: string
 }): Promise<boolean> {
   const supabase = await createServerSupabaseClient()
+
+  const { data: prev } = await supabase
+    .from('bike_rental_reservations')
+    .select('status')
+    .eq('id', params.id)
+    .maybeSingle()
+
   const patch: Partial<BikeRentalReservationRow> = { status: params.status }
   if (params.actualPickupAt) patch.actual_pickup_at = params.actualPickupAt
   if (params.actualReturnAt) patch.actual_return_at = params.actualReturnAt
@@ -95,7 +103,16 @@ export async function updateReservationStatus(params: {
     .from('bike_rental_reservations')
     .update(patch)
     .eq('id', params.id)
-  return !error
+  if (error) return false
+
+  await onReservationStatusChange({
+    vertical: 'bike',
+    reservationId: params.id,
+    newStatus: params.status,
+    previousStatus: (prev as { status?: string } | null)?.status ?? null,
+  })
+
+  return true
 }
 
 export interface ReservationStats {
