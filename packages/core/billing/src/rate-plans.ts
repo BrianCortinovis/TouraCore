@@ -68,7 +68,7 @@ export const RATE_PLAN_DEFAULTS: Record<RatePlanType, Partial<RatePlan>> = {
 export async function listRatePlans(entityId: string): Promise<RatePlan[]> {
   const supabase = await createServiceRoleClient()
   const { data } = await supabase
-    .from('rate_plans')
+    .from('payment_rate_plans')
     .select('*')
     .eq('entity_id', entityId)
     .order('sort_order', { ascending: true })
@@ -124,14 +124,14 @@ export async function upsertRatePlan(input: UpsertRatePlanInput): Promise<RatePl
 
   if (row.is_default) {
     await supabase
-      .from('rate_plans')
+      .from('payment_rate_plans')
       .update({ is_default: false })
       .eq('entity_id', input.entityId)
       .neq('id', row.id ?? '00000000-0000-0000-0000-000000000000')
   }
 
   const { data, error } = await supabase
-    .from('rate_plans')
+    .from('payment_rate_plans')
     .upsert(row, { onConflict: 'id' })
     .select('*')
     .single()
@@ -151,7 +151,7 @@ export async function ensureDefaultRatePlan(
 ): Promise<RatePlan | null> {
   const supabase = await createServiceRoleClient()
   const { data: existing } = await supabase
-    .from('rate_plans')
+    .from('payment_rate_plans')
     .select('id')
     .eq('entity_id', entityId)
     .limit(1)
