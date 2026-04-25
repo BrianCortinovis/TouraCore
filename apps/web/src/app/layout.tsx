@@ -8,6 +8,8 @@ import { GlobalSchemaLd } from "@/components/seo/GlobalSchemaLd";
 import { SkipToContent } from "@/components/a11y/SkipToContent";
 import { WebVitalsCollector } from "@/components/perf/WebVitalsCollector";
 import { CookieBannerWrapper } from "@touracore/hospitality/src/components/compliance/cookie-banner-wrapper";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { SeoVerification } from "@/components/seo/SeoVerification";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -30,6 +32,7 @@ export default function RootLayout({
       <head>
         <ConsentModeScript />
         <GlobalSchemaLd />
+        <SeoVerification />
       </head>
       <body className="font-sans">
         <SkipToContent />
@@ -38,6 +41,7 @@ export default function RootLayout({
         <CookieBannerWrapper />
         <Analytics />
         <SpeedInsights />
+        <GoogleAnalytics />
       </body>
     </html>
   );

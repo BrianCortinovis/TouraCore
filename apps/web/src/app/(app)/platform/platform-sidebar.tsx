@@ -7,8 +7,11 @@ import {
   CreditCard,
   LayoutDashboard,
   Layers3,
+  LineChart,
   MessageSquare,
+  Search,
   Shield,
+  Star,
   Terminal,
 } from 'lucide-react'
 import { SharedSidebar } from '../../../components/SharedSidebar'
@@ -45,6 +48,14 @@ export function PlatformSidebar({ email, role }: PlatformSidebarProps) {
           items: [
             { href: '/platform/config', label: 'Piani e commissioni', icon: Layers3 },
             { href: '/platform/messaging', label: 'Messaggistica', icon: MessageSquare },
+          ],
+        },
+        {
+          title: 'Crescita',
+          items: [
+            { href: '/platform/seo', label: 'SEO', icon: Search },
+            { href: '/platform/analytics', label: 'Analytics', icon: LineChart },
+            { href: '/platform/reviews', label: 'Recensioni', icon: Star },
           ],
         },
         {

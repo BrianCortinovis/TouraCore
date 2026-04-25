@@ -57,6 +57,7 @@ function isPublicRoute(pathname: string): boolean {
     pathname === '/legal' ||
     pathname === '/api/cookie-consent' ||
     pathname === '/api/vitals' ||
+    pathname === '/api/analytics/track' ||
     pathname.startsWith('/widget/') ||
     pathname.startsWith('/api/webhooks') ||
     pathname.startsWith('/api/v1') ||

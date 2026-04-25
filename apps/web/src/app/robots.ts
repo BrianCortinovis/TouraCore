@@ -1,8 +1,11 @@
 import type { MetadataRoute } from 'next'
 import { getSiteBaseUrl } from '@/lib/site-url'
 
-export default function robots(): MetadataRoute.Robots {
+export const revalidate = 300
+
+export default async function robots(): Promise<MetadataRoute.Robots> {
   const baseUrl = getSiteBaseUrl()
+
   return {
     rules: [
       {
