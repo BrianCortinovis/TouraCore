@@ -16,6 +16,8 @@ export function getSecurityHeaders(config: SecurityHeadersConfig): Record<string
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
     "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+    // Video embed: YouTube (incl. nocookie) e Vimeo per gallery pubblica
+    "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com",
     `frame-ancestors ${frameAncestors}`,
     "base-uri 'self'",
     "form-action 'self'",

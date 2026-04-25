@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { createServerSupabaseClient } from '@touracore/db/server'
 import { getAuthBootstrapData } from '@touracore/auth/bootstrap'
 import { logAudit } from '@touracore/audit'
+import { parseVideoLink, fetchVideoTitle } from '@touracore/media'
 import { revalidateListing } from '@/lib/cache-tags'
 import { revalidatePath } from 'next/cache'
 
@@ -17,6 +18,11 @@ export type GalleryItem = {
   sort_order: number
   is_hero: boolean
   caption: string | null
+  media_kind: 'photo' | 'video'
+  video_platform: 'youtube' | 'vimeo' | null
+  video_id: string | null
+  video_thumbnail_url: string | null
+  video_title: string | null
 }
 
 export type GalleryState = {
@@ -89,11 +95,20 @@ export async function loadGalleryStateAction(
   if (listing) {
     const { data: rows } = await supabase
       .from('listing_media')
-      .select('id, media_id, sort_order, is_hero, caption, media:media_id(url, alt_text, width, height)')
+      .select('id, media_id, sort_order, is_hero, caption, media_kind, media:media_id(url, alt_text, width, height, video_platform, video_id, video_thumbnail_url, video_title)')
       .eq('listing_id', listing.id)
       .order('sort_order', { ascending: true })
 
-    type MediaJoin = { url: string; alt_text: string | null; width: number | null; height: number | null }
+    type MediaJoin = {
+      url: string
+      alt_text: string | null
+      width: number | null
+      height: number | null
+      video_platform: 'youtube' | 'vimeo' | null
+      video_id: string | null
+      video_thumbnail_url: string | null
+      video_title: string | null
+    }
     items = (rows ?? []).map((r) => {
       const raw = (r as unknown as { media: MediaJoin | MediaJoin[] | null }).media
       const m = Array.isArray(raw) ? raw[0] : raw
@@ -107,6 +122,11 @@ export async function loadGalleryStateAction(
         sort_order: r.sort_order as number,
         is_hero: r.is_hero as boolean,
         caption: (r.caption as string | null) ?? null,
+        media_kind: ((r as { media_kind?: string }).media_kind ?? 'photo') as 'photo' | 'video',
+        video_platform: m?.video_platform ?? null,
+        video_id: m?.video_id ?? null,
+        video_thumbnail_url: m?.video_thumbnail_url ?? null,
+        video_title: m?.video_title ?? null,
       }
     })
 
@@ -349,6 +369,114 @@ export async function reorderListingMediaAction(
   }
 
   return { success: true }
+}
+
+const AttachVideoSchema = z.object({
+  entityId: z.string().min(1),
+  url: z.string().url().max(500),
+  caption: z.string().max(500).nullable().optional(),
+})
+
+export async function attachVideoLinkAction(
+  input: z.input<typeof AttachVideoSchema>
+): Promise<{ success: boolean; error?: string; mediaId?: string }> {
+  const parsed = AttachVideoSchema.safeParse(input)
+  if (!parsed.success) return { success: false, error: 'INVALID_INPUT' }
+
+  const link = parseVideoLink(parsed.data.url)
+  if (!link) return { success: false, error: 'INVALID_VIDEO_URL' }
+
+  const guard = await ensureEntityOwnership(parsed.data.entityId)
+  if (!guard.ok) return { success: false, error: guard.error }
+  const { supabase, entity, bootstrap } = guard
+
+  const listingId = await getOrCreateListing(supabase, entity.id, entity.tenant_id)
+  if (!listingId) return { success: false, error: 'LISTING_CREATE_FAILED' }
+
+  const title = await fetchVideoTitle(link)
+
+  const { data: existingMedia } = await supabase
+    .from('media')
+    .select('id')
+    .eq('tenant_id', entity.tenant_id)
+    .eq('video_platform', link.platform)
+    .eq('video_id', link.videoId)
+    .maybeSingle()
+
+  let mediaId = existingMedia?.id as string | undefined
+
+  if (!mediaId) {
+    const { data: newMedia, error: mediaErr } = await supabase
+      .from('media')
+      .insert({
+        tenant_id: entity.tenant_id,
+        filename: `${link.platform}-${link.videoId}`,
+        original_name: title ?? `${link.platform} video`,
+        mime_type: `video/${link.platform}`,
+        size_bytes: 0,
+        r2_key: '',
+        r2_bucket: '',
+        url: link.embedUrl,
+        alt_text: title ?? null,
+        video_platform: link.platform,
+        video_id: link.videoId,
+        video_thumbnail_url: link.thumbnailUrl,
+        video_title: title,
+      })
+      .select('id')
+      .single()
+    if (mediaErr || !newMedia) return { success: false, error: mediaErr?.message ?? 'MEDIA_INSERT_FAILED' }
+    mediaId = newMedia.id as string
+  }
+
+  const { data: lastRow } = await supabase
+    .from('listing_media')
+    .select('sort_order')
+    .eq('listing_id', listingId)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const nextOrder = (lastRow?.sort_order ?? -1) + 1
+
+  const { error: pivotErr } = await supabase
+    .from('listing_media')
+    .upsert(
+      {
+        listing_id: listingId,
+        media_id: mediaId,
+        tenant_id: entity.tenant_id,
+        sort_order: nextOrder,
+        is_hero: false,
+        media_kind: 'video',
+        caption: parsed.data.caption ?? null,
+      },
+      { onConflict: 'listing_id,media_id', ignoreDuplicates: false }
+    )
+
+  if (pivotErr) return { success: false, error: pivotErr.message }
+
+  try {
+    await logAudit({
+      context: { tenantId: entity.tenant_id, userId: bootstrap.user!.id },
+      action: 'listing_media.video_attached',
+      entityType: 'listing_media',
+      entityId: entity.id,
+      newData: { platform: link.platform, video_id: link.videoId },
+    })
+  } catch {}
+
+  revalidateListing({
+    entityId: entity.id,
+    tenantId: entity.tenant_id,
+    tenantSlug: bootstrap.tenant?.slug ?? undefined,
+    entitySlug: entity.slug,
+  })
+  if (bootstrap.tenant?.slug) {
+    revalidatePath(`/s/${bootstrap.tenant.slug}/${entity.slug}`)
+    revalidatePath(`/${bootstrap.tenant.slug}/settings/gallery/${entity.id}`)
+  }
+
+  return { success: true, mediaId }
 }
 
 const CaptionSchema = z.object({

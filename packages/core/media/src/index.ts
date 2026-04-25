@@ -21,3 +21,5 @@ export {
   VARIANT_QUALITY,
   isImageMime,
 } from './types';
+export type { VideoPlatform, ParsedVideoLink } from './video-link';
+export { parseVideoLink, fetchVideoTitle } from './video-link';

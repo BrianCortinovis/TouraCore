@@ -1,6 +1,11 @@
 @import "tailwindcss";
 @import "@touracore/config/tailwind/tokens.css";
 
+/* Tailwind v4: scan workspace packages used at runtime */
+@source "../../../../packages/core/listings/src/**/*.{ts,tsx}";
+@source "../../../../packages/core/ui/src/**/*.{ts,tsx}";
+@source "../../../../packages/core/auth/src/**/*.{ts,tsx}";
+
 /* next/font Inter (self-hosted via --font-inter from app/layout.tsx) overrides
    the legacy "Inter" reference in tokens.css with the optimized variable, so
    no Google Fonts link tag is emitted. */
