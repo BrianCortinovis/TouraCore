@@ -34,7 +34,9 @@ export function BookTableClient({ context, template, isEmbed, previewStep }: Pro
   })
 
   useEffect(() => {
-    void loadAvailability()
+    const ac = new AbortController()
+    void loadAvailability(ac.signal)
+    return () => ac.abort()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date, party])
 
@@ -50,12 +52,13 @@ export function BookTableClient({ context, template, isEmbed, previewStep }: Pro
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [previewStep])
 
-  async function loadAvailability() {
+  async function loadAvailability(signal?: AbortSignal) {
     setLoading(true)
     setError(null)
     try {
       const res = await fetch(
         `/api/public/restaurant/availability?slug=${context.slug}&date=${date}&party=${party}`,
+        { signal },
       )
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Errore')
@@ -63,9 +66,10 @@ export function BookTableClient({ context, template, isEmbed, previewStep }: Pro
       setDepositRequired(data.depositRequired ?? false)
       setDepositAmount(data.depositAmount ?? 0)
     } catch (e) {
+      if ((e as Error)?.name === 'AbortError') return
       setError(e instanceof Error ? e.message : 'Errore')
     } finally {
-      setLoading(false)
+      if (!signal?.aborted) setLoading(false)
     }
   }
 

@@ -62,40 +62,44 @@ export async function GET(request: NextRequest) {
     .in('provider', Object.keys(adapters))
     .eq('is_active', true)
 
-  const results: Array<{ entityId: string; provider: string; imported: number; error?: string }> = []
-
-  for (const conn of connections ?? []) {
-    const adapter = adapters[conn.provider]
-    if (!adapter) continue
-    try {
-      const reviews = await adapter.fetchReviews({ ...conn.credentials, ...conn.settings })
-      let imported = 0
-      for (const r of reviews) {
-        const sentiment = r.rating >= 7 ? 'positive' : r.rating >= 5 ? 'neutral' : 'negative'
-        const { error } = await supabase.from('reviews').upsert(
-          {
-            tenant_id: conn.tenant_id,
-            entity_id: conn.entity_id,
-            source: adapter.name,
-            external_id: r.externalId,
-            reviewer_name: r.reviewerName,
-            rating: r.rating,
-            title: r.title,
-            body: r.body,
-            language: r.language,
-            published_at: r.publishedAt,
-            sentiment,
-          },
-          { onConflict: 'tenant_id,source,external_id' }
-        )
-        if (!error) imported++
+  // Esegui adapter in parallelo: provider diversi sono indipendenti.
+  // Bulk upsert per provider invece di loop sequenziale (riduce latenza Supabase ~Nx).
+  const results = await Promise.all(
+    (connections ?? []).map(async (conn) => {
+      const adapter = adapters[conn.provider]
+      if (!adapter) return null
+      try {
+        const reviews = await adapter.fetchReviews({ ...conn.credentials, ...conn.settings })
+        if (reviews.length === 0) {
+          return { entityId: conn.entity_id, provider: adapter.name, imported: 0 }
+        }
+        const rows = reviews.map((r) => ({
+          tenant_id: conn.tenant_id,
+          entity_id: conn.entity_id,
+          source: adapter.name,
+          external_id: r.externalId,
+          reviewer_name: r.reviewerName,
+          rating: r.rating,
+          title: r.title,
+          body: r.body,
+          language: r.language,
+          published_at: r.publishedAt,
+          sentiment: r.rating >= 7 ? 'positive' : r.rating >= 5 ? 'neutral' : 'negative',
+        }))
+        const { error } = await supabase
+          .from('reviews')
+          .upsert(rows, { onConflict: 'tenant_id,source,external_id' })
+        if (error) {
+          return { entityId: conn.entity_id, provider: adapter.name, imported: 0, error: error.message }
+        }
+        return { entityId: conn.entity_id, provider: adapter.name, imported: rows.length }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Unknown'
+        return { entityId: conn.entity_id, provider: adapter.name, imported: 0, error: msg }
       }
-      results.push({ entityId: conn.entity_id, provider: adapter.name, imported })
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Unknown'
-      results.push({ entityId: conn.entity_id, provider: adapter.name, imported: 0, error: msg })
-    }
-  }
+    })
+  )
 
-  return NextResponse.json({ ok: true, processed: results.length, results })
+  const filtered = results.filter((r): r is NonNullable<typeof r> => r !== null)
+  return NextResponse.json({ ok: true, processed: filtered.length, results: filtered })
 }

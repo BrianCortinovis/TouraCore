@@ -23,7 +23,8 @@ function RegisterPageInner() {
   useEffect(() => {
     if (!clientInvite) return
     setIntentScope('tenant')
-    fetch(`/api/agency/client-invite/lookup?token=${encodeURIComponent(clientInvite)}`)
+    const ac = new AbortController()
+    fetch(`/api/agency/client-invite/lookup?token=${encodeURIComponent(clientInvite)}`, { signal: ac.signal })
       .then((r) => r.ok ? r.json() : null)
       .then((data: { agencyName?: string; verticalHint?: string; email?: string } | null) => {
         if (!data) return
@@ -31,7 +32,10 @@ function RegisterPageInner() {
         if (data.verticalHint) setIntentModule(data.verticalHint)
         if (data.email) setFormData((f) => ({ ...f, email: data.email ?? f.email }))
       })
-      .catch(() => {})
+      .catch((err) => {
+        if (err?.name === 'AbortError') return
+      })
+    return () => ac.abort()
   }, [clientInvite])
   const [formData, setFormData] = useState({
     displayName: '',
