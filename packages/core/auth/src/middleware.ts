@@ -57,6 +57,7 @@ function isPublicRoute(pathname: string): boolean {
     pathname.startsWith('/api/public/') ||
     pathname.startsWith('/api/partners/v1/') ||
     pathname.startsWith('/api/cron/') ||
+    pathname === '/api/revalidate' ||
     pathname.startsWith('/partner/')
   )
 }
