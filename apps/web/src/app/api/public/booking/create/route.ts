@@ -13,7 +13,7 @@ export async function OPTIONS(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   const origin = req.headers.get('origin')
-  let body: any
+  let body: Record<string, unknown>
   try {
     body = await req.json()
   } catch {
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     return jsonWithCors({ error: 'privacyConsent required' }, { status: 400, origin })
   }
 
-  const result = await createPublicBookingAction(body)
+  const result = await createPublicBookingAction(body as Parameters<typeof createPublicBookingAction>[0])
 
   if (!result.success) {
     return jsonWithCors({ error: result.error }, { status: 400, origin })

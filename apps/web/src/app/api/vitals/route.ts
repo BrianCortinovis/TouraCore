@@ -1,44 +1,39 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { randomUUID } from 'crypto'
+import { z } from 'zod'
 import { createPublicClient } from '@/lib/supabase-public'
 
 export const runtime = 'nodejs'
 
-interface VitalBody {
-  name?: string
-  value?: number
-  rating?: string
-  navigationType?: string
-  route?: string
-  tenant_slug?: string | null
-  device_type?: string
-  connection_effective_type?: string
-}
+const VitalSchema = z.object({
+  name: z.string().min(1).max(40),
+  value: z.number().finite().min(0).max(60_000),
+  rating: z.string().max(20).optional(),
+  navigationType: z.string().max(40).optional(),
+  route: z.string().min(1).max(500),
+  tenant_slug: z.string().max(120).nullish(),
+  device_type: z.string().max(40).optional(),
+  connection_effective_type: z.string().max(20).optional(),
+})
 
-const SAMPLE_RATE = 0.1 // 10% sampling per non saturare DB
+const SAMPLE_RATE = 0.1
 
 export async function POST(req: NextRequest) {
-  // Random sampling at edge
   if (Math.random() > SAMPLE_RATE) {
     return NextResponse.json({ ok: true, sampled_out: true })
   }
 
-  let body: VitalBody
-  try {
-    body = await req.json()
-  } catch {
-    return NextResponse.json({ error: 'invalid_body' }, { status: 400 })
+  const raw = await req.json().catch(() => null)
+  const parsed = VitalSchema.safeParse(raw)
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'invalid_body', issues: parsed.error.issues }, { status: 400 })
   }
-
-  if (!body.name || typeof body.value !== 'number' || !body.route) {
-    return NextResponse.json({ error: 'missing_fields' }, { status: 400 })
-  }
+  const body = parsed.data
 
   const sessionId = req.cookies.get('cwv_sid')?.value ?? randomUUID()
   const ua = req.headers.get('user-agent') ?? ''
   const country = req.headers.get('x-vercel-ip-country') ?? null
 
-  // Simple UA family extraction
   let uaFamily = 'other'
   if (/chrome/i.test(ua)) uaFamily = 'chrome'
   else if (/firefox/i.test(ua)) uaFamily = 'firefox'
@@ -69,7 +64,7 @@ export async function POST(req: NextRequest) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 60 * 30, // 30min session
+    maxAge: 60 * 30,
     path: '/',
   })
   return res

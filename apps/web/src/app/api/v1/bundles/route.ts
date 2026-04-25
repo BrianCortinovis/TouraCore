@@ -1,56 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { getStripe } from '@touracore/billing/server'
 import { defaultFiscalRouter } from '@touracore/fiscal'
 import { extractVat, type VatRate } from '@touracore/fiscal'
 import type Stripe from 'stripe'
 
-interface BundleRequestBody {
-  tenantSlug: string
-  guest: {
-    fullName: string
-    email: string
-    phone?: string
-    fiscalCode?: string
-    vatNumber?: string
-    isBusiness: boolean
-    companyName?: string
-    sdiCode?: string
-    consentPrivacy: boolean
-    consentMarketing?: boolean
-  }
-  items: Array<{
-    itemType: 'hospitality' | 'restaurant' | 'experience' | 'bike_rental' | 'wellness'
-    entityId: string
-    description: string
-    config: Record<string, unknown>
-    quantity: number
-    unitPriceCents: number
-    vatRate: number
-  }>
-  locale?: string
-  promoCode?: string
-}
+const BundleSchema = z.object({
+  tenantSlug: z.string().min(1).max(120),
+  guest: z.object({
+    fullName: z.string().min(1).max(200),
+    email: z.string().email().max(200),
+    phone: z.string().max(40).optional(),
+    fiscalCode: z.string().max(40).optional(),
+    vatNumber: z.string().max(40).optional(),
+    isBusiness: z.boolean(),
+    companyName: z.string().max(200).optional(),
+    sdiCode: z.string().max(20).optional(),
+    consentPrivacy: z.literal(true),
+    consentMarketing: z.boolean().optional(),
+  }),
+  items: z.array(z.object({
+    itemType: z.enum(['hospitality', 'restaurant', 'experience', 'bike_rental', 'wellness']),
+    entityId: z.string().uuid(),
+    description: z.string().min(1).max(500),
+    config: z.record(z.string(), z.unknown()),
+    quantity: z.number().int().min(1).max(50),
+    unitPriceCents: z.number().int().min(0).max(10_000_000),
+    vatRate: z.number().min(0).max(30),
+  })).min(1).max(20),
+  locale: z.string().max(10).optional(),
+  promoCode: z.string().max(50).optional(),
+})
+
+type BundleRequestBody = z.infer<typeof BundleSchema>
 
 export async function POST(request: NextRequest) {
-  let body: BundleRequestBody
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  const raw = await request.json().catch(() => null)
+  const parsed = BundleSchema.safeParse(raw)
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid input', issues: parsed.error.issues }, { status: 400 })
   }
-
-  // Validation
-  if (!body.tenantSlug) return NextResponse.json({ error: 'Missing tenantSlug' }, { status: 400 })
-  if (!body.guest?.email || !body.guest?.fullName) {
-    return NextResponse.json({ error: 'Missing guest info' }, { status: 400 })
-  }
-  if (!body.guest.consentPrivacy) {
-    return NextResponse.json({ error: 'Privacy consent required' }, { status: 400 })
-  }
-  if (!Array.isArray(body.items) || body.items.length === 0) {
-    return NextResponse.json({ error: 'Empty cart' }, { status: 400 })
-  }
+  const body: BundleRequestBody = parsed.data
 
   const supabase = await createServiceRoleClient()
 
@@ -246,5 +237,5 @@ export async function POST(request: NextRequest) {
   })
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 const _router = defaultFiscalRouter  // import side-effect to validate package link

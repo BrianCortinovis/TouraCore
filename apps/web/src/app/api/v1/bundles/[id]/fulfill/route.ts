@@ -234,11 +234,28 @@ export async function POST(
  * Crea record child vertical-specific per un bundle item.
  * v1 mappa minima — ogni vertical dovrà espandere ClassDetails.
  */
+interface BundleItem {
+  id: string
+  entity_id: string
+  item_type: string
+  total_cents: number
+  config: Record<string, unknown> | null
+}
+interface BundleRow {
+  id: string
+  tenant_id: string
+}
+interface BundleGuest {
+  email: string
+  full_name: string
+  phone: string | null
+}
+
 async function fulfillItem(
   supabase: Awaited<ReturnType<typeof createServiceRoleClient>>,
-  item: any,
-  bundle: any,
-  guest: any,
+  item: BundleItem,
+  bundle: BundleRow,
+  guest: BundleGuest,
 ): Promise<void> {
   if (item.item_type === 'hospitality') {
     const cfg = item.config ?? {}

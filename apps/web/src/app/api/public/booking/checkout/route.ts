@@ -15,10 +15,10 @@ export async function OPTIONS(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   const origin = req.headers.get('origin')
-  let body: any
+  let body: { reservationId?: string; includeTouristTax?: boolean; returnUrl?: string; cancelUrl?: string }
   try { body = await req.json() } catch { return jsonWithCors({ error: 'Invalid JSON' }, { status: 400, origin }) }
 
-  const reservationId = body?.reservationId as string | undefined
+  const reservationId = body?.reservationId
   const includeTouristTax = Boolean(body?.includeTouristTax)
   if (!reservationId) return jsonWithCors({ error: 'reservationId required' }, { status: 400, origin })
 

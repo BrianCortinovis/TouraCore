@@ -61,19 +61,39 @@ function safeHost(origin: string): string | null {
   try { return new URL(origin).host } catch { return null }
 }
 
-export function corsHeaders(origin: string | null): HeadersInit {
-  return {
-    'Access-Control-Allow-Origin': origin ?? '*',
+export function corsHeaders(origin: string | null, allowedDomains?: string[]): HeadersInit {
+  // Echo origin solo se presente E (whitelist assente OR origin in whitelist)
+  // Mai '*' su API mutabili: cookie/credenziali vengono rifiutate dal browser comunque,
+  // ma una mutazione GET-shaped può essere effettuata e produce side effect senza CORS.
+  const originHost = origin ? safeHost(origin) : null
+  let allowOrigin: string | null = null
+  if (origin && originHost) {
+    if (!allowedDomains || allowedDomains.length === 0) {
+      allowOrigin = origin
+    } else {
+      const ok = allowedDomains.some((d) => originHost === d || originHost.endsWith('.' + d))
+      allowOrigin = ok ? origin : null
+    }
+  }
+  const headers: Record<string, string> = {
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Booking-Key',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
   }
+  if (allowOrigin) headers['Access-Control-Allow-Origin'] = allowOrigin
+  return headers
 }
 
-export function jsonWithCors(data: unknown, init: ResponseInit & { origin: string | null }) {
-  const { origin, ...rest } = init
-  return NextResponse.json(data, { ...rest, headers: { ...corsHeaders(origin), ...(rest.headers ?? {}) } })
+export function jsonWithCors(
+  data: unknown,
+  init: ResponseInit & { origin: string | null; allowedDomains?: string[] }
+) {
+  const { origin, allowedDomains, ...rest } = init
+  return NextResponse.json(data, {
+    ...rest,
+    headers: { ...corsHeaders(origin, allowedDomains), ...(rest.headers ?? {}) },
+  })
 }
 
 export function extractKey(req: NextRequest): string | null {
