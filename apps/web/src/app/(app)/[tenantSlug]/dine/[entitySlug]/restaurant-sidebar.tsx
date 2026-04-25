@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   Tag,
   Globe,
+  Banknote,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -58,6 +59,7 @@ export function RestaurantSidebar({ tenantSlug, entitySlug, entityName, hasResta
     { href: `${base}/staff`, label: 'Staff & Turni', icon: UserCog },
     { href: `${base}/analytics`, label: 'Analytics', icon: BarChart3 },
     { href: `${base}/promotions`, label: 'Promozioni', icon: Tag },
+    { href: `${base}/rate-plans`, label: 'Tariffe', icon: Banknote },
     { href: `${base}/integrations`, label: 'Integrazioni', icon: Plug },
     { href: `${base}/fiscal`, label: 'Fiscale & GDPR', icon: ShieldCheck },
     { href: `${base}/settings`, label: 'Impostazioni', icon: Settings },

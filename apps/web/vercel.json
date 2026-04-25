@@ -17,6 +17,8 @@
     { "path": "/api/cron/billing-snapshots", "schedule": "0 3 1 * *" },
     { "path": "/api/cron/billing-grace-check", "schedule": "0 4 * * *" },
     { "path": "/api/cron/agency-payouts", "schedule": "0 5 1 * *" },
+    { "path": "/api/cron/auto-charge-bookings", "schedule": "0 3 * * *" },
+    { "path": "/api/cron/auto-cancel-failed-payments", "schedule": "0 4 * * *" },
     { "path": "/api/cron/data-retention", "schedule": "0 3 * * *" },
     { "path": "/api/cron/tourist-tax-generate", "schedule": "0 5 * * *" },
     { "path": "/api/cron/alloggiati-auto", "schedule": "0 23 * * *" },

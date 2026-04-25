@@ -401,11 +401,11 @@
   <h1>Sistema Billing</h1>
   <p class="lede">Come si muovono i soldi dentro TouraCore: dal cliente che prenota fino al super admin. Senza gergo tecnico, con esempi e calcolatore live.</p>
   <div class="meta">
-    <span>v3 · 2026-04-26</span>
+    <span>v4 · 2026-04-26</span>
     <span>Branch: main</span>
     <span>Audience: non-developer</span>
     <span>Tempo lettura: ~14 min</span>
-    <span class="pill ok" style="margin-left:6px;">Stripe Connect Direct Charge</span>
+    <span class="pill ok" style="margin-left:6px;">Direct Charge end-to-end</span>
   </div>
 </header>
 
@@ -925,7 +925,66 @@ export async function accrueCommission(input) {
 <section id="changelog">
   <h2><span class="num">13</span>Changelog v2 · v3</h2>
 
-  <h3 style="margin-top:8px;">v3 — 2026-04-26 (Stripe Connect tenant — Fase 1)</h3>
+  <h3 style="margin-top:8px;">v4 — 2026-04-26 (Direct Charge end-to-end · Fasi 2-6)</h3>
+
+  <div class="card">
+    <h3><span class="pill ok">done</span> Migration <code>00150_rate_plans_and_payments</code></h3>
+    <p>Tabelle nuove: <code>rate_plans</code> (tariffe per entity, 4 tipi: free_cancellation/deposit_30/partially_refundable_50/non_refundable), <code>reservation_payment_methods</code> (carta salvata per addebiti differiti), <code>reservation_payment_attempts</code> (audit retry). Colonne nuove su tutti 4 reservation tables: <code>rate_plan_id</code>, <code>charge_scheduled_at</code>, <code>payment_state</code>, <code>application_fee_amount_cents</code>.</p>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill ok">done</span> Helper <code>@touracore/billing/server</code></h3>
+    <ul class="clean">
+      <li><code>computeApplicationFee()</code> → calcola fee TouraCore da <code>billing_profiles</code> (canone-only=0, commission/hybrid=%).</li>
+      <li><code>buildConnectChargeParams()</code> → costruisce <code>{on_behalf_of, transfer_data, application_fee_amount}</code>. Throw se tenant Connect non ready.</li>
+      <li><code>buildConnectChargeParamsSafe()</code> → variante null-safe per checkout pubblici.</li>
+      <li><code>listRatePlans / upsertRatePlan / ensureDefaultRatePlan</code> → CRUD rate plans.</li>
+      <li><code>generateUpdateCardToken / getUpdateCardUrl</code> → magic link HMAC firmato per cliente non-loggato.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill ok">done</span> Switch checkout pubblici a Direct Charge — 4 verticali</h3>
+    <ul class="clean">
+      <li><code>/api/public/booking/checkout</code> — hospitality, esistente esteso con Connect params.</li>
+      <li><code>/api/public/restaurant/checkout</code> — restaurant deposit, esteso (capture_method manual + Connect).</li>
+      <li><code>/api/public/bike/checkout</code> — nuovo endpoint full Connect.</li>
+      <li><code>/api/public/experience/checkout</code> — nuovo endpoint full Connect.</li>
+    </ul>
+    <p>Tutti bloccano con 400 + messaggio chiaro se tenant non ha completato Stripe Connect onboarding.</p>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill ok">done</span> UI Rate plans — 4 verticali</h3>
+    <p>Component condiviso <code>RatePlansEditor</code> + page condivisa <code>RatePlansPage</code> in <code>_shared/rate-plans/</code>. 4 route: <code>/[tenantSlug]/{stays|dine|rides|activities}/[entitySlug]/rate-plans</code>. Auto-seed default <em>free_cancellation</em> alla prima visita per ogni entity. Voce sidebar <strong>Tariffe / Piani tariffari</strong> aggiunta a tutte 4 sidebar verticali.</p>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill ok">done</span> Cron <code>auto-charge-bookings</code> (Fase 4 + 5 unificate)</h3>
+    <p>Schedule giornaliero <code>0 3 * * *</code>. Scorre tutte 4 reservation tables: trova <code>payment_state ∈ {card_saved, failed}</code> con <code>charge_scheduled_at &lt;= now</code>. Per ognuna: recupera carta salvata da <code>reservation_payment_methods</code>, calcola Connect params, crea PaymentIntent off_session con <code>capture_method='manual'</code>. Su successo: <code>payment_state='authorized'</code>. Su errore: <code>payment_state='failed'</code> + retry schedulato +24h (max 4 tentativi). Idempotency via <code>idempotencyKey: autocharge_<v>_<id>_<n></code>.</p>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill ok">done</span> Cron <code>auto-cancel-failed-payments</code></h3>
+    <p>Schedule giornaliero <code>0 4 * * *</code>. Trova prenotazioni <code>payment_state='failed'</code> con check_in/start &lt;= now+3gg e nessun retry pending. Marca <code>payment_state='auto_cancelled'</code> + <code>status='cancelled'</code>. Slot/camera rilasciato per nuove prenotazioni.</p>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill ok">done</span> Magic link "aggiorna carta" — Stripe Customer Portal</h3>
+    <p>Route pubblica <code>/r/[token]/update-card</code> (token HMAC firmato 7gg validità). Genera Stripe Billing Portal session per il customer e redirect → cliente aggiorna carta nella UI nativa Stripe. Nessuna UI custom da mantenere. Carta nuova salvata sul Customer → prossimo cron auto-charge la userà.</p>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill ok">done</span> Capture action <code>capturePaymentAction</code></h3>
+    <p>Server action <code>_shared/payments/capture-actions.ts</code>. Trova ultimo PaymentIntent <code>requires_capture</code> per la prenotazione, chiama <code>stripe.paymentIntents.capture()</code>, marca <code>payment_state='captured'</code>. Da chiamare al check-in/check-out dall'UI tenant.</p>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill ok">done</span> Webhook <code>payment_intent.payment_failed</code></h3>
+    <p>Quando Stripe notifica fail: marca prenotazione <code>payment_state='failed'</code>, schedula retry +24h, scrive riga in <code>reservation_payment_attempts</code> con <code>failure_code</code> + <code>failure_message</code>. Lavora in tandem con cron <code>auto-charge-bookings</code>.</p>
+  </div>
+
+  <h3 style="margin-top:32px;">v3 — 2026-04-26 (Stripe Connect tenant — Fase 1)</h3>
 
   <div class="card">
     <h3><span class="pill ok">done</span> Migration <code>00149_tenants_stripe_connect</code></h3>

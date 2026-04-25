@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { z } from 'zod'
-import { getStripe } from '@touracore/billing/server'
+import { getStripe, buildConnectChargeParamsSafe } from '@touracore/billing/server'
 import { jsonWithCors } from '../_shared'
 
 export async function OPTIONS(req: NextRequest) {
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
   const admin = await createServiceRoleClient()
   const { data: reservation } = await admin
     .from('restaurant_reservations')
-    .select('id, restaurant_id, party_size, deposit_amount, deposit_status, deposit_stripe_intent_id, guest_email, guest_name, slot_date, slot_time')
+    .select('id, restaurant_id, party_size, deposit_amount, deposit_status, deposit_stripe_intent_id, guest_email, guest_name, slot_date, slot_time, restaurants:restaurant_id(tenant_id)')
     .eq('id', parsed.reservationId)
     .maybeSingle()
 
@@ -60,14 +60,44 @@ export async function POST(req: NextRequest) {
     return jsonWithCors({ error: 'No deposit required' }, { status: 400, origin })
   }
 
+  const restaurantField = (reservation as unknown as { restaurants?: { tenant_id: string } | { tenant_id: string }[] | null }).restaurants
+  const restaurant = Array.isArray(restaurantField) ? (restaurantField[0] ?? null) : (restaurantField ?? null)
+  if (!restaurant?.tenant_id) {
+    return jsonWithCors({ error: 'Tenant not resolvable' }, { status: 400, origin })
+  }
+
+  const depositCents = Math.round((reservation.deposit_amount as number) * 100)
+  const connectParams = await buildConnectChargeParamsSafe({
+    tenantId: restaurant.tenant_id,
+    moduleCode: 'restaurant',
+    baseAmountCents: depositCents,
+    appliesTo: 'coperto',
+  })
+  if (!connectParams) {
+    return jsonWithCors(
+      { error: 'Tenant non ha completato il setup pagamenti Stripe' },
+      { status: 400, origin },
+    )
+  }
+
+  await admin
+    .from('restaurant_reservations')
+    .update({ application_fee_amount_cents: connectParams.application_fee_amount })
+    .eq('id', reservation.id)
+
   const stripe = getStripe()
 
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
     payment_intent_data: {
       capture_method: 'manual',
+      application_fee_amount: connectParams.application_fee_amount,
+      on_behalf_of: connectParams.on_behalf_of,
+      transfer_data: connectParams.transfer_data,
       metadata: {
         restaurant_reservation_id: reservation.id as string,
+        tenant_id: restaurant.tenant_id,
+        vertical: 'restaurant',
         type: 'restaurant_deposit',
       },
     },

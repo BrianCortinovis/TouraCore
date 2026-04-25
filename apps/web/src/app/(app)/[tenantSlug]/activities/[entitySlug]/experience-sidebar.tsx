@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Package, CalendarRange, CalendarClock, Users,
-  ClipboardList, Printer, QrCode, FileCheck2, Plug, Settings, Globe,
+  ClipboardList, Printer, QrCode, FileCheck2, Plug, Settings, Globe, Banknote,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -27,6 +27,7 @@ export function ExperienceSidebar({ tenantSlug, entitySlug, entityName }: Props)
     { href: `${base}/checkin`, label: 'Check-in QR', icon: QrCode },
     { href: `${base}/waivers`, label: 'Waiver digitali', icon: FileCheck2 },
     { href: `${base}/channels`, label: 'Channel Manager', icon: Plug },
+    { href: `${base}/rate-plans`, label: 'Tariffe', icon: Banknote },
     { href: `${base}/settings`, label: 'Impostazioni', icon: Settings },
   ]
 

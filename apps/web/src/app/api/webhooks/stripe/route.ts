@@ -488,6 +488,45 @@ export async function POST(request: NextRequest) {
       })
       break
     }
+
+    case 'payment_intent.payment_failed': {
+      const pi = event.data.object as Stripe.PaymentIntent
+      const vertical = pi.metadata?.vertical
+      const reservationId = pi.metadata?.reservation_id
+      const tenantId = pi.metadata?.tenant_id
+      if (!vertical || !reservationId || !tenantId) break
+
+      const tableMap: Record<string, string> = {
+        hospitality: 'reservations',
+        restaurant: 'restaurant_reservations',
+        bike: 'bike_rental_reservations',
+        experience: 'experience_reservations',
+      }
+      const table = tableMap[vertical]
+      if (!table) break
+
+      await supabase.from(table).update({
+        payment_state: 'failed',
+        charge_scheduled_at: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+      }).eq('id', reservationId)
+
+      await supabase.from('reservation_payment_attempts').insert({
+        vertical,
+        reservation_id: reservationId,
+        tenant_id: tenantId,
+        attempt_number: 0,
+        stripe_payment_intent_id: pi.id,
+        amount_cents: pi.amount,
+        currency: pi.currency.toUpperCase(),
+        status: 'failed',
+        failure_code: pi.last_payment_error?.code ?? null,
+        failure_message: pi.last_payment_error?.message ?? null,
+        completed_at: new Date().toISOString(),
+        retry_at: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+        metadata: { from_webhook: true },
+      })
+      break
+    }
   }
 
   // Record event come processed (idempotency)

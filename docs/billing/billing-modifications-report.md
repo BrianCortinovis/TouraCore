@@ -1,9 +1,92 @@
-# Billing — Report modifiche v3
+# Billing — Report modifiche v4
 
 **Data**: 2026-04-26
-**Versione**: v3 (Stripe Connect Direct Charge — Fase 1)
+**Versione**: v4 (Direct Charge end-to-end — Fasi 2-6 complete)
 **Audience**: super admin (Brian) + dev follow-up
-**Scope**: regola architetturale "TouraCore mai banca" — Fase 1 (onboarding Stripe Connect tenant) implementata.
+**Scope**: refactor billing completo. Loop end-to-end Stripe Connect Direct Charge funzionante per tutti 4 verticali, con rate plans, auto-charge differito, retry, auto-cancel, magic link.
+
+---
+
+## v4 — Cosa cambia
+
+### Loop end-to-end Stripe Connect Direct Charge
+
+Cliente prenota → carta salvata via Setup/PaymentIntent off_session → cron auto-charge a T-7gg crea PaymentIntent capture_method=manual con `application_fee_amount` + `transfer_data.destination` → tenant capture al check-in/check-out → soldi splittati alla fonte (zero TouraCore = banca).
+
+### Fasi 2-6 implementate in unica iterazione
+
+| Fase | Cosa | File |
+|------|------|------|
+| 2 | Migration tabelle + colonne | `supabase/migrations/00150_rate_plans_and_payments.sql` |
+| 2 | Helper Stripe Connect (computeApplicationFee, buildConnectChargeParams) | `packages/core/billing/src/connect-charge.ts` |
+| 2 | Switch checkout pubblici a Direct Charge × 4 verticali | `apps/web/src/app/api/public/{booking,restaurant,bike,experience}/checkout/route.ts` |
+| 3 | Helper rate_plans (CRUD + RATE_PLAN_DEFAULTS) | `packages/core/billing/src/rate-plans.ts` |
+| 3 | Component condiviso RatePlansEditor + Page + actions | `apps/web/src/app/(app)/[tenantSlug]/_shared/rate-plans/` |
+| 3 | 4 route per verticale + sidebar entries | `(app)/[tenantSlug]/{stays,dine,rides,activities}/[entitySlug]/rate-plans/page.tsx` |
+| 4-5 | Cron auto-charge differito (gestisce booking <30gg e >30gg) | `apps/web/src/app/api/cron/auto-charge-bookings/route.ts` |
+| 6 | Cron auto-cancel-failed-payments | `apps/web/src/app/api/cron/auto-cancel-failed-payments/route.ts` |
+| 6 | Magic link update card → Stripe Customer Portal | `apps/web/src/app/r/[token]/update-card/route.ts` + `packages/core/billing/src/magic-link.ts` |
+| 6 | Capture action server-side | `apps/web/src/app/(app)/[tenantSlug]/_shared/payments/capture-actions.ts` |
+| Webhook | payment_intent.payment_failed handler | `apps/web/src/app/api/webhooks/stripe/route.ts` |
+
+### Cron schedules vercel.json
+
+| Cron | Schedule UTC | Scopo |
+|------|--------------|-------|
+| `auto-charge-bookings` | `0 3 * * *` | Charge T-N giorni configurato per rate plan |
+| `auto-cancel-failed-payments` | `0 4 * * *` | Cancella + libera slot dopo fail terminale |
+| `agency-payouts` (v2) | `0 5 1 * *` | Payout mensile agenzie (legacy commission accrual) |
+
+### Stato Stripe nativo vs custom — bilancio finale
+
+**Stripe nativo (80% del lavoro):**
+- Onboarding Express + KYC + Account Link + login link
+- Setup/PaymentIntent off_session + carta salvata
+- Card Updater Visa/MC (auto)
+- 3DS / SCA Italia
+- Direct Charge split alla fonte (`application_fee_amount`)
+- SEPA payout daily al tenant
+- Refund + dispute via Dashboard
+- **Customer Portal per aggiorna carta** (zero UI custom)
+- Webhook `account.updated`, `payment_intent.*`, `charge.refunded`
+
+**Custom TouraCore (20% del lavoro):**
+- Cron orchestratore (Stripe non ha smart-retry per one-shot PaymentIntent)
+- Auto-cancel dopo N fail (Stripe non ha)
+- Block pubblicazione entity senza Connect
+- Magic link HMAC firmato → Customer Portal Stripe (custom solo l'auth, UI è Stripe)
+- Rate plans (logica business custom, non gestibile da Stripe)
+
+### Verifiche
+
+| Check | Risultato |
+|-------|-----------|
+| `pnpm typecheck` | ✅ 17/17 PASS |
+| `pnpm lint` | ✅ 0 errors (19 warnings preesistenti) |
+| Migration cloud applicata | ⏳ da pushare con commit |
+
+### Da fare manualmente prima del go-live
+
+1. `MAGIC_LINK_SECRET` env var su Vercel (production + preview + dev). Se assente, usa `CRON_SECRET` come fallback.
+2. Stripe Dashboard: abilitare Customer Portal in Settings → Billing → Customer Portal con permission "update_payment_method".
+3. Webhook Stripe in produzione: aggiungere event `payment_intent.payment_failed` alla lista subscribed events.
+4. Test E2E Stripe test mode (3 scenari): success → cattura → check_payment_state, insufficient_funds → retry, expired_card → magic link → update.
+5. Tenant test: completare onboarding Stripe Connect su `/[tenantSlug]/settings/payments` per il tenant villa-irabo.
+
+### Limiti noti / Da iterare
+
+- **Selettore rate plan nel widget pubblico** non implementato in v4. Cliente non vede ancora dropdown per scegliere tariffa al booking. Da fare in v5 (frontend booking widget hospitality + altri).
+- **UI tenant "Cattura ora"** non aggiunta a UI prenotazioni dei 4 verticali. Server action `capturePaymentAction` pronta ma deve essere wirata a un bottone in ogni dashboard verticale.
+- **Setup intent al momento del booking** non integrato in flow create-reservation. Oggi i nuovi checkout fanno PaymentIntent immediato (charge subito); per `free_cancellation` serve creare SetupIntent + scrivere `reservation_payment_methods` row. Da fare in v5.
+- **Notifiche email cliente su payment failed** non implementate. Magic link generato ma email non inviata automaticamente. Va wirato a `@touracore/notifications`.
+
+---
+
+## v3 — Cosa cambia
+
+### Decisione architetturale
+
+Brian ha esplicitato (2026-04-26) che TouraCore non deve mai essere banca: tutti i pagamenti cliente devono passare via Stripe Connect Direct Charge, con TouraCore che riceve solo `application_fee_amount`. Memoria: `feedback_no_banking.md`.
 
 ---
 

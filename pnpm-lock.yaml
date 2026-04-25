@@ -300,6 +300,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.49.4
         version: 2.103.0
+      '@touracore/db':
+        specifier: workspace:*
+        version: link:../../db
       stripe:
         specifier: ^17.7.0
         version: 17.7.0

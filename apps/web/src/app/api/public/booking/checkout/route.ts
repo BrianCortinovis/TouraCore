@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server'
 import { createServiceRoleClient } from '@touracore/db/server'
-import { getStripe } from '@touracore/billing/server'
+import { getStripe, buildConnectChargeParamsSafe } from '@touracore/billing/server'
 import { jsonWithCors } from '../_shared'
 
 export async function OPTIONS(req: NextRequest) {
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
 
   const { data: entity } = await supabase
     .from('entities')
-    .select('id, slug, name')
+    .select('id, slug, name, tenant_id')
     .eq('id', res.entity_id)
     .single()
 
@@ -104,10 +104,42 @@ export async function POST(req: NextRequest) {
 
   try {
     const stripe = getStripe()
+
+    // Stripe Connect Direct Charge: cliente paga direttamente al tenant,
+    // TouraCore preleva solo application_fee. Block se Connect non attivo.
+    const totalCents = Math.round(Number(res.total_amount) * 100) + touristTaxCents
+    const connectParams = await buildConnectChargeParamsSafe({
+      tenantId: entity.tenant_id as string,
+      moduleCode: 'hospitality',
+      baseAmountCents: totalCents,
+      appliesTo: 'booking_total',
+    })
+    if (!connectParams) {
+      return jsonWithCors(
+        { error: 'Tenant non ha completato il setup pagamenti Stripe' },
+        { status: 400, origin },
+      )
+    }
+
+    await supabase
+      .from('reservations')
+      .update({ application_fee_amount_cents: connectParams.application_fee_amount })
+      .eq('id', res.id)
+
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
       customer_email: guest.email,
+      payment_intent_data: {
+        application_fee_amount: connectParams.application_fee_amount,
+        on_behalf_of: connectParams.on_behalf_of,
+        transfer_data: connectParams.transfer_data,
+        metadata: {
+          reservation_id: res.id,
+          tenant_id: entity.tenant_id as string,
+          vertical: 'hospitality',
+        },
+      },
       line_items: [
         {
           price_data: {

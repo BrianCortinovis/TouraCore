@@ -4,5 +4,5 @@ export const dynamic = 'force-dynamic'
 
 export default async function Page({ params }: { params: Promise<{ tenantSlug: string; entitySlug: string }> }) {
   const p = await params
-  return <RatePlansPage tenantSlug={p.tenantSlug} entitySlug={p.entitySlug} vertical="hospitality" />
+  return <RatePlansPage tenantSlug={p.tenantSlug} entitySlug={p.entitySlug} vertical="experience" />
 }
