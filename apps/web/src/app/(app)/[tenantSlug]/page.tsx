@@ -97,6 +97,20 @@ export default async function TenantHome({ params }: TenantHomeProps) {
               </div>
             </Link>
           )}
+          {hasBike && (
+            <Link href={`/${tenantSlug}/rides`}
+              className="group rounded-lg border border-gray-200 bg-white p-5 transition hover:border-emerald-400 hover:shadow">
+              <div className="flex items-start gap-3">
+                <div className="rounded-md bg-emerald-50 p-2">
+                  <Compass className="h-5 w-5 text-emerald-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold group-hover:text-emerald-600">Bike rental</h3>
+                  <p className="mt-1 text-xs text-gray-500">Flotta, prenotazioni, manutenzione, channel manager</p>
+                </div>
+              </div>
+            </Link>
+          )}
         </div>
       </section>
 
