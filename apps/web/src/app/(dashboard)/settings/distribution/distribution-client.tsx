@@ -107,6 +107,7 @@ export function DistributionClient({ rows: initialRows, tenantSlug }: Props) {
               <th className="px-4 py-3 text-left font-semibold">Slug</th>
               <th className="px-4 py-3 text-left font-semibold">Pubblicata il</th>
               <th className="px-4 py-3 text-left font-semibold">Anteprima</th>
+              <th className="px-4 py-3 text-left font-semibold">Foto</th>
               <th className="px-4 py-3 text-left font-semibold">Personalizza</th>
               <th className="px-4 py-3 text-right font-semibold">Stato pubblico</th>
             </tr>
@@ -153,6 +154,18 @@ export function DistributionClient({ rows: initialRows, tenantSlug }: Props) {
                     )}
                   </td>
                   <td className="px-4 py-3">
+                    {tenantSlug ? (
+                      <a
+                        href={`/${tenantSlug}/settings/gallery/${r.entity_id}`}
+                        className="text-[#003b95] hover:underline"
+                      >
+                        Gestisci →
+                      </a>
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
                     <a
                       href={tenantSlug ? `/${tenantSlug}/settings/distribution/${r.entity_id}` : `/settings/distribution/${r.entity_id}`}
                       className="text-[#003b95] hover:underline"
@@ -188,7 +201,7 @@ export function DistributionClient({ rows: initialRows, tenantSlug }: Props) {
             })}
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-500">
+                <td colSpan={8} className="px-4 py-12 text-center text-sm text-gray-500">
                   Nessuna attività. Aggiungi entity al tenant per pubblicare schede.
                 </td>
               </tr>

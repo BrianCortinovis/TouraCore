@@ -15,6 +15,8 @@ export type ProfileFormState = {
     intro_description: string
     default_booking_mode: 'multi' | 'singles' | 'mixed'
     is_public: boolean
+    avatar_media_id: string | null
+    avatar_url: string | null
   }
   tenantSlug: string
   availableListings: {
@@ -36,9 +38,19 @@ export async function loadProfileFormState(): Promise<{ success: boolean; data?:
 
   const { data: profile } = await supabase
     .from('platform_profiles')
-    .select('id, username, display_name, intro_headline, intro_description, default_booking_mode, is_public, tenant_id')
+    .select('id, username, display_name, intro_headline, intro_description, default_booking_mode, is_public, tenant_id, avatar_media_id')
     .eq('user_id', bootstrap.user.id)
     .maybeSingle()
+
+  let avatarUrl: string | null = null
+  if (profile?.avatar_media_id) {
+    const { data: am } = await supabase
+      .from('media')
+      .select('url')
+      .eq('id', profile.avatar_media_id)
+      .maybeSingle()
+    avatarUrl = am?.url ?? null
+  }
 
   const tenantSlug = bootstrap.tenant?.slug ?? ''
 
@@ -85,6 +97,8 @@ export async function loadProfileFormState(): Promise<{ success: boolean; data?:
         intro_description: profile?.intro_description ?? '',
         default_booking_mode: (profile?.default_booking_mode as 'multi' | 'singles' | 'mixed') ?? 'multi',
         is_public: profile?.is_public ?? true,
+        avatar_media_id: (profile?.avatar_media_id as string | null) ?? null,
+        avatar_url: avatarUrl,
       },
       tenantSlug,
       availableListings: availableListings.sort((a, b) => a.entity_name.localeCompare(b.entity_name)),
@@ -100,6 +114,7 @@ const SaveSchema = z.object({
   default_booking_mode: z.enum(['multi', 'singles', 'mixed']),
   is_public: z.boolean(),
   listing_ids: z.array(z.string()).default([]),
+  avatar_media_id: z.string().uuid().nullable().optional(),
 })
 
 export async function saveProfileAction(
@@ -112,6 +127,17 @@ export async function saveProfileAction(
   if (!bootstrap.user) return { success: false, error: 'AUTH_REQUIRED' }
 
   const supabase = await createServerSupabaseClient()
+
+  // Verify avatar media ownership when set
+  if (parsed.data.avatar_media_id && bootstrap.tenant?.id) {
+    const { data: owned } = await supabase
+      .from('media')
+      .select('id')
+      .eq('id', parsed.data.avatar_media_id)
+      .eq('tenant_id', bootstrap.tenant.id)
+      .maybeSingle()
+    if (!owned) return { success: false, error: 'AVATAR_NOT_OWNED' }
+  }
 
   // Upsert profile
   const { data: profile, error: upsertErr } = await supabase
@@ -126,6 +152,7 @@ export async function saveProfileAction(
         intro_description: parsed.data.intro_description,
         default_booking_mode: parsed.data.default_booking_mode,
         is_public: parsed.data.is_public,
+        avatar_media_id: parsed.data.avatar_media_id ?? null,
       },
       { onConflict: 'user_id' }
     )

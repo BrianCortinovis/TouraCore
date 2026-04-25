@@ -17,6 +17,7 @@ import {
   Handshake,
   Globe,
   Code2,
+  Palette,
 } from 'lucide-react'
 
 interface SettingsSidebarProps {
@@ -41,6 +42,7 @@ export function SettingsSidebar({
     { href: `${base}/team`, label: 'Team', icon: Users },
     { href: `${base}/modules`, label: 'Moduli', icon: Package },
     { href: `${base}/booking-engine`, label: 'Booking', icon: Sparkles },
+    { href: `${base}/branding`, label: 'Branding', icon: Palette },
     { href: `${base}/distribution`, label: 'Distribuzione', icon: Globe },
     { href: `${base}/embed-studio`, label: 'Embed', icon: Code2 },
     { href: `${base}/credits`, label: 'Credits', icon: Gift },

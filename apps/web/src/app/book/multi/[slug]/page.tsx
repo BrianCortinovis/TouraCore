@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { notFound } from 'next/navigation'
 import { UnifiedBookingClient } from './unified-booking-client'
@@ -28,6 +29,12 @@ export default async function UnifiedBookingPage({ params }: Props) {
 
   if (!tenant) notFound()
 
+  const { data: branding } = await supabase
+    .from('public_tenant_branding_view')
+    .select('logo_url, logo_alt, cover_url, cover_alt, brand_color')
+    .eq('tenant_id', tenant.id)
+    .maybeSingle()
+
   const modules = (tenant.modules as Record<string, ModuleState>) ?? {}
   const activeVerticals: Array<'hospitality' | 'restaurant' | 'experiences' | 'bike_rental' | 'wellness'> = []
   if (isActive(modules.hospitality)) activeVerticals.push('hospitality')
@@ -49,12 +56,39 @@ export default async function UnifiedBookingPage({ params }: Props) {
   const restaurantEntities = (entities ?? []).filter((e) => e.kind === 'restaurant')
   const experienceEntities = (entities ?? []).filter((e) => e.kind === 'activity')
 
+  const brandColor = branding?.brand_color ?? '#003b95'
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="mx-auto max-w-5xl px-4 py-4">
-          <h1 className="text-xl font-bold text-gray-900">{tenant.name}</h1>
-          <p className="text-xs text-gray-500">Prenota online — unica esperienza multi-servizio</p>
+      {branding?.cover_url && (
+        <div className="relative h-40 w-full bg-gray-200 sm:h-56">
+          <Image
+            src={branding.cover_url}
+            alt={branding.cover_alt ?? tenant.name}
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+        </div>
+      )}
+      <header className="bg-white shadow-sm" style={{ borderTop: `3px solid ${brandColor}` }}>
+        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-4">
+          {branding?.logo_url && (
+            <div className="relative h-10 w-10 overflow-hidden rounded">
+              <Image
+                src={branding.logo_url}
+                alt={branding.logo_alt ?? tenant.name}
+                fill
+                sizes="40px"
+                className="object-contain"
+              />
+            </div>
+          )}
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">{tenant.name}</h1>
+            <p className="text-xs text-gray-500">Prenota online — unica esperienza multi-servizio</p>
+          </div>
         </div>
       </header>
 

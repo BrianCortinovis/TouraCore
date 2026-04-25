@@ -1,8 +1,10 @@
 'use client'
 
+import Image from 'next/image'
 import { useState, useTransition } from 'react'
 import type { ProfileFormState } from './actions'
 import { saveProfileAction } from './actions'
+import { MediaPicker, type MediaPickerSelection } from '@/components/media/media-picker'
 
 type Props = { state: ProfileFormState }
 
@@ -25,6 +27,9 @@ export function ProfileEditor({ state }: Props) {
   const [pending, startTransition] = useTransition()
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
+  const [avatarMediaId, setAvatarMediaId] = useState<string | null>(state.profile.avatar_media_id)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(state.profile.avatar_url)
+  const [avatarPickerOpen, setAvatarPickerOpen] = useState(false)
 
   function toggleListing(id: string) {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
@@ -57,6 +62,7 @@ export function ProfileEditor({ state }: Props) {
         default_booking_mode: mode,
         is_public: isPublic,
         listing_ids: selectedIds,
+        avatar_media_id: avatarMediaId,
       })
       if (res.success) setMsg('Profilo salvato ✓')
       else setErr(res.error ?? 'Errore')
@@ -81,6 +87,38 @@ export function ProfileEditor({ state }: Props) {
 
       <section className="rounded-md border border-[#e5e7eb] bg-white p-5">
         <h2 className="mb-4 text-lg font-bold">Identità</h2>
+
+        <div className="mb-5 flex items-center gap-4">
+          <div className="relative h-20 w-20 overflow-hidden rounded-full bg-gray-100 ring-2 ring-gray-200">
+            {avatarUrl ? (
+              <Image src={avatarUrl} alt="Avatar" fill sizes="80px" className="object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-2xl text-gray-400">👤</div>
+            )}
+          </div>
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => setAvatarPickerOpen(true)}
+              className="rounded-md border border-[#d1d5db] bg-white px-3 py-1.5 text-xs font-semibold hover:bg-gray-50"
+            >
+              {avatarUrl ? 'Cambia avatar' : 'Scegli avatar'}
+            </button>
+            {avatarUrl && (
+              <button
+                type="button"
+                onClick={() => {
+                  setAvatarMediaId(null)
+                  setAvatarUrl(null)
+                }}
+                className="rounded-md border border-[#d1d5db] bg-white px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50"
+              >
+                Rimuovi
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
             <span className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#6b7280]">
@@ -246,6 +284,16 @@ export function ProfileEditor({ state }: Props) {
           </a>
         ) : null}
       </div>
+
+      <MediaPicker
+        open={avatarPickerOpen}
+        onClose={() => setAvatarPickerOpen(false)}
+        onSelect={(m: MediaPickerSelection) => {
+          setAvatarMediaId(m.id)
+          setAvatarUrl(m.url)
+        }}
+        title="Scegli avatar"
+      />
     </div>
   )
 }
