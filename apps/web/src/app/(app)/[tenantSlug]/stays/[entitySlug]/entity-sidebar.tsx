@@ -41,8 +41,6 @@ import {
   ShoppingCart,
   KeyRound,
   MapPin,
-  Store,
-  CalendarClock,
   type LucideIcon,
 } from 'lucide-react'
 import {

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@touracore/db/server'
-import { getVisibilityContext, hasPermission } from '@touracore/auth/visibility'
+import { getVisibilityContext } from '@touracore/auth/visibility'
 import { logAgencyAction } from '@touracore/audit'
 
 export async function updateBrandingAction(input: {

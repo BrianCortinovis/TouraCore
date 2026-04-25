@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { z } from 'zod'
-import { assertUserOwnsRestaurant, assertRoomInRestaurant, assertTableInRestaurant } from '@/lib/restaurant-guard'
+import { assertUserOwnsRestaurant, assertRoomInRestaurant } from '@/lib/restaurant-guard'
 
 const PositionSchema = z.object({
   x: z.number(),

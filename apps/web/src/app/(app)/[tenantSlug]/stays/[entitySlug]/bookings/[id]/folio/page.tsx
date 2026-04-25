@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@touracore/db/server'
-import { ArrowLeft, UtensilsCrossed, Receipt, Plus } from 'lucide-react'
+import { ArrowLeft, UtensilsCrossed, Receipt } from 'lucide-react'
 
 interface Props {
   params: Promise<{ tenantSlug: string; entitySlug: string; id: string }>

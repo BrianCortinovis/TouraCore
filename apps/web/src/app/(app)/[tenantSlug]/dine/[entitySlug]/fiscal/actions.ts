@@ -165,7 +165,7 @@ export async function issueRTReceiptForOrder(input: {
       const config = JSON.parse(decrypted) as { middlewareUrl?: string; fiscalSerial?: string }
       middlewareUrl = config.middlewareUrl ?? ''
       rtSerial = config.fiscalSerial ?? ''
-    } catch (e) {
+    } catch {
       // Decryption fail
     }
   }

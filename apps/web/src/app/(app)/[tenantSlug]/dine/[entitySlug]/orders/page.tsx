@@ -6,7 +6,7 @@ interface Props {
 }
 
 export default async function OrdersPage({ params, searchParams }: Props) {
-  const { tenantSlug, entitySlug } = await params
+  const { entitySlug } = await params
   const { filter } = await searchParams
   const supabase = await createServerSupabaseClient()
 

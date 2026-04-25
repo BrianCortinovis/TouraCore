@@ -1,9 +1,8 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { Plus, Download, Send, CheckCircle, FileText, Receipt, Building, UtensilsCrossed } from 'lucide-react'
+import { Plus, Download, Send, CheckCircle, Building, UtensilsCrossed } from 'lucide-react'
 import { createDocument, downloadDocumentXml, markDocumentSubmitted, markDocumentPaid } from './actions'
 
 interface Document {

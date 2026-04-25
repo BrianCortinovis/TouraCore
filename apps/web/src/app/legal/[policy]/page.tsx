@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import {
   renderPolicy,
-  getPolicyVersion,
   SUPPORTED_LOCALES,
   type Locale,
 } from '@touracore/compliance'

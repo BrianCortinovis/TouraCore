@@ -1,5 +1,4 @@
 import { notFound, redirect } from 'next/navigation'
-import Link from 'next/link'
 import { getAuthBootstrapData } from '@touracore/auth/bootstrap'
 import {
   getPartnerById,

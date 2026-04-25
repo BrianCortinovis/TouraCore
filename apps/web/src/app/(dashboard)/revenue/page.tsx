@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Badge, Button, DataTable, Input, Modal, Select } from '@touracore/ui'
-import { Calendar, Loader2, Percent, RefreshCw, Sparkles, TrendingUp } from 'lucide-react'
+import { Calendar, Loader2, Percent, RefreshCw, TrendingUp } from 'lucide-react'
 import { WeekdaySelector } from '@touracore/hospitality/src/components/rates'
 import type { PricingRuleType, PriceSuggestion, PricingRule } from '@touracore/hospitality/src/types/database'
 import {

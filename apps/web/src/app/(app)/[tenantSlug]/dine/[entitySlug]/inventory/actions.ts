@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { z } from 'zod'
-import { assertUserOwnsRestaurant, assertIngredientInRestaurant } from '@/lib/restaurant-guard'
+import { assertUserOwnsRestaurant } from '@/lib/restaurant-guard'
 
 const IngredientSchema = z.object({
   restaurantId: z.string().uuid(),

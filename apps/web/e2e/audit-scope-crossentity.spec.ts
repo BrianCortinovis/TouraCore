@@ -36,7 +36,7 @@ async function createSeasonOn(page: any, tenantSlug: string, entitySlug: string,
 const ENTITIES = ['villa-irabo', 'grand-hotel-adriatico', 'bnb-il-glicine']
 
 for (const entity of ENTITIES) {
-  test(`SCOPE: create season on ${entity}`, async ({ page, request }) => {
+  test(`SCOPE: create season on ${entity}`, async ({ page }) => {
     const name = `SCOPETEST_${entity.slice(0, 8)}_${Date.now().toString().slice(-6)}`
     const ok = await createSeasonOn(page, TENANT, entity, name)
     if (!ok) { results.push({ entity, expected: entity, got: null, result: 'FAIL' }); return }

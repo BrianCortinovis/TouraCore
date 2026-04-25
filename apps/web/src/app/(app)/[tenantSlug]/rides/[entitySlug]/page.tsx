@@ -2,7 +2,7 @@ import { createServerSupabaseClient } from '@touracore/db/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Bike, CalendarClock, MapPin, Zap, CheckCircle2, AlertCircle } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle, Badge } from '@touracore/ui'
+import { Card, CardContent, CardHeader, CardTitle } from '@touracore/ui'
 import { getFleetStats } from '@touracore/bike-rental'
 import { getReservationStats } from '@touracore/bike-rental'
 

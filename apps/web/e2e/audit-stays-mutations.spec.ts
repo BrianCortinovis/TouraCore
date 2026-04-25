@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test } from '@playwright/test'
 
 const TENANT = 'villa-irabo'
 const ENTITY = 'villa-irabo'

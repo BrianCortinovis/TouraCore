@@ -101,7 +101,6 @@ export async function POST(request: NextRequest) {
             ])
 
             const tenantName = (tenantData.data as { name?: string } | null)?.name ?? 'TouraCore'
-            const tenantSlug = (tenantData.data as { slug?: string } | null)?.slug ?? ''
 
             if (instrumentData.data) {
               // Sign JWT + deliver URL

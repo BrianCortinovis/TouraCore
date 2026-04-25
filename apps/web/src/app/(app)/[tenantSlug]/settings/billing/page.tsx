@@ -39,11 +39,6 @@ export default async function BillingSettingsPage({ params }: BillingSettingsPro
     .eq('tenant_id', tenant.id)
     .maybeSingle()
 
-  const { data: subscriptionItems } = await admin
-    .from('subscription_items')
-    .select('*')
-    .eq('tenant_id', tenant.id)
-
   const { data: overrides } = await admin
     .from('module_overrides')
     .select('module_code,override_type,valid_until,reason')

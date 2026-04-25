@@ -36,7 +36,7 @@ interface Props {
 export function LocksView({ tenantSlug, entitySlug, entityId, locks, codes }: Props) {
   const [showAdd, setShowAdd] = useState(false)
   const [issuePinFor, setIssuePinFor] = useState<Lock | null>(null)
-  const [pending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
 
   return (
     <>

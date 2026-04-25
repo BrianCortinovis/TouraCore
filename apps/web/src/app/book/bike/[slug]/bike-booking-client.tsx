@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
-import { Bike, CalendarClock, MapPin, Check, Loader2, Ticket, X } from 'lucide-react'
+import { Bike, CalendarClock, MapPin, Check, Loader2, Ticket } from 'lucide-react'
 import { createBookingAction } from './actions'
 import { validateVoucherAction } from './voucher-actions'
 
@@ -61,7 +61,7 @@ interface AppliedVoucher {
 export function BikeBookingClient({
   entityId,
   tenantId,
-  entityName,
+  entityName: _entityName,
   types,
   addons,
   locations,

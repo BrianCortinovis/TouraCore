@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Plus, Award, TrendingUp, Star } from 'lucide-react'
+import { Plus, Award, Star } from 'lucide-react'
 import { createLoyaltyProgram, createLoyaltyTier, adjustGuestPoints } from './actions'
 
 interface Tier { id: string; name: string; minPoints: number; benefits: string[]; colorHex: string | null }

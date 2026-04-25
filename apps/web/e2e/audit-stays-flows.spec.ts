@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test } from '@playwright/test'
 
 const TENANT = 'villa-irabo'
 const ENTITY = 'villa-irabo'
@@ -240,7 +240,7 @@ test('FLOW: public listing', async ({ browser }) => {
   await page.waitForTimeout(1500)
   const status = resp?.status() ?? 0
   const body = await page.locator('body').innerText().catch(() => '')
-  const hasBE = body.includes('Prenota') || body.includes('booking') || body.includes('camere')
+  const _hasBE = body.includes('Prenota') || body.includes('booking') || body.includes('camere')
   await ctx.close()
   if (status >= 400) { log('Public listing', 'FAIL', `HTTP ${status}`); return }
   if (errs.length) { log('Public listing', 'FAIL', ...errs.slice(0, 3)); return }

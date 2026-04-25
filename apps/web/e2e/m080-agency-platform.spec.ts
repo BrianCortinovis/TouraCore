@@ -48,7 +48,7 @@ test.describe('M080 agency+platform live verify', () => {
     await page.fill('input[type=password]', 'OwnerTest2026!')
     await page.click('button[type=submit]')
     await page.waitForLoadState('networkidle')
-    const res = await page.goto(`${BASE}/a/riviera-travel`)
+    await page.goto(`${BASE}/a/riviera-travel`)
     // Deve redirect a / o 403
     expect(page.url()).not.toContain('/a/riviera-travel')
   })

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test } from '@playwright/test'
 
 const TENANT = 'villa-irabo'
 const ENTITY = 'villa-irabo'
@@ -132,7 +132,7 @@ for (const route of routes) {
 
     // Count interactive elements
     const btnCount = await page.locator('button:visible').count()
-    const linkCount = await page.locator('a:visible').count()
+    const _linkCount = await page.locator('a:visible').count()
     const inputCount = await page.locator('input:visible,select:visible,textarea:visible').count()
     findings.push(`btns=${btnCount} inputs=${inputCount}`)
 

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { Plus, List, LayoutGrid, Clock } from 'lucide-react'
 import { createReservation, updateReservationStatus, moveReservation } from './actions'

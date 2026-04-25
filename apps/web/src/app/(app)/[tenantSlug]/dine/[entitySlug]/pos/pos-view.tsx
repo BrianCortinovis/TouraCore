@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition, useEffect } from 'react'
-import { Plus, Send, X, Receipt, AlertTriangle } from 'lucide-react'
+import { Send, X, Receipt, AlertTriangle } from 'lucide-react'
 import { openOrder, addItemToOrder, sendOrderToKitchen, voidOrderItem, closeOrder, findInHouseStays } from './actions'
 
 interface TableT {

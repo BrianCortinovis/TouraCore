@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { createServiceRoleClient } from '@touracore/db/server'
 import {
   Activity,
-  CheckCircle2,
   ExternalLink,
   Gauge,
   Server,

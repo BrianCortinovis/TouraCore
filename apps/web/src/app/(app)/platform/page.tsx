@@ -6,11 +6,10 @@ export const dynamic = 'force-dynamic'
 export default async function PlatformHomePage() {
   const supabase = await createServiceRoleClient()
 
-  const [{ count: agenciesCount }, { count: tenantsCount }, { data: commissions }, { count: bookingsToday }] = await Promise.all([
+  const [{ count: agenciesCount }, { count: tenantsCount }, { data: commissions }] = await Promise.all([
     supabase.from('agencies').select('id', { count: 'exact', head: true }).eq('is_active', true),
     supabase.from('tenants').select('id', { count: 'exact', head: true }).eq('is_active', true),
     supabase.from('agency_commissions').select('commission_amount, status, accrued_at').gte('accrued_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()),
-    supabase.from('reservations').select('id', { count: 'exact', head: true }).eq('check_in', new Date().toISOString().slice(0, 10)).neq('status', 'cancelled'),
   ])
 
   let mrrEstimated = 0

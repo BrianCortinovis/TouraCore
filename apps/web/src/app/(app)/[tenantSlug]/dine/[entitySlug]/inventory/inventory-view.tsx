@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Plus, AlertTriangle, ArrowDownCircle, ArrowUpCircle } from 'lucide-react'
+import { Plus, AlertTriangle } from 'lucide-react'
 import { createIngredient, recordStockMovement } from './actions'
 
 interface Ingredient {

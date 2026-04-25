@@ -10,10 +10,8 @@ test.describe('Vertical switcher top-bar', () => {
     // VerticalSwitcher mostra "Ospitalità" o "Seleziona vertical" o icon+label.
     // Verifica presenza chip con uno dei labels
     const possibleLabels = [/ospitalità/i, /ristorazione/i]
-    let found = false
     for (const label of possibleLabels) {
       if (await authedPage.locator('header').getByText(label).count() > 0) {
-        found = true
         break
       }
     }

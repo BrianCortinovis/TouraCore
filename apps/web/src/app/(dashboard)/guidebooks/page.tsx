@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Button, Input, Select, Modal, DataTable, Badge } from '@touracore/ui'
+import { Button, Input, Select, Modal, Badge } from '@touracore/ui'
 import { useAuthStore } from '@touracore/auth/store'
 import {
   listGuidebooksAction,

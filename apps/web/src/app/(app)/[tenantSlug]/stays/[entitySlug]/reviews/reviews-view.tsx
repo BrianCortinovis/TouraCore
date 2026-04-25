@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
-import { Star, MessageSquare, Flag, EyeOff, AlertCircle } from 'lucide-react'
+import { Star, MessageSquare, Flag, EyeOff } from 'lucide-react'
 import { replyToReview, flagReview, hideReview } from './actions'
 
 interface Review {

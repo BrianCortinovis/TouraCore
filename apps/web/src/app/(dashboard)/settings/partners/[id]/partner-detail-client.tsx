@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Copy, Plus, Link2, Key, X, Check } from 'lucide-react'
+import { Copy, Plus, Key, X } from 'lucide-react'
 import type {
   PartnerRow,
   PartnerLinkRow,

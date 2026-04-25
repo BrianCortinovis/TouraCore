@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createServerSupabaseClient, createServiceRoleClient } from '@touracore/db/server'
+import { createServiceRoleClient } from '@touracore/db/server'
 import { getCurrentUser } from '@touracore/auth'
 import { z } from 'zod'
 

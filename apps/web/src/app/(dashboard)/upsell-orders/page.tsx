@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Button, DataTable, Badge, Select } from '@touracore/ui'
+import { DataTable, Badge, Select } from '@touracore/ui'
 import { useAuthStore } from '@touracore/auth/store'
 import { listUpsellOrdersAction, updateUpsellOrderStatusAction } from '../competitive-actions'
 

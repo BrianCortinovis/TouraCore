@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Plus, Handshake, X } from 'lucide-react'
 import type { PartnerRow } from '@touracore/partners'
-import { createPartnerAction, updatePartnerStatusAction } from './actions'
+import { createPartnerAction } from './actions'
 
 interface Props {
   partners: PartnerRow[]

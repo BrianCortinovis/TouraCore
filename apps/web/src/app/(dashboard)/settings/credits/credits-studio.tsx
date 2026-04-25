@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Plus, Gift, Ticket, Tag, CreditCard, Copy, Check, X, Pause, Play } from 'lucide-react'
@@ -360,7 +360,7 @@ function CreditRow({ credit, creditDetailBase }: { credit: CreditInstrumentRow; 
 function IssueWizard({
   kind,
   designs,
-  entities,
+  entities: _entities,
   onClose,
 }: {
   kind: Tab

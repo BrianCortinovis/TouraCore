@@ -10,8 +10,7 @@ async function assertPlatformAdmin(userId: string): Promise<boolean> {
   return !!data
 }
 
-const MODULE_CODES = ['hospitality', 'restaurant', 'wellness', 'experiences', 'bike_rental', 'moto_rental', 'ski_school'] as const
-type ModuleCode = typeof MODULE_CODES[number]
+type ModuleCode = 'hospitality' | 'restaurant' | 'wellness' | 'experiences' | 'bike_rental' | 'moto_rental' | 'ski_school'
 
 export async function saveTenantPlatformBillingAction(input: {
   tenantId: string
