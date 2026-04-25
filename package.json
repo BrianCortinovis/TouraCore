@@ -11,7 +11,8 @@
     "test:e2e:public": "pnpm --dir apps/web run test:e2e:public",
     "test:e2e:m080": "pnpm --dir apps/web run test:e2e:m080",
     "verify": "pnpm lint && pnpm typecheck && pnpm test:unit",
-    "secrets": "tsx scripts/secrets/menu.ts"
+    "secrets": "tsx scripts/secrets/menu.ts",
+    "secrets:install-app": "bash scripts/secrets/install-app.sh"
   },
   "devDependencies": {
     "@aws-sdk/client-s3": "^3.1029.0",
