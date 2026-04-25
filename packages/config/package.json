@@ -16,5 +16,8 @@
   "scripts": {
     "build": "true",
     "lint": "true"
+  },
+  "devDependencies": {
+    "eslint-plugin-unused-imports": "^4.4.1"
   }
 }
