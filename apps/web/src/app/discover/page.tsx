@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Image as ImageIcon, Search } from 'lucide-react'
 import {
-  listAllPublicListings,
-  type PublicListing,
+  listAllPublicListingsCards,
+  type PublicListingCard,
   ENTITY_KINDS,
 } from '@touracore/listings'
 import { createPublicClient } from '@/lib/supabase-public'
@@ -42,20 +43,13 @@ const KIND_CHIP_COLOR: Record<string, { bg: string; fg: string }> = {
 export default async function DiscoverPage({ searchParams }: Props) {
   const { kind, q } = await searchParams
   const supabase = createPublicClient()
-  const listings = await listAllPublicListings(supabase, { limit: 200 })
+  const listings = await listAllPublicListingsCards(supabase, { limit: 200 })
 
   const filtered = listings.filter((l) => {
     if (kind && l.entity_kind !== kind) return false
     if (q) {
       const needle = q.toLowerCase()
-      const hay = [
-        l.entity_name,
-        l.tagline ?? '',
-        l.tenant_name,
-        l.entity_description ?? '',
-      ]
-        .join(' ')
-        .toLowerCase()
+      const hay = [l.entity_name, l.tagline ?? '', l.tenant_name].join(' ').toLowerCase()
       if (!hay.includes(needle)) return false
     }
     return true
@@ -152,8 +146,8 @@ export default async function DiscoverPage({ searchParams }: Props) {
           </div>
         ) : (
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filtered.map((l) => (
-              <DiscoverCard key={l.listing_id} listing={l} />
+            {filtered.map((l, idx) => (
+              <DiscoverCard key={l.listing_id} listing={l} priority={idx < 4} />
             ))}
           </ul>
         )}
@@ -168,7 +162,7 @@ export default async function DiscoverPage({ searchParams }: Props) {
   )
 }
 
-function DiscoverCard({ listing }: { listing: PublicListing }) {
+function DiscoverCard({ listing, priority }: { listing: PublicListingCard; priority: boolean }) {
   const color = KIND_CHIP_COLOR[listing.entity_kind] ?? { bg: '#e7f0ff', fg: '#003b95' }
   const href = `/s/${listing.tenant_slug}/${listing.slug}`
   return (
@@ -176,7 +170,14 @@ function DiscoverCard({ listing }: { listing: PublicListing }) {
       <Link href={href}>
         <div className="relative aspect-[16/10] bg-[#e5e7eb]">
           {listing.hero_url ? (
-            <img src={listing.hero_url} alt={listing.entity_name} className="h-full w-full object-cover" loading="lazy" />
+            <Image
+              src={listing.hero_url}
+              alt={listing.entity_name}
+              fill
+              sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+              className="object-cover"
+              priority={priority}
+            />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-[#9ca3af]">
               <ImageIcon size={28} />

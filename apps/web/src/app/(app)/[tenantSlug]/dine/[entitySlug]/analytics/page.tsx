@@ -1,6 +1,12 @@
+import dynamic from 'next/dynamic'
 import { createServerSupabaseClient } from '@touracore/db/server'
 import { ensureRestaurantRecord } from '../settings/actions'
-import { AnalyticsDashboard } from './analytics-dashboard'
+
+// Recharts pesa ~180KB. Carichiamo lato client per non bloccare TTI server.
+const AnalyticsDashboard = dynamic(
+  () => import('./analytics-dashboard').then((m) => m.AnalyticsDashboard),
+  { loading: () => <div className="p-8 text-sm text-gray-500">Caricamento grafici…</div> }
+)
 
 interface Props {
   params: Promise<{ tenantSlug: string; entitySlug: string }>

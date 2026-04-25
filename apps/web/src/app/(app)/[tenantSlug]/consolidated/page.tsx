@@ -1,5 +1,11 @@
+import dynamic from 'next/dynamic'
 import { createServerSupabaseClient } from '@touracore/db/server'
-import { ConsolidatedDashboard } from './consolidated-dashboard'
+
+// Recharts pesa ~180KB, lazy lato client.
+const ConsolidatedDashboard = dynamic(
+  () => import('./consolidated-dashboard').then((m) => m.ConsolidatedDashboard),
+  { loading: () => <div className="p-8 text-sm text-gray-500">Caricamento grafici…</div> }
+)
 
 interface Props {
   params: Promise<{ tenantSlug: string }>
