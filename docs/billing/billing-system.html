@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TouraCore — Sistema Billing</title>
+<title>TouraCore — Sistema Billing v4</title>
 <style>
   :root {
     --bg: #faf9f5;
@@ -67,9 +67,21 @@
     display: flex;
     gap: 16px;
     flex-wrap: wrap;
+    align-items: center;
   }
   header.hero .meta span::before { content: "·"; margin-right: 16px; color: var(--line); }
   header.hero .meta span:first-child::before { content: ""; margin-right: 0; }
+  header.hero a.history-link {
+    margin-left: auto;
+    color: var(--info);
+    text-decoration: none;
+    font-size: 13px;
+    border: 1px solid var(--line);
+    padding: 6px 12px;
+    border-radius: 999px;
+  }
+  header.hero a.history-link:hover { background: var(--card); }
+  header.hero a.history-link::before { content: ""; }
 
   nav.toc {
     background: var(--card);
@@ -231,7 +243,6 @@
   .pill.todo { background: var(--warn-soft); color: var(--warn); border-color: var(--warn); }
   .pill.accent { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
 
-  /* Diagramma flusso */
   .flow {
     background: var(--card);
     border: 1px solid var(--line);
@@ -242,7 +253,6 @@
   }
   .flow svg { width: 100%; height: auto; min-width: 720px; }
 
-  /* Tabs */
   .tabs {
     display: flex;
     gap: 4px;
@@ -266,7 +276,6 @@
   .tab-pane { display: none; }
   .tab-pane.active { display: block; }
 
-  /* Calculator */
   .calc {
     background: var(--card);
     border: 1px solid var(--line);
@@ -313,30 +322,10 @@
   .calc-line .amt.pos { color: var(--success); }
   .calc-line .amt.neg { color: var(--accent); }
 
-  /* Toggle scenario */
-  .toggle-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-  }
-  .toggle-row button {
-    background: var(--card);
-    border: 1px solid var(--line);
-    padding: 8px 14px;
-    border-radius: 999px;
-    font-size: 13px;
-    cursor: pointer;
-    color: var(--ink-soft);
-    font-family: inherit;
-  }
-  .toggle-row button.active {
-    background: var(--ink);
-    color: var(--bg);
-    border-color: var(--ink);
-  }
+  ul.clean, ol.clean { margin: 8px 0 16px 22px; }
+  ul.clean li, ol.clean li { margin-bottom: 6px; color: var(--ink-soft); }
+  ul.clean li strong { color: var(--ink); }
 
-  /* Accordion */
   details {
     background: var(--card);
     border: 1px solid var(--line);
@@ -362,10 +351,6 @@
   details[open] summary::after { transform: rotate(45deg); }
   details[open] { padding-bottom: 18px; }
   details .body { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line-soft); font-size: 14px; color: var(--ink-soft); }
-
-  ul.clean, ol.clean { margin: 8px 0 16px 22px; }
-  ul.clean li, ol.clean li { margin-bottom: 6px; color: var(--ink-soft); }
-  ul.clean li strong { color: var(--ink); }
 
   footer {
     margin-top: 80px;
@@ -399,909 +384,460 @@
 <header class="hero">
   <div class="eyebrow">Documentazione interna · TouraCore</div>
   <h1>Sistema Billing</h1>
-  <p class="lede">Come si muovono i soldi dentro TouraCore: dal cliente che prenota fino al super admin. Senza gergo tecnico, con esempi e calcolatore live.</p>
+  <p class="lede">Come funziona oggi: cliente paga direttamente al tenant via Stripe Connect Direct Charge, TouraCore preleva solo la commissione. Mai banca, mai cassa intermedia.</p>
   <div class="meta">
     <span>v4 · 2026-04-26</span>
-    <span>Branch: main</span>
-    <span>Audience: non-developer</span>
-    <span>Tempo lettura: ~14 min</span>
-    <span class="pill ok" style="margin-left:6px;">Direct Charge end-to-end</span>
+    <span>Branch: main · LIVE</span>
+    <span class="pill ok">Direct Charge end-to-end</span>
+    <a href="billing-system-history.html" class="history-link">📜 Storico v1 → v4</a>
   </div>
 </header>
 
 <nav class="toc">
   <h3>In questa guida</h3>
   <ol>
-    <li><a href="#attori">I 3 attori del sistema</a></li>
-    <li><a href="#flusso">Flusso completo dei soldi</a></li>
-    <li><a href="#modelli">I 4 modelli di pagamento</a></li>
-    <li><a href="#scenari">Scenari interattivi</a></li>
+    <li><a href="#tldr">Riassunto in 60 secondi</a></li>
+    <li><a href="#flusso">Flusso fisico dei soldi</a></li>
+    <li><a href="#attori">I 3 attori</a></li>
+    <li><a href="#tariffe">Le 4 tariffe (rate plans)</a></li>
+    <li><a href="#timeline">Timeline prenotazione → pagamento</a></li>
     <li><a href="#calc">Calcolatore live</a></li>
-    <li><a href="#scaglioni">Scaglioni di default</a></li>
-    <li><a href="#tabelle">Tabelle database</a></li>
-    <li><a href="#accrual">Quando matura una commissione</a></li>
-    <li><a href="#cron">Automazioni notturne (cron)</a></li>
-    <li><a href="#ui">Dove il super admin vede tutto</a></li>
-    <li><a href="#mental">Mental model finale</a></li>
-    <li><a href="#money-flow">Flusso fisico soldi (Stripe Connect)</a></li>
-    <li><a href="#changelog">Changelog v2 · v3</a></li>
+    <li><a href="#stripe-vs-custom">Stripe nativo vs custom</a></li>
+    <li><a href="#ui">UI per tenant + super admin</a></li>
+    <li><a href="#cron">Automazioni notturne</a></li>
+    <li><a href="#fail">Cosa succede se la carta fallisce</a></li>
+    <li><a href="#tabelle">Tabelle DB chiave</a></li>
+    <li><a href="#todo">TODO residui (v5)</a></li>
   </ol>
 </nav>
 
 <!-- ==================================================== -->
-<section id="attori">
-  <h2><span class="num">01</span>I 3 attori del sistema</h2>
-  <p class="subtitle">Tutto il sistema billing ruota intorno a tre soggetti più uno: il cliente finale.</p>
+<section id="tldr">
+  <h2><span class="num">01</span>Riassunto in 60 secondi</h2>
 
-  <div class="card-row">
-    <div class="stat">
-      <div class="label">Cliente finale</div>
-      <div class="val">Paga e basta</div>
-      <div class="hint">Turista, ospite hotel, cliente ristorante, noleggiatore bici. Non sa nulla del backstage: paga la struttura.</div>
-    </div>
-    <div class="stat">
-      <div class="label">Tenant (struttura)</div>
-      <div class="val">Incassa & paga</div>
-      <div class="hint">Hotel, ristorante, bike shop, tour operator. Riceve dal cliente, paga TouraCore + (eventuale) agenzia.</div>
-    </div>
-    <div class="stat">
-      <div class="label">Agenzia <span class="pill">opzionale</span></div>
-      <div class="val">Intermediaria</div>
-      <div class="hint">Gestisce più tenant. Prende commissioni dai tenant. Paga TouraCore per la piattaforma.</div>
-    </div>
-    <div class="stat">
-      <div class="label">TouraCore (super admin = tu)</div>
-      <div class="val">In cima</div>
-      <div class="hint">La piattaforma. Incassa da tenant diretti e da agenzie. Non paga nessuno.</div>
-    </div>
+  <div class="card" style="font-size:17px;line-height:1.7;">
+    <p>Cliente prenota su <strong>villasole.touracore.it</strong>. Inserisce carta. <strong>Niente viene addebitato subito</strong> (rate plan free_cancellation di default).</p>
+    <p>7 giorni prima del check-in, un cron automatico crea un PaymentIntent <strong>direttamente sull'account Stripe del tenant</strong> con <code>application_fee_amount</code> = commissione TouraCore.</p>
+    <p>Al check-in, l'hotel preme <em>"Cattura"</em>: Stripe splitta i soldi alla fonte. <strong>€900 vanno all'hotel, €100 a TouraCore. Mai un euro transita sul conto TouraCore</strong>.</p>
+    <p>Stripe bonifica daily al tenant via SEPA. TouraCore riceve i propri €100 sul proprio IBAN.</p>
   </div>
 </section>
 
 <!-- ==================================================== -->
 <section id="flusso">
-  <h2><span class="num">02</span>Flusso completo dei soldi</h2>
-  <p class="subtitle">Diagramma del viaggio di un euro dalla carta di credito del cliente fino al conto TouraCore.</p>
+  <h2><span class="num">02</span>Flusso fisico dei soldi</h2>
+  <p class="subtitle">La regola architetturale: TouraCore mai banca. Stripe Connect Direct Charge splitta alla fonte.</p>
 
-  <div class="toggle-row" role="tablist">
-    <button class="active" data-flow="con-agenzia">Con agenzia (3 livelli)</button>
-    <button data-flow="senza-agenzia">Senza agenzia (2 livelli)</button>
+  <div class="flow">
+    <svg viewBox="0 0 800 480" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, system-ui, sans-serif">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#c96442"/>
+        </marker>
+        <marker id="arGr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#4a7c59"/>
+        </marker>
+        <marker id="arBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#4a6fa5"/>
+        </marker>
+      </defs>
+
+      <!-- Cliente -->
+      <g>
+        <rect x="300" y="20" width="200" height="60" rx="10" fill="#f4ddd1" stroke="#c96442" stroke-width="1.5"/>
+        <text x="400" y="45" text-anchor="middle" font-size="14" font-weight="600" fill="#1a1a1a">CLIENTE FINALE</text>
+        <text x="400" y="63" text-anchor="middle" font-size="11" fill="#4a4a4a">paga €1000 con carta</text>
+      </g>
+
+      <!-- Stripe Network -->
+      <g>
+        <rect x="240" y="170" width="320" height="80" rx="10" fill="#dde5f0" stroke="#4a6fa5" stroke-width="1.5"/>
+        <text x="400" y="198" text-anchor="middle" font-size="14" font-weight="600" fill="#1a1a1a">STRIPE NETWORK</text>
+        <text x="400" y="218" text-anchor="middle" font-size="11" fill="#4a4a4a">Direct Charge con application_fee</text>
+        <text x="400" y="236" text-anchor="middle" font-size="11" fill="#4a4a4a">on_behalf_of + transfer_data</text>
+      </g>
+
+      <!-- Tenant Stripe -->
+      <g>
+        <rect x="40" y="340" width="220" height="80" rx="10" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
+        <text x="150" y="368" text-anchor="middle" font-size="14" font-weight="600" fill="#1a1a1a">STRIPE TENANT</text>
+        <text x="150" y="388" text-anchor="middle" font-size="11" fill="#4a4a4a">€900 → balance hotel</text>
+        <text x="150" y="406" text-anchor="middle" font-size="11" fill="#4a7c59">payout SEPA daily → IBAN</text>
+      </g>
+
+      <!-- TouraCore Stripe -->
+      <g>
+        <rect x="540" y="340" width="220" height="80" rx="10" fill="#1a1a1a" stroke="#1a1a1a" stroke-width="1.5"/>
+        <text x="650" y="368" text-anchor="middle" font-size="14" font-weight="600" fill="#faf9f5">STRIPE TOURACORE</text>
+        <text x="650" y="388" text-anchor="middle" font-size="11" fill="#e8e4d8">€100 (application_fee)</text>
+        <text x="650" y="406" text-anchor="middle" font-size="11" fill="#e8e4d8">payout SEPA → IBAN TouraCore</text>
+      </g>
+
+      <!-- Frecce -->
+      <line x1="400" y1="80" x2="400" y2="170" stroke="#4a7c59" stroke-width="2" marker-end="url(#arGr)"/>
+      <text x="412" y="130" font-size="11" fill="#4a7c59" font-weight="600">€1000</text>
+
+      <path d="M 280 250 Q 200 290 175 340" stroke="#4a7c59" stroke-width="2" fill="none" marker-end="url(#arGr)"/>
+      <text x="180" y="295" font-size="11" fill="#4a7c59" font-weight="600">€900 (split alla fonte)</text>
+
+      <path d="M 520 250 Q 600 290 625 340" stroke="#c96442" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+      <text x="585" y="295" font-size="11" fill="#c96442" font-weight="600">€100 fee</text>
+
+      <text x="400" y="460" text-anchor="middle" font-size="12" font-style="italic" fill="#8a8a8a">Zero spostamenti manuali. TouraCore non vede mai i €900.</text>
+    </svg>
   </div>
 
-  <div class="flow" id="flow-diagram">
-    <!-- SVG dinamico -->
+  <div class="callout success">
+    <strong>Garanzia regola architetturale</strong>
+    Nessun checkout pubblico viene attivato senza tenant Stripe Connect <code>charges_enabled = true</code>. Block hard a livello server action di pubblicazione entity (<code>STRIPE_CONNECT_REQUIRED</code>).
   </div>
 </section>
 
 <!-- ==================================================== -->
-<section id="modelli">
-  <h2><span class="num">03</span>I 4 modelli di pagamento</h2>
-  <p class="subtitle">Tra ogni coppia di attori (tenant→TouraCore, tenant→agenzia, agenzia→TouraCore) si applica uno di questi 4 modelli. Sempre gli stessi 4.</p>
+<section id="attori">
+  <h2><span class="num">03</span>I 3 attori</h2>
+
+  <div class="card-row">
+    <div class="stat">
+      <div class="label">Cliente finale</div>
+      <div class="val">Paga e va</div>
+      <div class="hint">Vede solo "carta salvata su Hotel Villa Sole". Nessun addebito al booking se rate plan = free_cancellation.</div>
+    </div>
+    <div class="stat">
+      <div class="label">Tenant (struttura)</div>
+      <div class="val">Riceve diretto</div>
+      <div class="hint">Onboarding Stripe Express 5min. Bonifico SEPA daily sul proprio IBAN. Mai vede TouraCore in mezzo.</div>
+    </div>
+    <div class="stat">
+      <div class="label">TouraCore (super admin = tu)</div>
+      <div class="val">Solo fee</div>
+      <div class="hint">Riceve solo <code>application_fee_amount</code> sul proprio Stripe. Mai banca, mai cassa intermedia.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================================================== -->
+<section id="tariffe">
+  <h2><span class="num">04</span>Le 4 tariffe (rate plans)</h2>
+  <p class="subtitle">Il tenant configura quali tariffe offrire in <code>/[tenantSlug]/{stays|dine|rides|activities}/[entitySlug]/rate-plans</code>. Default auto-creato alla prima visita = <strong>free_cancellation</strong>.</p>
 
   <table class="data">
     <thead>
-      <tr><th>Modello</th><th>Come funziona</th><th>Esempio reale</th><th>Quando ha senso</th></tr>
+      <tr><th>Tipo</th><th>Quando addebita</th><th>Cancellazione</th><th>Tipico per</th></tr>
     </thead>
     <tbody>
       <tr>
-        <td><span class="pill accent">subscription</span></td>
-        <td>Canone fisso ricorrente</td>
-        <td><strong>€29/mese</strong> hotel<br>indipendente da quanto fattura</td>
-        <td>Tenant maturo, vuole costo prevedibile</td>
+        <td><span class="pill ok">free_cancellation</span></td>
+        <td>Carta salvata al booking. Charge 7gg prima del check-in.</td>
+        <td>Gratuita fino a 7gg prima.</td>
+        <td>Default. Hotel/B&B/esperienze flessibili.</td>
       </tr>
       <tr>
-        <td><span class="pill accent">commission</span></td>
-        <td>Solo % sulle prenotazioni</td>
-        <td><strong>10% × €1000</strong> = €100<br>per ogni prenotazione</td>
-        <td>Tenant nuovo, paga solo se vende</td>
+        <td><span class="pill accent">deposit_30</span></td>
+        <td>30% subito + saldo 30gg prima.</td>
+        <td>Gratuita fino a 30gg prima, poi perdi il 30%.</td>
+        <td>Strutture con cash flow esigente.</td>
       </tr>
       <tr>
-        <td><span class="pill accent">hybrid</span></td>
-        <td>Canone + commissione</td>
-        <td><strong>€29/mese + 5%</strong> per prenotazione</td>
-        <td>Mix: copre costi base + condivide upside</td>
+        <td><span class="pill accent">partially_refundable_50</span></td>
+        <td>50% subito + saldo 14gg prima.</td>
+        <td>Rimborso 50% se cancelli.</td>
+        <td>Bilanciato impegno cliente / flessibilità.</td>
       </tr>
       <tr>
-        <td><span class="pill ok">free</span></td>
-        <td>Zero (omaggio)</td>
-        <td>0 €</td>
-        <td>Pilota, partner strategico, periodo trial</td>
+        <td><span class="pill todo">non_refundable</span></td>
+        <td>100% subito (sconto 10%).</td>
+        <td>Nessun rimborso.</td>
+        <td>Offerte Early Bird / non-refundable rate.</td>
       </tr>
     </tbody>
   </table>
 
-  <h3>Tariffe di default su TouraCore</h3>
-  <p>Il super admin ha già impostato i listini di default per i nuovi tenant, modulo per modulo:</p>
-  <table class="data">
-    <thead><tr><th>Modulo</th><th>Canone mensile</th></tr></thead>
-    <tbody>
-      <tr><td>Hospitality (hotel/B&amp;B)</td><td>€29 / mese</td></tr>
-      <tr><td>Restaurant</td><td>€29 / mese</td></tr>
-      <tr><td>Wellness</td><td>€19 / mese</td></tr>
-      <tr><td>Experiences (tour, attività)</td><td>€19 / mese</td></tr>
-      <tr><td>Bike rental</td><td>€15 / mese</td></tr>
-      <tr><td>Moto rental</td><td>€19 / mese</td></tr>
-      <tr><td>Ski school</td><td>€15 / mese</td></tr>
-    </tbody>
-  </table>
-  <p style="font-size:13px;color:var(--ink-mute);">Fonte: <code>supabase/migrations/00063_billing_profiles.sql</code> — record con <code>scope='global_default'</code>.</p>
+  <div class="callout info">
+    <strong>Stessi 4 tipi vale per tutti i 4 verticali</strong>
+    Hospitality, restaurant, bike, experience usano la stessa tabella <code>payment_rate_plans</code> con flag <code>vertical</code>. UI condivisa <code>RatePlansEditor</code> riusata.
+  </div>
 </section>
 
 <!-- ==================================================== -->
-<section id="scenari">
-  <h2><span class="num">04</span>Scenari interattivi</h2>
-  <p class="subtitle">Tre situazioni tipiche. Clicca sulle linguette per vedere come cambiano i flussi.</p>
+<section id="timeline">
+  <h2><span class="num">05</span>Timeline prenotazione → pagamento</h2>
+  <p class="subtitle">Esempio rate plan <strong>free_cancellation</strong>, prenotazione 6 mesi prima del check-in.</p>
 
-  <div class="tabs" id="scenarioTabs">
-    <button class="active" data-scn="A">A · Tenant diretto</button>
-    <button data-scn="B">B · Con agenzia</button>
-    <button data-scn="C">C · Pilota gratuito</button>
+  <div class="card">
+    <ol class="clean">
+      <li><strong>Mese 0 — Cliente prenota.</strong> Inserisce carta sul widget pubblico. Stripe SetupIntent salva token off_session. <strong>Niente addebito. Niente blocco plafond.</strong> Stato: <code>payment_state = card_saved</code>.</li>
+      <li><strong>Mese 1-5 — Attesa.</strong> Niente. Cliente vede zero movimenti. Tenant vede prenotazione confermata. Stripe Card Updater rinnova automatico carta se scade.</li>
+      <li><strong>T-7gg — Cron auto-charge.</strong> <code>auto-charge-bookings</code> alle 03:00 UTC trova la prenotazione, crea PaymentIntent off_session con <code>capture_method = manual</code>. Stripe pre-autorizza €1000. Stato: <code>payment_state = authorized</code>.</li>
+      <li><strong>Giorno check-in — Capture.</strong> Hotel preme <em>"Cattura"</em> (o cron lo fa al check-out). Stripe esegue split: €900 al tenant + €100 fee TouraCore. Stato: <code>payment_state = captured</code>.</li>
+      <li><strong>Stripe payout daily.</strong> €900 dal balance tenant → IBAN tenant via SEPA. €100 dal balance TouraCore → IBAN TouraCore.</li>
+    </ol>
   </div>
 
-  <div class="tab-pane active" data-scn="A">
-    <div class="card">
-      <h3>Scenario A — Hotel direttamente sotto TouraCore</h3>
-      <p>Hotel "Villa Sole" si registra da solo, nessuna agenzia in mezzo.</p>
-      <ul class="clean">
-        <li><strong>Accordo:</strong> TouraCore → Villa Sole = subscription €29/mese</li>
-        <li><strong>Cliente prenota €1000:</strong> Villa Sole incassa €1000 puliti</li>
-        <li><strong>Fine mese:</strong> Stripe addebita €29 a Villa Sole</li>
-        <li><strong>Bilancio TouraCore:</strong> +€29 indipendente da quante prenotazioni</li>
-      </ul>
-      <div class="callout info">
-        <strong>Quando conviene</strong>
-        Tenant medio-grande con volume costante. Costo prevedibile, nessun salasso da % alta.
-      </div>
-    </div>
-  </div>
-
-  <div class="tab-pane" data-scn="B">
-    <div class="card">
-      <h3>Scenario B — Hotel gestito da un'agenzia</h3>
-      <p>L'agenzia "TurismoLago" gestisce 5 hotel. Villa Sole è uno di loro.</p>
-      <ul class="clean">
-        <li><strong>Accordo TouraCore → Villa Sole:</strong> €29/mese (subscription)</li>
-        <li><strong>Accordo Villa Sole → TurismoLago:</strong> 10% per prenotazione (override entity)</li>
-        <li><strong>Accordo TouraCore → TurismoLago:</strong> €299/mese (subscription agenzia)</li>
-        <li><strong>Cliente prenota €1000:</strong>
-          <ul>
-            <li>Villa Sole incassa €1000</li>
-            <li>Villa Sole paga €100 a TurismoLago (commissione)</li>
-            <li>Villa Sole paga €29/mese a TouraCore (canone)</li>
-            <li>TurismoLago paga €299/mese a TouraCore (canone)</li>
-          </ul>
-        </li>
-        <li><strong>TouraCore mese (1 prenotazione):</strong> €29 + €299 = <strong>€328</strong></li>
-      </ul>
-      <div class="callout warn">
-        <strong>Soglia agenzia</strong>
-        L'agenzia deve generare almeno €299/mese di commissioni dai suoi tenant per andare in pari.
-      </div>
-    </div>
-  </div>
-
-  <div class="tab-pane" data-scn="C">
-    <div class="card">
-      <h3>Scenario C — Tenant pilota gratuito</h3>
-      <p>Stai testando un nuovo verticale con un partner. Vuoi zero attrito.</p>
-      <ul class="clean">
-        <li><strong>Accordo:</strong> TouraCore → Tenant = <span class="pill ok">free</span></li>
-        <li><strong>Cliente prenota €1000:</strong> il tenant incassa €1000 puliti</li>
-        <li><strong>Fine mese:</strong> nulla</li>
-        <li><strong>Quando conversire a paid:</strong> a fine periodo trial cambi <code>billing_model</code> da <code>free</code> a <code>subscription</code> o <code>commission</code></li>
-      </ul>
-      <div class="callout success">
-        <strong>Override pulito</strong>
-        Il modello "free" è gestito esplicitamente: il sistema sa che la commissione è 0%, non un bug.
-      </div>
-    </div>
+  <div class="callout warn">
+    <strong>Limite Stripe pre-auth = 7 giorni</strong>
+    Per questo per booking &gt;7gg in anticipo serve la fase 1 (carta salvata) + fase 3 (charge a T-7gg). Stripe non permette pre-auth più lunghe; carte salvate sì, indefinitamente.
   </div>
 </section>
 
 <!-- ==================================================== -->
 <section id="calc">
-  <h2><span class="num">05</span>Calcolatore live</h2>
-  <p class="subtitle">Imposta i parametri e vedi in tempo reale chi incassa cosa su <strong>una singola prenotazione</strong>.</p>
+  <h2><span class="num">06</span>Calcolatore live</h2>
+  <p class="subtitle">Imposta importo prenotazione e commissione TouraCore. Vedi quanto va a chi.</p>
 
   <div class="calc">
     <div class="row">
       <div>
-        <label for="cv-amount">Importo prenotazione (€)</label>
+        <label for="cv-amount">Prenotazione (€)</label>
         <input type="number" id="cv-amount" value="1000" min="0" step="50">
       </div>
       <div>
-        <label for="cv-vertical">Verticale</label>
-        <select id="cv-vertical">
-          <option value="hospitality">Hospitality (hotel)</option>
-          <option value="restaurant">Restaurant</option>
-          <option value="experience">Experience</option>
-          <option value="bike">Bike rental</option>
-        </select>
+        <label for="cv-fee-pct">Commissione TouraCore (%)</label>
+        <input type="number" id="cv-fee-pct" value="10" min="0" max="100" step="0.5">
       </div>
     </div>
 
-    <div class="row">
-      <div>
-        <label for="cv-has-agency">C'è un'agenzia?</label>
-        <select id="cv-has-agency">
-          <option value="no">No — tenant diretto</option>
-          <option value="yes" selected>Sì — gestito da agenzia</option>
-        </select>
-      </div>
-      <div>
-        <label for="cv-month-rev">Fatturato mese agenzia (€) <small>(per scaglione default)</small></label>
-        <input type="number" id="cv-month-rev" value="3000" min="0" step="500">
-      </div>
-    </div>
-
-    <div class="row">
-      <div>
-        <label for="cv-tc-tenant-model">TouraCore → Tenant</label>
-        <select id="cv-tc-tenant-model">
-          <option value="subscription">Subscription (canone)</option>
-          <option value="commission">Commission (%)</option>
-          <option value="hybrid">Hybrid</option>
-          <option value="free">Free</option>
-        </select>
-      </div>
-      <div>
-        <label>
-          Canone <small>€/mese</small> &nbsp; / &nbsp; %
-        </label>
-        <div style="display:flex;gap:8px;">
-          <input type="number" id="cv-tc-tenant-fee" value="29" min="0" step="1" style="flex:1;">
-          <input type="number" id="cv-tc-tenant-pct" value="0" min="0" max="100" step="0.5" style="flex:1;">
-        </div>
-      </div>
-    </div>
-
-    <div class="row" data-agency-row>
-      <div>
-        <label for="cv-agency-override">Override agenzia → tenant</label>
-        <select id="cv-agency-override">
-          <option value="default">Usa scaglioni default</option>
-          <option value="custom">Override custom %</option>
-          <option value="free">Free (0%)</option>
-        </select>
-      </div>
-      <div>
-        <label for="cv-agency-pct">Override % (se custom)</label>
-        <input type="number" id="cv-agency-pct" value="10" min="0" max="100" step="0.5">
-      </div>
-    </div>
-
-    <div class="calc-out" id="calc-out">
-      <!-- popolato via JS -->
-    </div>
+    <div class="calc-out" id="calc-out"></div>
   </div>
 </section>
 
 <!-- ==================================================== -->
-<section id="scaglioni">
-  <h2><span class="num">06</span>Scaglioni di default</h2>
-  <p class="subtitle">Quando l'agenzia <strong>non</strong> imposta un override su una struttura, la commissione che il tenant paga all'agenzia segue questi scaglioni — più fattura nel mese, più sale la %.</p>
+<section id="stripe-vs-custom">
+  <h2><span class="num">07</span>Stripe nativo vs custom</h2>
+  <p class="subtitle">80% del lavoro è Stripe nativo. Custom solo dove Stripe non copre.</p>
 
   <table class="data">
-    <thead>
-      <tr><th>Verticale</th><th>0 – 5.000 €</th><th>5.000 – 20.000 €</th><th>20.000 + €</th></tr>
-    </thead>
+    <thead><tr><th>Funzione</th><th>Stripe nativo</th><th>Custom TouraCore</th></tr></thead>
     <tbody>
-      <tr><td><strong>Hospitality</strong></td><td>10 %</td><td>12 %</td><td>15 %</td></tr>
-      <tr><td><strong>Experience</strong></td><td>10 %</td><td>12 %</td><td>15 %</td></tr>
-      <tr><td><strong>Bike</strong></td><td>8 %</td><td>10 %</td><td>10 %</td></tr>
-      <tr><td><strong>Restaurant</strong></td><td>5 %</td><td>8 %</td><td>8 %</td></tr>
+      <tr><td>Onboarding KYC tenant</td><td>✅ Connect Express + Account Link</td><td>—</td></tr>
+      <tr><td>Salva carta cliente</td><td>✅ Customer + SetupIntent</td><td>—</td></tr>
+      <tr><td>Carta scaduta auto-update</td><td>✅ Card Updater (Visa/MC network)</td><td>—</td></tr>
+      <tr><td>3DS / SCA Italia</td><td>✅ automatico</td><td>—</td></tr>
+      <tr><td>Split fee tenant/TouraCore</td><td>✅ application_fee_amount + transfer_data</td><td>—</td></tr>
+      <tr><td>Payout SEPA al tenant</td><td>✅ daily auto su IBAN</td><td>—</td></tr>
+      <tr><td>Refund / dispute</td><td>✅ Dashboard Stripe</td><td>—</td></tr>
+      <tr><td>Aggiorna carta cliente loggato</td><td>✅ Customer Portal (URL pre-built)</td><td>—</td></tr>
+      <tr><td>Aggiorna carta cliente non-loggato</td><td>—</td><td>Magic link HMAC firmato → redirect a Customer Portal</td></tr>
+      <tr><td>Smart retry pagamenti falliti (one-shot)</td><td>❌ (solo Subscriptions)</td><td>cron retry × 4 a 24h</td></tr>
+      <tr><td>Auto-cancel dopo N fail</td><td>❌</td><td>cron auto-cancel-failed-payments</td></tr>
+      <tr><td>Block pubblicazione entity senza Connect</td><td>❌</td><td>guard server action togglePublicListingAction</td></tr>
+      <tr><td>Booking &gt;30gg orchestration</td><td>❌ (pre-auth max 7gg)</td><td>cron auto-charge-bookings + payment_rate_plans</td></tr>
     </tbody>
   </table>
-
-  <div class="callout info">
-    <strong>Override batte sempre lo scaglione</strong>
-    Se in <code>agency_entity_billing</code> esiste un record con <code>commission_pct</code> per quella coppia agenzia+entità, vince quello e gli scaglioni vengono ignorati.
-  </div>
-
-  <p style="font-size:13px;color:var(--ink-mute);">Sorgente: <code>packages/core/agency/src/commissions.ts</code> · array <code>DEFAULT_TIERS</code> (riga 10).</p>
-</section>
-
-<!-- ==================================================== -->
-<section id="tabelle">
-  <h2><span class="num">07</span>Tabelle database</h2>
-  <p class="subtitle">Le 5 tabelle chiave. Ognuna risponde a una domanda precisa.</p>
-
-  <details>
-    <summary><code>billing_profiles</code> — Tariffe TouraCore → tenant</summary>
-    <div class="body">
-      Definisce, per ogni tenant e ogni modulo, il modello (subscription / commission / hybrid / free) e i parametri economici. Esiste anche a livello "global_default" per i nuovi tenant.
-      <br><br>Risoluzione a cascata: tenant+modulo → tenant generico → agency+modulo → agency generico → global default.
-      <br><br><span class="file-ref">supabase/migrations/00063_billing_profiles.sql</span>
-    </div>
-  </details>
-
-  <details>
-    <summary><code>agency_entity_billing</code> — Override agenzia → tenant</summary>
-    <div class="body">
-      Per ogni coppia (agenzia, entità del cliente) può esistere un accordo specifico che batte gli scaglioni di default. Utile se l'agenzia vuole offrire condizioni diverse a un partner strategico.
-      <br><br><span class="file-ref">supabase/migrations/00138_agency_entity_billing.sql</span>
-    </div>
-  </details>
-
-  <details>
-    <summary><code>agency_platform_billing</code> — Accordo TouraCore ↔ agenzia</summary>
-    <div class="body">
-      Cosa l'agenzia paga a TouraCore: subscription, commission, hybrid o free. La commissione può essere calcolata su <code>client_revenue</code> (fatturato aggregato dei tenant) o su <code>agency_fee</code> (commissioni che l'agenzia incassa dai tenant).
-      <br><br><span class="file-ref">supabase/migrations/00139_agency_platform_billing.sql</span>
-    </div>
-  </details>
-
-  <details>
-    <summary><code>agency_commissions</code> — Ledger storico commissioni</summary>
-    <div class="body">
-      Ogni volta che una prenotazione genera commissione per l'agenzia, qui viene scritto un record. Tre stati possibili:
-      <ul class="clean" style="margin-top:8px;">
-        <li><span class="pill">accrued</span> — maturata, non ancora pagata</li>
-        <li><span class="pill ok">paid</span> — payout eseguito (Stripe Transfer)</li>
-        <li><span class="pill todo">reversed</span> — annullata (es. prenotazione cancellata)</li>
-      </ul>
-      <span class="file-ref">supabase/migrations/00123_agency_commissions.sql</span>
-    </div>
-  </details>
-
-  <details>
-    <summary><code>entity_billing_snapshots</code> — Conteggio mensile entità attive</summary>
-    <div class="body">
-      Per ogni tenant + modulo + mese, snapshot di quante entità (es. 3 hotel) sono attive. Serve per fatturare a quantità: prezzo base + (count − 1) × prezzo unit. Sincronizzato con Stripe via cron.
-      <br><br><span class="file-ref">supabase/migrations/00128_module_billing_units.sql</span>
-    </div>
-  </details>
-</section>
-
-<!-- ==================================================== -->
-<section id="accrual">
-  <h2><span class="num">08</span>Quando matura una commissione</h2>
-  <p class="subtitle">La funzione <code>accrueCommission()</code> è il cuore del sistema commissioni. Ecco cosa fa quando una prenotazione viene confermata.</p>
-
-  <ol class="clean">
-    <li><strong>Calcola fatturato del mese</strong> per quella agenzia + tipo prenotazione (escludendo i record stornati). Serve a determinare lo scaglione.</li>
-    <li><strong>Risolve la tariffa:</strong>
-      <ul class="clean" style="margin-top:6px;">
-        <li>Se esiste override in <code>agency_entity_billing</code> con <code>commission_pct</code> → usa quello</li>
-        <li>Se modello <code>free</code> → tariffa = 0</li>
-        <li>Altrimenti → scaglione di default in base al fatturato mensile</li>
-      </ul>
-    </li>
-    <li><strong>Calcola importo</strong>: <code>gross_amount × rate</code> arrotondato a 2 decimali.</li>
-    <li><strong>Inserisce record</strong> in <code>agency_commissions</code> con <code>status='accrued'</code>.</li>
-  </ol>
-
-  <h3>Trigger automatico (v2)</h3>
-  <p>L'helper <code>onReservationStatusChange</code> in <code>packages/core/agency/src/wiring.ts</code> è chiamato dopo ogni cambio di stato prenotazione su tutti e 4 i verticali. Risolve:</p>
-  <ul class="clean">
-    <li><strong>tenant → agency</strong> via <code>agency_tenant_links</code> (status='active'). Se non c'è agenzia: no-op.</li>
-    <li><strong>gross_amount</strong>: <code>total_amount</code> per hospitality/bike, <code>covers_billed_to_folio || deposit_amount</code> per restaurant, <code>total_cents/100</code> per experience.</li>
-    <li><strong>currency</strong>: dal record reservation, fallback EUR.</li>
-  </ul>
-  <p>Idempotente: <code>agency_commissions</code> ha unique index <code>(agency_id, reservation_type, reservation_id)</code> → no double-accrual. Errori catturati e loggati, mai propagati al booking flow.</p>
-
-  <pre><code>// packages/core/agency/src/commissions.ts:78
-export async function accrueCommission(input) {
-  const monthRevenue = /* somma gross_amount mese, escludendo reversed */
-  const { rate } = await resolveEntityRate(...)
-  const commissionAmount = +(input.grossAmount * rate).toFixed(2)
-  return supabase.from('agency_commissions').insert({
-    agency_id, tenant_id, reservation_id,
-    gross_amount, commission_rate: rate, commission_amount,
-    status: 'accrued',
-  })
-}</code></pre>
-
-  <div class="callout success">
-    <strong>✓ Loop chiuso (v2 · 2026-04-26)</strong>
-    Il wiring è ora attivo su tutti e 4 i verticali tramite l'helper condiviso <code>onReservationStatusChange</code> in <code>packages/core/agency/src/wiring.ts</code>. Quando una prenotazione passa a <code>confirmed / checked_in / completed</code>, la commissione matura automaticamente; quando passa a <code>cancelled / no_show</code>, viene stornata. Vedi sezione 12 per il dettaglio.
-  </div>
-</section>
-
-<!-- ==================================================== -->
-<section id="cron">
-  <h2><span class="num">09</span>Automazioni notturne (cron)</h2>
-  <p class="subtitle">Due cron job tengono in sync il sistema con Stripe e disattivano clienti scaduti.</p>
-
-  <div class="card">
-    <h3><code>billing-snapshots</code> <span class="pill ok">attivo</span></h3>
-    <p>Per ogni tenant e modulo attivo: conta le entità (es. 3 hotel), calcola il prezzo come <code>base + (count − 1) × unit</code>, scrive snapshot e aggiorna la quantity sull'abbonamento Stripe del tenant.</p>
-    <p style="font-size:13px;color:var(--ink-mute);"><span class="file-ref">apps/web/src/app/api/cron/billing-snapshots/route.ts</span></p>
-  </div>
-
-  <div class="card">
-    <h3><code>billing-grace-check</code> <span class="pill ok">attivo</span></h3>
-    <p>Trova tenant con <code>billing_grace_until</code> scaduto, disattiva tutti i moduli e logga l'evento. È la rete di sicurezza per chi non paga entro il grace period.</p>
-    <p style="font-size:13px;color:var(--ink-mute);"><span class="file-ref">apps/web/src/app/api/cron/billing-grace-check/route.ts</span> · cron <code>0 4 * * *</code></p>
-  </div>
-
-  <div class="card">
-    <h3><code>agency-payouts</code> <span class="pill ok">nuovo (v2)</span></h3>
-    <p>Il 1° di ogni mese alle 05:00 UTC: aggrega le commissioni <code>accrued</code> del mese precedente per ogni agenzia, calcola la fee piattaforma in base a <code>agency_platform_billing</code>, esegue uno Stripe Connect Transfer verso l'<code>stripe_connect_account_id</code> dell'agenzia e marca le righe come <code>paid</code> linkandole al payout.</p>
-    <ul class="clean">
-      <li>Idempotente: <code>UNIQUE (agency_id, period_month)</code> sulla tabella <code>agency_payouts</code> + Stripe <code>idempotencyKey</code> per il transfer.</li>
-      <li>Se manca Stripe Connect o l'importo netto è 0 → payout marcato comunque (<code>failed</code> con motivo, o <code>paid</code> a zero).</li>
-      <li>Errori Stripe → <code>status='failed'</code> con <code>error_message</code>, le commissioni restano <code>accrued</code> per retry al run successivo.</li>
-    </ul>
-    <p style="font-size:13px;color:var(--ink-mute);"><span class="file-ref">apps/web/src/app/api/cron/agency-payouts/route.ts</span> · cron <code>0 5 1 * *</code></p>
-  </div>
 </section>
 
 <!-- ==================================================== -->
 <section id="ui">
-  <h2><span class="num">10</span>Dove il super admin vede tutto</h2>
-  <p class="subtitle">Tre pagine principali nel CMS di piattaforma.</p>
+  <h2><span class="num">08</span>UI per tenant + super admin</h2>
 
+  <h3>Tenant</h3>
   <table class="data">
-    <thead><tr><th>Pagina</th><th>Cosa mostra / consente</th></tr></thead>
+    <thead><tr><th>Pagina</th><th>Cosa fa</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>/[tenantSlug]/settings/payments</code></td>
+        <td>Onboarding Stripe Connect + stato (Operativo / In verifica / Da completare). Bottoni Collega / Aggiorna stato / Apri dashboard Stripe.</td>
+      </tr>
+      <tr>
+        <td><code>/[tenantSlug]/{stays|dine|rides|activities}/[entitySlug]/rate-plans</code></td>
+        <td>CRUD tariffe per entity. 4 tipi disponibili. Auto-seed default <code>free_cancellation</code> alla prima visita.</td>
+      </tr>
+      <tr>
+        <td><code>/a/[agencySlug]/clients/[tenantId]/billing</code></td>
+        <td>(Vista agenzia) override commissione per singolo tenant cliente.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Super admin (TouraCore)</h3>
+  <table class="data">
+    <thead><tr><th>Pagina</th><th>Cosa fa</th></tr></thead>
     <tbody>
       <tr>
         <td><code>/platform</code></td>
-        <td>KPI mensili: <strong>MRR</strong> da abbonamenti agenzie + <strong>commissioni maturate</strong> nel mese (somma <code>agency_commissions</code> escluso reversed).</td>
+        <td>KPI mese: MRR agenzie + commissioni maturate + (futuro) saldo Stripe live.</td>
       </tr>
       <tr>
         <td><code>/platform/agencies/[id]</code></td>
-        <td>Imposta accordo commerciale TouraCore ↔ agenzia: modello, canone, %, base (client_revenue / agency_fee), cap, soglia minima.</td>
+        <td>Imposta accordo TouraCore ↔ agenzia.</td>
       </tr>
       <tr>
         <td><code>/platform/clients/[id]</code></td>
-        <td>Imposta accordo diretto TouraCore ↔ tenant (per tenant senza agenzia, o override per tenant con agenzia).</td>
+        <td>Imposta accordo diretto TouraCore ↔ tenant (commissione).</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ==================================================== -->
+<section id="cron">
+  <h2><span class="num">09</span>Automazioni notturne</h2>
+
+  <table class="data">
+    <thead><tr><th>Cron</th><th>Schedule UTC</th><th>Cosa fa</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>auto-charge-bookings</code></td>
+        <td><code>0 3 * * *</code></td>
+        <td>Scorre 4 reservation tables. Trova carta salvata + <code>charge_scheduled_at &lt;= now</code>. Crea PaymentIntent off_session con Direct Charge. Retry +24h max 4.</td>
       </tr>
       <tr>
-        <td><code>/a/[slug]/commissions</code> <span class="pill">vista agenzia</span></td>
-        <td>Per ogni agenzia: ledger commissioni (maturate, pagate, stornate), KPI mese, dettaglio per verticale, ultime 100 transazioni.</td>
+        <td><code>auto-cancel-failed-payments</code></td>
+        <td><code>0 4 * * *</code></td>
+        <td>Cancella prenotazioni con <code>payment_state = failed</code> a T-3gg dal check-in senza retry pending. Slot/camera liberato.</td>
+      </tr>
+      <tr>
+        <td><code>billing-snapshots</code></td>
+        <td><code>0 3 1 * *</code></td>
+        <td>(Legacy v2) Sync quantity Stripe per moduli subscription.</td>
+      </tr>
+      <tr>
+        <td><code>billing-grace-check</code></td>
+        <td><code>0 4 * * *</code></td>
+        <td>Disattiva tenant in grace period scaduto.</td>
+      </tr>
+      <tr>
+        <td><code>agency-payouts</code></td>
+        <td><code>0 5 1 * *</code></td>
+        <td>(Legacy v2) Payout mensile commissioni accrued ad agenzie. Nuovo modello = fee splittata alla fonte, questo cron resta per legacy.</td>
       </tr>
     </tbody>
   </table>
 </section>
 
 <!-- ==================================================== -->
-<section id="mental">
-  <h2><span class="num">11</span>Mental model finale</h2>
+<section id="fail">
+  <h2><span class="num">10</span>Cosa succede se la carta fallisce</h2>
+  <p class="subtitle">Sistema di recupero a 3 livelli.</p>
 
-  <div class="card" style="font-size:17px;line-height:1.7;">
-    <p style="color:var(--ink);"><strong>TouraCore</strong> è il padrone del palazzo.</p>
-    <p style="color:var(--ink);"><strong>I tenant</strong> sono inquilini: pagano l'affitto fisso (subscription), o una % sui propri affari (commission), o entrambi (hybrid).</p>
-    <p style="color:var(--ink);"><strong>L'agenzia</strong> è un portinaio che gestisce più inquilini insieme: prende una mancia da ognuno, e a sua volta paga al palazzo un proprio affitto.</p>
-    <p style="color:var(--ink);"><strong>Il cliente finale</strong> non sa nulla di tutto questo. Paga la struttura e va a dormire.</p>
-  </div>
-</section>
-
-<!-- ==================================================== -->
-<section id="money-flow">
-  <h2><span class="num">12</span>Flusso fisico soldi — Stripe Connect Direct Charge</h2>
-  <p class="subtitle">Regola architetturale TouraCore: <strong>mai banca</strong>. I soldi del cliente non transitano mai sul conto TouraCore. Stripe splitta alla fonte.</p>
-
-  <div class="callout success">
-    <strong>Obiettivo</strong>
-    Cliente paga €1000 → €900 vanno direttamente al conto del tenant (hotel/ristorante/bike/tour) → €100 vanno direttamente al conto TouraCore (commissione). Zero spostamenti manuali, zero TouraCore-come-cassa-temporanea.
-  </div>
-
-  <h3>Come funziona tecnicamente</h3>
   <ol class="clean">
-    <li><strong>Tenant fa onboarding Stripe Connect Express</strong> da <code>/[tenantSlug]/settings/payments</code> (5 minuti, KYC + IBAN gestiti da Stripe).</li>
-    <li><strong>Stripe verifica</strong> documenti + banca → <code>charges_enabled=true</code>.</li>
-    <li><strong>Tenant può ora pubblicare</strong> entity. Senza Connect attivo la pubblicazione è bloccata con messaggio chiaro.</li>
-    <li><strong>Cliente prenota</strong>: il <code>PaymentIntent</code> viene creato con <code>on_behalf_of</code> + <code>transfer_data.destination</code> sul Connect account del tenant + <code>application_fee_amount</code> = commissione TouraCore.</li>
-    <li><strong>Stripe esegue lo split alla fonte</strong>: tenant riceve gross meno fee, TouraCore riceve solo la fee.</li>
-    <li><strong>Stripe bonifica al tenant via SEPA</strong> automatico (giornaliero) sul suo IBAN. TouraCore riceve i propri payout sul proprio IBAN.</li>
+    <li><strong>T-7gg fallimento 1</strong> — cron <code>auto-charge-bookings</code> riceve <code>insufficient_funds</code>. Marca <code>payment_state = failed</code>. Schedula retry +24h. Webhook <code>payment_intent.payment_failed</code> registra attempt.</li>
+    <li><strong>T-6, T-5, T-4 — retry 2/3/4.</strong> Stesso ciclo. Se cliente nel frattempo ricarica carta → success. Se 4 fail consecutivi → niente più retry.</li>
+    <li><strong>Magic link "aggiorna carta".</strong> Email cliente con URL <code>/r/[token]/update-card</code> (HMAC firmato 7gg). Cliente clicca → redirect Stripe Customer Portal nativo → aggiorna carta → token rimpiazzato sul Customer → prossimo cron usa la nuova.</li>
+    <li><strong>T-3gg — auto-cancel.</strong> Se ancora <code>failed</code> e nessun retry pending, cron <code>auto-cancel-failed-payments</code> marca <code>payment_state = auto_cancelled</code> + <code>status = cancelled</code>. Camera/slot liberato. Niente refund (mai addebitato).</li>
   </ol>
 
-  <h3>Stripe-first, custom solo dove necessario</h3>
-  <table class="data">
-    <thead><tr><th>Funzione</th><th>Stripe nativo</th><th>Custom TouraCore</th></tr></thead>
-    <tbody>
-      <tr><td>Onboarding KYC tenant</td><td>✅ Express</td><td>—</td></tr>
-      <tr><td>Salva carta cliente per addebiti futuri</td><td>✅ SetupIntent + Customer</td><td>—</td></tr>
-      <tr><td>Carta scaduta tra booking e charge</td><td>✅ Card Updater (Visa/MC network)</td><td>—</td></tr>
-      <tr><td>3DS / SCA Italia</td><td>✅ automatico</td><td>—</td></tr>
-      <tr><td>Split fee tenant/TouraCore</td><td>✅ application_fee_amount</td><td>—</td></tr>
-      <tr><td>Payout SEPA al tenant</td><td>✅ daily auto</td><td>—</td></tr>
-      <tr><td>Refund / dispute</td><td>✅ Dashboard Stripe</td><td>—</td></tr>
-      <tr><td>Aggiorna carta cliente loggato</td><td>✅ Customer Portal</td><td>—</td></tr>
-      <tr><td>Smart retry pagamenti falliti (one-shot)</td><td>❌ (solo Subscriptions)</td><td>cron retry × 4 a 24h</td></tr>
-      <tr><td>Auto-cancel prenotazione dopo N fail</td><td>❌</td><td>cron auto-cancel</td></tr>
-      <tr><td>Block pubblicazione senza Connect attivo</td><td>❌</td><td>guard server action</td></tr>
-      <tr><td>Booking &gt; 30gg (pre-auth max 7gg Stripe)</td><td>❌</td><td>orchestrator + SetupIntent</td></tr>
-    </tbody>
-  </table>
-
-  <h3>Roadmap fasi</h3>
-  <ul class="clean">
-    <li><strong>Fase 1 (DONE v3)</strong> — Onboarding Stripe Connect tenant + gating pubblicazione.</li>
-    <li><strong>Fase 2</strong> — Switch checkout pubblici (4 verticali) a Direct Charge con <code>application_fee_amount</code>.</li>
-    <li><strong>Fase 3</strong> — Rate plans (free_cancellation / deposit_30 / partially_refundable / non_refundable) con UI tenant per ogni verticale.</li>
-    <li><strong>Fase 4</strong> — Auto-charge differito 7gg prima check-in (pre-auth + capture).</li>
-    <li><strong>Fase 5</strong> — Orchestratore booking &gt;30gg con SetupIntent al booking + charge a T-30gg.</li>
-    <li><strong>Fase 6</strong> — Retry custom + auto-cancel + magic link aggiorna carta.</li>
-  </ul>
-
   <div class="callout info">
-    <strong>Stima totale rimanente</strong>
-    ~17h dev (fasi 2-6) + ~3h test E2E con Stripe test mode. 80% del lavoro è configurazione Stripe nativa, 20% custom orchestration.
+    <strong>Il vantaggio dell'addebito differito</strong>
+    Niente è mai stato spostato → niente da rimborsare. Stripe fee zero su prenotazioni che non si concretizzano. Tenant ha tempo di rivendere lo slot.
   </div>
 </section>
 
 <!-- ==================================================== -->
-<section id="changelog">
-  <h2><span class="num">13</span>Changelog v2 · v3</h2>
+<section id="tabelle">
+  <h2><span class="num">11</span>Tabelle DB chiave</h2>
 
-  <h3 style="margin-top:8px;">v4 — 2026-04-26 (Direct Charge end-to-end · Fasi 2-6)</h3>
+  <details>
+    <summary><code>tenants.stripe_connect_*</code> (migration 00149)</summary>
+    <div class="body">
+      Colonne aggiunte a <code>tenants</code>: <code>stripe_connect_account_id</code>, <code>stripe_connect_charges_enabled</code>, <code>stripe_connect_payouts_enabled</code>, <code>stripe_connect_details_submitted</code>, <code>stripe_connect_country</code>, <code>stripe_connect_requirements</code> (JSONB). Mirror dal webhook <code>account.updated</code>.
+      <br><br><span class="file-ref">supabase/migrations/00149_tenants_stripe_connect.sql</span>
+    </div>
+  </details>
 
-  <div class="card">
-    <h3><span class="pill ok">done</span> Migration <code>00150_rate_plans_and_payments</code></h3>
-    <p>Tabelle nuove: <code>rate_plans</code> (tariffe per entity, 4 tipi: free_cancellation/deposit_30/partially_refundable_50/non_refundable), <code>reservation_payment_methods</code> (carta salvata per addebiti differiti), <code>reservation_payment_attempts</code> (audit retry). Colonne nuove su tutti 4 reservation tables: <code>rate_plan_id</code>, <code>charge_scheduled_at</code>, <code>payment_state</code>, <code>application_fee_amount_cents</code>.</p>
-  </div>
+  <details>
+    <summary><code>payment_rate_plans</code> (migration 00150)</summary>
+    <div class="body">
+      Tariffe per entity. Colonne: <code>vertical</code>, <code>type</code>, <code>refund_window_hours</code>, <code>deposit_pct</code>, <code>discount_pct</code>, <code>charge_balance_days_before</code>, <code>is_default</code>, <code>active</code>. UNIQUE su <code>(entity_id) WHERE is_default</code>. RLS: tenant write+read, anon read se active=true, service-role full.
+      <br><br>Nome <code>payment_rate_plans</code> per non collidere con legacy <code>rate_plans</code> hospitality.
+      <br><br><span class="file-ref">supabase/migrations/00150_rate_plans_and_payments.sql</span>
+    </div>
+  </details>
 
-  <div class="card">
-    <h3><span class="pill ok">done</span> Helper <code>@touracore/billing/server</code></h3>
-    <ul class="clean">
-      <li><code>computeApplicationFee()</code> → calcola fee TouraCore da <code>billing_profiles</code> (canone-only=0, commission/hybrid=%).</li>
-      <li><code>buildConnectChargeParams()</code> → costruisce <code>{on_behalf_of, transfer_data, application_fee_amount}</code>. Throw se tenant Connect non ready.</li>
-      <li><code>buildConnectChargeParamsSafe()</code> → variante null-safe per checkout pubblici.</li>
-      <li><code>listRatePlans / upsertRatePlan / ensureDefaultRatePlan</code> → CRUD rate plans.</li>
-      <li><code>generateUpdateCardToken / getUpdateCardUrl</code> → magic link HMAC firmato per cliente non-loggato.</li>
-    </ul>
-  </div>
+  <details>
+    <summary><code>reservation_payment_methods</code> (migration 00150)</summary>
+    <div class="body">
+      Token Stripe carta salvata per reservation (polimorfica via <code>vertical</code>+<code>reservation_id</code>). Colonne: <code>stripe_customer_id</code>, <code>stripe_payment_method_id</code>, <code>stripe_setup_intent_id</code>, card_brand/last4/exp/funding/country, <code>is_primary</code>.
+    </div>
+  </details>
 
-  <div class="card">
-    <h3><span class="pill ok">done</span> Switch checkout pubblici a Direct Charge — 4 verticali</h3>
-    <ul class="clean">
-      <li><code>/api/public/booking/checkout</code> — hospitality, esistente esteso con Connect params.</li>
-      <li><code>/api/public/restaurant/checkout</code> — restaurant deposit, esteso (capture_method manual + Connect).</li>
-      <li><code>/api/public/bike/checkout</code> — nuovo endpoint full Connect.</li>
-      <li><code>/api/public/experience/checkout</code> — nuovo endpoint full Connect.</li>
-    </ul>
-    <p>Tutti bloccano con 400 + messaggio chiaro se tenant non ha completato Stripe Connect onboarding.</p>
-  </div>
+  <details>
+    <summary><code>reservation_payment_attempts</code> (migration 00150)</summary>
+    <div class="body">
+      Audit retry. Per ogni tentativo charge: <code>attempt_number</code>, <code>stripe_payment_intent_id</code>, <code>amount_cents</code>, <code>status</code>, <code>failure_code</code>, <code>failure_message</code>, <code>retry_at</code>. Index parziale per cron retry lookup.
+    </div>
+  </details>
 
-  <div class="card">
-    <h3><span class="pill ok">done</span> UI Rate plans — 4 verticali</h3>
-    <p>Component condiviso <code>RatePlansEditor</code> + page condivisa <code>RatePlansPage</code> in <code>_shared/rate-plans/</code>. 4 route: <code>/[tenantSlug]/{stays|dine|rides|activities}/[entitySlug]/rate-plans</code>. Auto-seed default <em>free_cancellation</em> alla prima visita per ogni entity. Voce sidebar <strong>Tariffe / Piani tariffari</strong> aggiunta a tutte 4 sidebar verticali.</p>
-  </div>
+  <details>
+    <summary>Colonne payment state su 4 reservation tables</summary>
+    <div class="body">
+      Aggiunte su <code>reservations</code> (hospitality), <code>restaurant_reservations</code>, <code>bike_rental_reservations</code>, <code>experience_reservations</code>:
+      <ul class="clean" style="margin-top:6px;">
+        <li><code>payment_rate_plan_id</code> (FK)</li>
+        <li><code>charge_scheduled_at</code> (TIMESTAMPTZ, indice parziale per cron)</li>
+        <li><code>payment_state</code> ENUM: pending / card_saved / authorized / captured / failed / auto_cancelled / refunded</li>
+        <li><code>application_fee_amount_cents</code> (snapshot fee al momento del checkout)</li>
+      </ul>
+    </div>
+  </details>
+</section>
 
-  <div class="card">
-    <h3><span class="pill ok">done</span> Cron <code>auto-charge-bookings</code> (Fase 4 + 5 unificate)</h3>
-    <p>Schedule giornaliero <code>0 3 * * *</code>. Scorre tutte 4 reservation tables: trova <code>payment_state ∈ {card_saved, failed}</code> con <code>charge_scheduled_at &lt;= now</code>. Per ognuna: recupera carta salvata da <code>reservation_payment_methods</code>, calcola Connect params, crea PaymentIntent off_session con <code>capture_method='manual'</code>. Su successo: <code>payment_state='authorized'</code>. Su errore: <code>payment_state='failed'</code> + retry schedulato +24h (max 4 tentativi). Idempotency via <code>idempotencyKey: autocharge_<v>_<id>_<n></code>.</p>
-  </div>
-
-  <div class="card">
-    <h3><span class="pill ok">done</span> Cron <code>auto-cancel-failed-payments</code></h3>
-    <p>Schedule giornaliero <code>0 4 * * *</code>. Trova prenotazioni <code>payment_state='failed'</code> con check_in/start &lt;= now+3gg e nessun retry pending. Marca <code>payment_state='auto_cancelled'</code> + <code>status='cancelled'</code>. Slot/camera rilasciato per nuove prenotazioni.</p>
-  </div>
-
-  <div class="card">
-    <h3><span class="pill ok">done</span> Magic link "aggiorna carta" — Stripe Customer Portal</h3>
-    <p>Route pubblica <code>/r/[token]/update-card</code> (token HMAC firmato 7gg validità). Genera Stripe Billing Portal session per il customer e redirect → cliente aggiorna carta nella UI nativa Stripe. Nessuna UI custom da mantenere. Carta nuova salvata sul Customer → prossimo cron auto-charge la userà.</p>
-  </div>
-
-  <div class="card">
-    <h3><span class="pill ok">done</span> Capture action <code>capturePaymentAction</code></h3>
-    <p>Server action <code>_shared/payments/capture-actions.ts</code>. Trova ultimo PaymentIntent <code>requires_capture</code> per la prenotazione, chiama <code>stripe.paymentIntents.capture()</code>, marca <code>payment_state='captured'</code>. Da chiamare al check-in/check-out dall'UI tenant.</p>
-  </div>
+<!-- ==================================================== -->
+<section id="todo">
+  <h2><span class="num">12</span>TODO residui (v5)</h2>
+  <p class="subtitle">Pezzi che chiudono ulteriormente il loop. Non bloccanti per il modello "TouraCore mai banca" già attivo.</p>
 
   <div class="card">
-    <h3><span class="pill ok">done</span> Webhook <code>payment_intent.payment_failed</code></h3>
-    <p>Quando Stripe notifica fail: marca prenotazione <code>payment_state='failed'</code>, schedula retry +24h, scrive riga in <code>reservation_payment_attempts</code> con <code>failure_code</code> + <code>failure_message</code>. Lavora in tandem con cron <code>auto-charge-bookings</code>.</p>
-  </div>
-
-  <h3 style="margin-top:32px;">v3 — 2026-04-26 (Stripe Connect tenant — Fase 1)</h3>
-
-  <div class="card">
-    <h3><span class="pill ok">done</span> Migration <code>00149_tenants_stripe_connect</code></h3>
-    <p>Aggiunta colonne su <code>tenants</code>: <code>stripe_connect_account_id</code> (UNIQUE), <code>stripe_connect_charges_enabled</code>, <code>stripe_connect_payouts_enabled</code>, <code>stripe_connect_details_submitted</code>, <code>stripe_connect_country</code>, <code>stripe_connect_requirements</code> (JSONB), <code>stripe_connect_updated_at</code>. Index parziale su <code>account_id</code> non-null.</p>
+    <h3><span class="pill todo">v5</span> SetupIntent al booking per <code>free_cancellation</code></h3>
+    <p>Oggi i checkout pubblici fanno <code>PaymentIntent</code> immediato (charge subito). Per il rate plan flexible serve solo SetupIntent (salva carta, no addebito) + scrittura <code>reservation_payment_methods</code>. Cron auto-charge poi crea il PaymentIntent a T-7gg.</p>
   </div>
 
   <div class="card">
-    <h3><span class="pill ok">done</span> Server actions onboarding tenant</h3>
-    <p>Nuove action in <span class="file-ref">apps/web/src/app/(app)/[tenantSlug]/settings/payments/actions.ts</span>:</p>
-    <ul class="clean">
-      <li><code>connectStripeTenantAction</code> — crea Express account con capabilities <code>card_payments</code> + <code>transfers</code>, metadata <code>tenant_id</code>+<code>tenant_slug</code>, redirect a Stripe Account Link per onboarding.</li>
-      <li><code>refreshStripeStatusAction</code> — pull stato corrente da Stripe, aggiorna DB.</li>
-      <li><code>openStripeDashboardAction</code> — genera login link Express dashboard per tenant.</li>
-    </ul>
+    <h3><span class="pill todo">v5</span> Selettore rate plan nel widget pubblico</h3>
+    <p>Cliente non vede ancora dropdown delle tariffe disponibili al momento del booking. UI da aggiungere ai widget pubblici dei 4 verticali.</p>
   </div>
 
   <div class="card">
-    <h3><span class="pill ok">done</span> UI <code>/[tenantSlug]/settings/payments</code></h3>
-    <p>Pagina con badge stato (<em>Non collegato / Da completare / In verifica / Operativo</em>), dettagli account Stripe, lista <code>requirements.currently_due</code> se mancano dati, 3 bottoni (collega / aggiorna stato / apri dashboard Stripe). Voce sidebar <strong>Pagamenti</strong> con icona Banknote.</p>
+    <h3><span class="pill todo">v5</span> Bottone "Cattura ora" nelle UI prenotazioni</h3>
+    <p>Server action <code>capturePaymentAction</code> già pronta. Serve wirarla a un bottone nelle dashboard prenotazioni dei 4 verticali.</p>
   </div>
 
   <div class="card">
-    <h3><span class="pill ok">done</span> Webhook <code>account.updated</code> esteso</h3>
-    <p>Oltre a popolare <code>connect_accounts</code> (esistente), ora mirror anche su <code>tenants.stripe_connect_*</code> per gating pubblicazione + UI status. File <span class="file-ref">apps/web/src/app/api/webhooks/stripe/route.ts:410</span>.</p>
-  </div>
-
-  <div class="card">
-    <h3><span class="pill ok">done</span> Block pubblicazione entity senza Connect attivo</h3>
-    <p>In <span class="file-ref">apps/web/src/app/(dashboard)/settings/distribution/actions.ts</span> <code>togglePublicListingAction</code>: se <code>isPublic=true</code> e <code>tenants.stripe_connect_charges_enabled=false</code> → ritorna <code>STRIPE_CONNECT_REQUIRED</code>. Client mappa in messaggio chiaro: <em>"Per pubblicare devi prima collegare Stripe in Impostazioni → Pagamenti."</em></p>
-  </div>
-
-  <h3 style="margin-top:32px;">v2 — 2026-04-26 (wiring commission + payout)</h3>
-  <p class="subtitle">Tutti i gap critici della v1 sono stati implementati. Loop accrual → payout mensile attivo (pre-Stripe Connect).</p>
-
-  <div class="card">
-    <h3><span class="pill ok">done</span> Helper condiviso <code>onReservationStatusChange</code></h3>
-    <p>Nuovo modulo <code>packages/core/agency/src/wiring.ts</code>: una sola funzione che riceve <code>{ vertical, reservationId, newStatus, previousStatus }</code>, risolve agenzia + finanziali della prenotazione (lookup automatico via <code>agency_tenant_links</code>), chiama <code>accrueCommission</code> o <code>reverseCommissionForReservation</code> a seconda dello stato. Non breaking: se il tenant non ha agenzia, no-op. Errori catturati e loggati senza propagare al booking flow.</p>
-  </div>
-
-  <div class="card">
-    <h3><span class="pill ok">done</span> Wiring sui 4 verticali</h3>
-    <ul class="clean">
-      <li>Hospitality: <span class="file-ref">apps/web/src/app/(app)/[tenantSlug]/stays/[entitySlug]/bookings/actions.ts</span> dentro <code>updateReservationStatusAction</code> dopo l'UPDATE.</li>
-      <li>Restaurant: <span class="file-ref">apps/web/src/app/(app)/[tenantSlug]/dine/[entitySlug]/reservations/actions.ts</span> dentro <code>updateReservationStatus</code>.</li>
-      <li>Experience: <span class="file-ref">apps/web/src/app/(app)/[tenantSlug]/activities/[entitySlug]/checkin/actions.ts</span> dentro <code>checkinByQrAction</code>.</li>
-      <li>Bike: <span class="file-ref">verticals/bike-rental/src/queries/reservations.ts</span> dentro <code>updateReservationStatus</code> (vertical-level, agency dep aggiunta a package.json).</li>
-    </ul>
-    <p>Stati che fanno maturare: <code>confirmed</code>, <code>checked_in</code>, <code>checked_out</code>, <code>completed</code>, <code>returned</code>, <code>finished</code>, <code>seated</code>. Stati che stornano: <code>cancelled</code>, <code>no_show</code>.</p>
-  </div>
-
-  <div class="card">
-    <h3><span class="pill ok">done</span> Migration <code>00148_agency_payouts</code></h3>
-    <p>Nuova tabella <code>agency_payouts</code> per il ledger payout mensili: gross / platform_fee / net, currency, count commissioni, stripe_transfer_id, status (<code>pending → processing → paid | failed</code>), error_message. Constraint <code>UNIQUE (agency_id, period_month)</code> garantisce idempotency. RLS: service-role full + read per platform admin (JWT claim) + read per membri agenzia. FK <code>agency_commissions.payout_id</code> aggiunta retroattivamente.</p>
-  </div>
-
-  <div class="card">
-    <h3><span class="pill ok">done</span> Cron mensile <code>agency-payouts</code></h3>
-    <p>Nuovo endpoint <code>/api/cron/agency-payouts</code> registrato in <code>vercel.json</code> con schedule <code>0 5 1 * *</code> (1° del mese, 05:00 UTC). Auth Bearer <code>CRON_SECRET</code> consistente con altri cron. Calcola la platform fee in base a <code>agency_platform_billing</code> (subscription / commission su <code>client_revenue</code> o <code>agency_fee</code> / hybrid / free) con threshold + cap + min mensile.</p>
-  </div>
-
-  <div class="card">
-    <h3><span class="pill ok">already done</span> UI override entity</h3>
-    <p>Esiste già: <span class="file-ref">apps/web/src/app/(app)/a/[agencySlug]/clients/[tenantId]/entity-billing-panel.tsx</span> con form completo (model + fee + commission_pct + cap + notes) e action <code>saveEntityBillingAction</code>. Il gap segnalato in v1 era falso allarme.</p>
-  </div>
-
-  <div class="callout warn">
-    <strong>Da fare manualmente prima del prossimo run</strong>
-    <ol class="clean" style="margin-top:6px;">
-      <li>Push migration <code>00148_agency_payouts.sql</code> sul Supabase cloud (skill <code>supabase-cloud-ops</code>).</li>
-      <li>Verificare <code>CRON_SECRET</code> e <code>STRIPE_SECRET_KEY</code> presenti in env Vercel production.</li>
-      <li>Per testare end-to-end: creare una prenotazione di test su un tenant gestito da agenzia, marcarla <code>confirmed</code>, controllare la riga in <code>agency_commissions</code> con <code>status='accrued'</code>.</li>
-      <li>Dry-run del cron payout (manuale, mese precedente): <code>curl -H "Authorization: Bearer $CRON_SECRET" $URL/api/cron/agency-payouts</code>.</li>
-    </ol>
-  </div>
-
-  <div class="callout info">
-    <strong>Per il dettaglio tecnico</strong>
-    Vedi <code>billing-modifications-report.md</code> aggiornato nella stessa cartella per file path, righe e ordine di deploy.
+    <h3><span class="pill todo">v5</span> Email automatic cliente su payment_failed</h3>
+    <p>Magic link generato dall'helper <code>getUpdateCardUrl</code> ma email non inviata. Wirare a <code>@touracore/notifications</code> con template email.</p>
   </div>
 </section>
 
 <footer>
-  TouraCore · Documento interno · Ultimo aggiornamento 2026-04-25
+  TouraCore · v4 · 2026-04-26 · Storico versioni in <a href="billing-system-history.html">billing-system-history.html</a>
 </footer>
 
 </div>
 
 <script>
-// ============================================================
-// FLOW DIAGRAM
-// ============================================================
-const flowSvg = {
-  'con-agenzia': `
-<svg viewBox="0 0 760 460" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, system-ui, sans-serif">
-  <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#c96442"/>
-    </marker>
-    <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#4a7c59"/>
-    </marker>
-  </defs>
-
-  <!-- CLIENTE -->
-  <g>
-    <rect x="280" y="20" width="200" height="60" rx="10" fill="#f4ddd1" stroke="#c96442" stroke-width="1.5"/>
-    <text x="380" y="45" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1a1a">CLIENTE FINALE</text>
-    <text x="380" y="63" text-anchor="middle" font-size="11" fill="#4a4a4a">paga la prenotazione</text>
-  </g>
-
-  <!-- TENANT -->
-  <g>
-    <rect x="280" y="170" width="200" height="60" rx="10" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
-    <text x="380" y="195" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1a1a">TENANT (struttura)</text>
-    <text x="380" y="213" text-anchor="middle" font-size="11" fill="#4a4a4a">hotel, ristorante, bike, ...</text>
-  </g>
-
-  <!-- AGENZIA -->
-  <g>
-    <rect x="500" y="320" width="200" height="60" rx="10" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
-    <text x="600" y="345" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1a1a">AGENZIA</text>
-    <text x="600" y="363" text-anchor="middle" font-size="11" fill="#4a4a4a">gestisce più tenant</text>
-  </g>
-
-  <!-- TOURACORE -->
-  <g>
-    <rect x="60" y="320" width="200" height="60" rx="10" fill="#1a1a1a" stroke="#1a1a1a" stroke-width="1.5"/>
-    <text x="160" y="345" text-anchor="middle" font-size="13" font-weight="600" fill="#faf9f5">TOURACORE</text>
-    <text x="160" y="363" text-anchor="middle" font-size="11" fill="#e8e4d8">super admin</text>
-  </g>
-
-  <!-- Frecce -->
-  <!-- Cliente → Tenant -->
-  <line x1="380" y1="80" x2="380" y2="170" stroke="#4a7c59" stroke-width="2" marker-end="url(#arrowGreen)"/>
-  <text x="395" y="130" font-size="11" fill="#4a7c59" font-weight="600">€ prenotazione</text>
-
-  <!-- Tenant → TouraCore (canone/commissione) -->
-  <path d="M 290 230 Q 200 270 175 320" stroke="#c96442" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
-  <text x="180" y="280" font-size="10" fill="#c96442" font-weight="600">canone / %</text>
-
-  <!-- Tenant → Agenzia (commissione) -->
-  <path d="M 470 230 Q 580 270 595 320" stroke="#c96442" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
-  <text x="555" y="280" font-size="10" fill="#c96442" font-weight="600">commissione</text>
-
-  <!-- Agenzia → TouraCore (canone/commissione) -->
-  <path d="M 500 350 L 260 350" stroke="#c96442" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
-  <text x="380" y="343" text-anchor="middle" font-size="10" fill="#c96442" font-weight="600">canone agenzia / %</text>
-
-  <!-- Legenda -->
-  <g transform="translate(60, 410)">
-    <line x1="0" y1="0" x2="20" y2="0" stroke="#4a7c59" stroke-width="2"/>
-    <text x="26" y="4" font-size="11" fill="#4a4a4a">denaro reale (prenotazione)</text>
-    <line x1="200" y1="0" x2="220" y2="0" stroke="#c96442" stroke-width="2"/>
-    <text x="226" y="4" font-size="11" fill="#4a4a4a">canoni e commissioni</text>
-  </g>
-</svg>`,
-  'senza-agenzia': `
-<svg viewBox="0 0 760 360" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, system-ui, sans-serif">
-  <defs>
-    <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#c96442"/>
-    </marker>
-    <marker id="arrowGreen2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#4a7c59"/>
-    </marker>
-  </defs>
-
-  <g>
-    <rect x="280" y="20" width="200" height="60" rx="10" fill="#f4ddd1" stroke="#c96442" stroke-width="1.5"/>
-    <text x="380" y="45" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1a1a">CLIENTE FINALE</text>
-    <text x="380" y="63" text-anchor="middle" font-size="11" fill="#4a4a4a">paga la prenotazione</text>
-  </g>
-
-  <g>
-    <rect x="280" y="150" width="200" height="60" rx="10" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
-    <text x="380" y="175" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1a1a">TENANT (struttura)</text>
-    <text x="380" y="193" text-anchor="middle" font-size="11" fill="#4a4a4a">contratto diretto con TouraCore</text>
-  </g>
-
-  <g>
-    <rect x="280" y="280" width="200" height="60" rx="10" fill="#1a1a1a" stroke="#1a1a1a" stroke-width="1.5"/>
-    <text x="380" y="305" text-anchor="middle" font-size="13" font-weight="600" fill="#faf9f5">TOURACORE</text>
-    <text x="380" y="323" text-anchor="middle" font-size="11" fill="#e8e4d8">super admin</text>
-  </g>
-
-  <line x1="380" y1="80" x2="380" y2="150" stroke="#4a7c59" stroke-width="2" marker-end="url(#arrowGreen2)"/>
-  <text x="395" y="120" font-size="11" fill="#4a7c59" font-weight="600">€ prenotazione</text>
-
-  <line x1="380" y1="210" x2="380" y2="280" stroke="#c96442" stroke-width="2" marker-end="url(#arrow2)"/>
-  <text x="395" y="250" font-size="11" fill="#c96442" font-weight="600">canone / commissione</text>
-</svg>`
-};
-
-function renderFlow(key) {
-  document.getElementById('flow-diagram').innerHTML = flowSvg[key];
-}
-renderFlow('con-agenzia');
-document.querySelectorAll('[data-flow]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('[data-flow]').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    renderFlow(btn.dataset.flow);
-  });
-});
-
-// ============================================================
-// SCENARIO TABS
-// ============================================================
-document.querySelectorAll('#scenarioTabs button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const scn = btn.dataset.scn;
-    document.querySelectorAll('#scenarioTabs button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('.tab-pane[data-scn]').forEach(p => p.classList.remove('active'));
-    document.querySelector(`.tab-pane[data-scn="${scn}"]`).classList.add('active');
-  });
-});
-
-// ============================================================
-// CALCULATOR
-// ============================================================
-const DEFAULT_TIERS = {
-  hospitality: [{t:0,r:0.10},{t:5000,r:0.12},{t:20000,r:0.15}],
-  experience:  [{t:0,r:0.10},{t:5000,r:0.12},{t:20000,r:0.15}],
-  bike:        [{t:0,r:0.08},{t:5000,r:0.10}],
-  restaurant:  [{t:0,r:0.05},{t:5000,r:0.08}],
-};
-
-function resolveDefaultRate(vertical, monthRev) {
-  const tiers = DEFAULT_TIERS[vertical] || DEFAULT_TIERS.hospitality;
-  let rate = tiers[0].r;
-  for (const t of tiers) if (monthRev >= t.t) rate = t.r;
-  return rate;
-}
-
 function fmt(n) {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);
 }
 
 function renderCalc() {
   const amount = +document.getElementById('cv-amount').value || 0;
-  const vertical = document.getElementById('cv-vertical').value;
-  const hasAgency = document.getElementById('cv-has-agency').value === 'yes';
-  const monthRev = +document.getElementById('cv-month-rev').value || 0;
-  const tcModel = document.getElementById('cv-tc-tenant-model').value;
-  const tcFee = +document.getElementById('cv-tc-tenant-fee').value || 0;
-  const tcPct = +document.getElementById('cv-tc-tenant-pct').value || 0;
-  const overrideMode = document.getElementById('cv-agency-override').value;
-  const overridePct = +document.getElementById('cv-agency-pct').value || 0;
+  const feePct = +document.getElementById('cv-fee-pct').value || 0;
+  const fee = +(amount * feePct / 100).toFixed(2);
+  const tenant = +(amount - fee).toFixed(2);
 
-  // Mostra/nascondi riga agenzia
-  document.querySelectorAll('[data-agency-row]').forEach(r => {
-    r.style.display = hasAgency ? 'grid' : 'none';
-  });
-
-  // Calcoli
-  let tenantToTouracore = 0; // su singola prenotazione
-  let tenantToTouracoreNote = '';
-  if (tcModel === 'subscription') {
-    tenantToTouracore = 0;
-    tenantToTouracoreNote = `+ ${fmt(tcFee)}/mese (canone, non legato a questa prenotazione)`;
-  } else if (tcModel === 'commission') {
-    tenantToTouracore = amount * (tcPct / 100);
-  } else if (tcModel === 'hybrid') {
-    tenantToTouracore = amount * (tcPct / 100);
-    tenantToTouracoreNote = `+ ${fmt(tcFee)}/mese (canone aggiuntivo)`;
-  } else {
-    tenantToTouracore = 0;
-  }
-
-  let tenantToAgency = 0;
-  let agencyRate = 0;
-  let agencySource = '';
-  if (hasAgency) {
-    if (overrideMode === 'free') {
-      agencyRate = 0;
-      agencySource = 'override "free"';
-    } else if (overrideMode === 'custom') {
-      agencyRate = overridePct / 100;
-      agencySource = 'override custom';
-    } else {
-      agencyRate = resolveDefaultRate(vertical, monthRev);
-      agencySource = `scaglione default (${vertical}, mese €${monthRev.toLocaleString('it-IT')})`;
-    }
-    tenantToAgency = amount * agencyRate;
-  }
-
-  const tenantNet = amount - tenantToTouracore - tenantToAgency;
-
-  // Render
-  const out = document.getElementById('calc-out');
-  out.innerHTML = `
-    <h4>Movimenti su questa singola prenotazione di ${fmt(amount)}</h4>
+  document.getElementById('calc-out').innerHTML = `
+    <h4>Movimenti su questa prenotazione di ${fmt(amount)}</h4>
     <div class="calc-line">
-      <span class="who">Cliente paga al tenant<small>incasso lordo</small></span>
+      <span class="who">Cliente paga<small>una sola transazione carta</small></span>
       <span class="amt pos">+${fmt(amount)}</span>
     </div>
     <div class="calc-line">
-      <span class="who">Tenant → TouraCore<small>${tcModel}${tenantToTouracoreNote ? ' · ' + tenantToTouracoreNote : ''}</small></span>
-      <span class="amt neg">−${fmt(tenantToTouracore)}</span>
+      <span class="who">→ Stripe account TENANT<small>split alla fonte (transfer_data)</small></span>
+      <span class="amt pos">${fmt(tenant)}</span>
     </div>
-    ${hasAgency ? `
     <div class="calc-line">
-      <span class="who">Tenant → Agenzia<small>${(agencyRate*100).toFixed(2)}% · ${agencySource}</small></span>
-      <span class="amt neg">−${fmt(tenantToAgency)}</span>
+      <span class="who">→ Stripe account TOURACORE<small>application_fee_amount (${feePct}%)</small></span>
+      <span class="amt pos">${fmt(fee)}</span>
     </div>
-    ` : ''}
     <div class="calc-line">
-      <span class="who">Tenant trattiene</span>
-      <span class="amt pos">${fmt(tenantNet)}</span>
+      <span class="who">Quanto TouraCore "tiene" temporaneamente</span>
+      <span class="amt pos">${fmt(0)}</span>
     </div>
   `;
 }
 
-['cv-amount','cv-vertical','cv-has-agency','cv-month-rev','cv-tc-tenant-model','cv-tc-tenant-fee','cv-tc-tenant-pct','cv-agency-override','cv-agency-pct'].forEach(id => {
+['cv-amount', 'cv-fee-pct'].forEach(id => {
   document.getElementById(id).addEventListener('input', renderCalc);
-  document.getElementById(id).addEventListener('change', renderCalc);
 });
 renderCalc();
 </script>
