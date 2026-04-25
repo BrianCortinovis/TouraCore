@@ -445,7 +445,7 @@ export async function createPublicBookingAction(input: {
     .filter((item) => Boolean(item.offerId))
 
   let upsellTotal = 0
-  let upsellOrdersToInsert: Array<Record<string, unknown>> = []
+  const upsellOrdersToInsert: Array<Record<string, unknown>> = []
 
   if (selectedUpsellIds.length > 0) {
     const offerIds = Array.from(new Set(selectedUpsellIds.map((item) => item.offerId)))

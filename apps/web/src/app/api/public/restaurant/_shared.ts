@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createServiceRoleClient } from '@touracore/db/server'
 
 function isAllowedOrigin(origin: string | null): boolean {

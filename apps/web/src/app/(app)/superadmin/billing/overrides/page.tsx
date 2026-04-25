@@ -114,14 +114,14 @@ export default async function SuperadminOverridesPage() {
               rows.map((r) => {
                 const tenant = tenantMap.get(r.tenant_id)
                 const agency = r.granted_by_agency_id ? agencyMap.get(r.granted_by_agency_id) : null
-                const module = catalogMap.get(r.module_code)
+                const moduleInfo = catalogMap.get(r.module_code)
                 return (
                   <tr key={r.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
                       <div className="font-medium text-gray-900">{tenant?.name ?? '—'}</div>
                       <div className="text-xs text-gray-500">{tenant?.slug}</div>
                     </td>
-                    <td className="px-4 py-3 text-gray-900">{module?.label ?? r.module_code}</td>
+                    <td className="px-4 py-3 text-gray-900">{moduleInfo?.label ?? r.module_code}</td>
                     <td className="px-4 py-3">
                       <span
                         className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${

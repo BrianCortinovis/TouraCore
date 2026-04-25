@@ -61,7 +61,7 @@ export default async function ClientDetailPage({ params }: ClientDetailProps) {
   }
 
   // Accordi commerciali per entity
-  let billingMap: Record<string, EntityBillingRecord> = {}
+  const billingMap: Record<string, EntityBillingRecord> = {}
   if (entityIds.length > 0) {
     const { data: billingRows } = await supabase
       .from('agency_entity_billing')

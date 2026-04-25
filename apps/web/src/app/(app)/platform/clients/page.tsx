@@ -28,7 +28,7 @@ export default async function PlatformClientsPage() {
 
   // Billing profiles tenant-wide per questi tenant
   const tenantIds = (tenants ?? []).map((t) => t.id)
-  let billingMap: Record<string, { billing_model: string; subscription_price_eur: number | null; commission_percent: number | null }> = {}
+  const billingMap: Record<string, { billing_model: string; subscription_price_eur: number | null; commission_percent: number | null }> = {}
   if (tenantIds.length > 0) {
     const { data: profiles } = await supabase
       .from('billing_profiles')

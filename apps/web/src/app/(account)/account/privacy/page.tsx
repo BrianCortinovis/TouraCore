@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@touracore/auth'
 import { createServerSupabaseClient } from '@touracore/db/server'
@@ -123,7 +124,7 @@ export default async function AccountPrivacyPage() {
       <section className="text-sm text-gray-500">
         Per domande: <a href="mailto:dpo@touracore.com" className="text-blue-600 hover:underline">dpo@touracore.com</a>.
         Vedi anche{' '}
-        <a href="/legal/privacy" className="text-blue-600 hover:underline">Privacy Policy</a>.
+        <Link href="/legal/privacy" className="text-blue-600 hover:underline">Privacy Policy</Link>.
       </section>
     </div>
   )

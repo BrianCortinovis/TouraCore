@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { resolveTenantLegal } from '@/lib/tenant-legal'
 import { BRAND_CONFIG } from '@/config/brand'
 
@@ -25,21 +26,21 @@ export async function GlobalFooter({ tenantSlug, minimal = false }: GlobalFooter
             <div>
               <h3 className="font-semibold text-gray-900 mb-3">Legale</h3>
               <ul className="space-y-2 text-gray-600">
-                <li><a href="/legal/privacy" className="hover:text-blue-600 hover:underline">Privacy Policy</a></li>
-                <li><a href="/legal/cookie-policy" className="hover:text-blue-600 hover:underline">Cookie Policy</a></li>
-                <li><a href="/legal/terms" className="hover:text-blue-600 hover:underline">Termini</a></li>
-                <li><a href="/legal/dpa" className="hover:text-blue-600 hover:underline">DPA</a></li>
-                <li><a href="/legal/sub-processors" className="hover:text-blue-600 hover:underline">Sub-processor</a></li>
-                <li><a href="/legal/accessibility-statement" className="hover:text-blue-600 hover:underline">Accessibilità</a></li>
+                <li><Link href="/legal/privacy" className="hover:text-blue-600 hover:underline">Privacy Policy</Link></li>
+                <li><Link href="/legal/cookie-policy" className="hover:text-blue-600 hover:underline">Cookie Policy</Link></li>
+                <li><Link href="/legal/terms" className="hover:text-blue-600 hover:underline">Termini</Link></li>
+                <li><Link href="/legal/dpa" className="hover:text-blue-600 hover:underline">DPA</Link></li>
+                <li><Link href="/legal/sub-processors" className="hover:text-blue-600 hover:underline">Sub-processor</Link></li>
+                <li><Link href="/legal/accessibility-statement" className="hover:text-blue-600 hover:underline">Accessibilità</Link></li>
               </ul>
             </div>
 
             <div>
               <h3 className="font-semibold text-gray-900 mb-3">Account</h3>
               <ul className="space-y-2 text-gray-600">
-                <li><a href="/account/privacy" className="hover:text-blue-600 hover:underline">I tuoi dati</a></li>
-                <li><a href="/preferences/notifications" className="hover:text-blue-600 hover:underline">Preferenze notifiche</a></li>
-                <li><a href="/unsubscribe" className="hover:text-blue-600 hover:underline">Unsubscribe</a></li>
+                <li><Link href="/account/privacy" className="hover:text-blue-600 hover:underline">I tuoi dati</Link></li>
+                <li><Link href="/preferences/notifications" className="hover:text-blue-600 hover:underline">Preferenze notifiche</Link></li>
+                <li><Link href="/unsubscribe" className="hover:text-blue-600 hover:underline">Unsubscribe</Link></li>
               </ul>
             </div>
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Badge } from '@touracore/ui'
 
 function Label({ children }: { children: React.ReactNode }) {
@@ -254,7 +254,14 @@ function PreviewPanel({ slug, template, theme }: { slug: string; template: Booki
   )
 }
 
-function EmbedPanel({ slug, baseUrl, embedUrl, bookingUrl, template }: any) {
+interface EmbedPanelProps {
+  slug: string
+  baseUrl: string
+  embedUrl: string
+  bookingUrl: string
+  template?: string
+}
+function EmbedPanel({ slug, baseUrl, embedUrl, bookingUrl, template: _template }: EmbedPanelProps) {
   const [copied, setCopied] = useState<string | null>(null)
   const copy = (id: string, text: string) => {
     navigator.clipboard.writeText(text)

@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { verifyApiKey, verifyHmacSignature, recordApiAudit } from '@touracore/partners/server'
+import { verifyApiKey, recordApiAudit } from '@touracore/partners/server'
 import type { PartnerRow, PartnerApiKeyRow } from '@touracore/partners/server'
 
 /**
@@ -42,7 +42,7 @@ export async function authenticate(
   }
 
   // Determine secret for verify
-  let secretToVerify = secret
+  const secretToVerify = secret
   if (!secretToVerify && signature && timestamp) {
     // HMAC flow: secret is verified via HMAC of body, not passed directly.
     // In this case client uses X-Signature + X-Timestamp. We still need

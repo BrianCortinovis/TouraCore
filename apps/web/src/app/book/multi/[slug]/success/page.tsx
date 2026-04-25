@@ -14,8 +14,10 @@ export default async function BundleSuccessPage({ params, searchParams }: Props)
   const { bundle: bundleId } = await searchParams
   const supabase = await createServiceRoleClient()
 
-  let bundle: { id: string; total_amount_cents: number; status: string } | null = null
-  let items: Array<{ id: string; item_type: string; config: any; total_cents: number }> = []
+  type BundleRow = { id: string; total_amount_cents: number; status: string }
+  type BundleItemRow = { id: string; item_type: string; config: Record<string, unknown>; total_cents: number }
+  let bundle: BundleRow | null = null
+  let items: BundleItemRow[] = []
 
   if (bundleId) {
     const { data: b } = await supabase
@@ -23,14 +25,14 @@ export default async function BundleSuccessPage({ params, searchParams }: Props)
       .select('id, total_amount_cents, status')
       .eq('id', bundleId)
       .single()
-    bundle = b as any
+    bundle = (b as unknown as BundleRow | null) ?? null
 
     const { data: i } = await supabase
       .from('reservation_bundle_items')
       .select('id, item_type, config, total_cents')
       .eq('bundle_id', bundleId)
       .order('sort_order')
-    items = (i ?? []) as any
+    items = (i as unknown as BundleItemRow[] | null) ?? []
   }
 
   return (

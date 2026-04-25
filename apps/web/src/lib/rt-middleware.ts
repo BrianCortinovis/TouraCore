@@ -1,4 +1,5 @@
 import 'server-only'
+import { xmlEscape } from './sdi-xml'
 
 /**
  * RT Fiscale middleware HTTP client per stampa scontrini IT.
@@ -117,8 +118,6 @@ export function buildADECorrispettiviXml(input: {
   }>
   rtSerial: string
 }): string {
-  const { xmlEscape } = require('./sdi-xml') as { xmlEscape: (s: string) => string }
-
   const totalAmount = input.receipts.reduce((s, r) => s + r.amountTotal, 0)
   const totalVat = input.receipts.reduce((s, r) => s + r.vatTotal, 0)
 

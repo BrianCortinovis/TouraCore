@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import Link from 'next/link'
 import { Building2, UtensilsCrossed, Compass, Bike, Heart, ShoppingCart, X, Plus, Minus, CreditCard, AlertCircle } from 'lucide-react'
 
 type Vertical = 'hospitality' | 'restaurant' | 'experiences' | 'bike_rental' | 'wellness'
@@ -45,7 +46,7 @@ const VERTICAL_META: Record<Vertical, { label: string; icon: typeof Building2; c
 }
 
 export function UnifiedBookingClient({
-  tenantId,
+  tenantId: _tenantId,
   tenantSlug,
   activeVerticals,
   hospitalityEntities,
@@ -503,7 +504,7 @@ function GuestForm({
         <div className="space-y-2 rounded border border-gray-200 p-3">
           <label className="flex items-start gap-2 text-sm">
             <input type="checkbox" checked={guestInfo.consentPrivacy} onChange={(e) => setGuestInfo({ ...guestInfo, consentPrivacy: e.target.checked })} required className="mt-0.5" />
-            <span>Ho letto e accetto l'<a href="/privacy" className="text-blue-600 hover:underline">informativa privacy</a> (obbligatorio).</span>
+            <span>Ho letto e accetto l&apos;<Link href="/privacy" className="text-blue-600 hover:underline">informativa privacy</Link> (obbligatorio).</span>
           </label>
           <label className="flex items-start gap-2 text-sm">
             <input type="checkbox" checked={guestInfo.consentMarketing} onChange={(e) => setGuestInfo({ ...guestInfo, consentMarketing: e.target.checked })} className="mt-0.5" />
