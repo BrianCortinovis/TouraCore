@@ -51,7 +51,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     listing.tagline ??
     listing.entity_short_description ??
     undefined
-  const image = listing.og_image_url ?? listing.hero_url ?? undefined
+  const customImage = listing.og_image_url ?? listing.hero_url ?? undefined
 
   return {
     title,
@@ -60,13 +60,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title,
       description: description ?? undefined,
       type: 'website',
-      images: image ? [{ url: image }] : undefined,
+      ...(customImage ? { images: [{ url: customImage }] } : {}),
     },
     twitter: {
-      card: image ? 'summary_large_image' : 'summary',
+      card: 'summary_large_image',
       title,
       description: description ?? undefined,
-      images: image ? [image] : undefined,
+      ...(customImage ? { images: [customImage] } : {}),
     },
   }
 }
