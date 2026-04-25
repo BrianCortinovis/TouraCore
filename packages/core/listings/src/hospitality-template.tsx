@@ -1,5 +1,5 @@
 import type { FC } from 'react'
-import { MapPin, Clock, Users, Mail, Phone, Globe, CalendarDays, DoorOpen } from 'lucide-react'
+import { MapPin, Clock, Users, Mail, Phone, Globe, CalendarDays, DoorOpen, ShieldCheck } from 'lucide-react'
 import type { PublicListing, AmenityKey } from './types'
 import type { AccommodationDetails } from './accommodation'
 import { formatPropertyType, normalizeAmenities } from './accommodation'
@@ -46,9 +46,21 @@ export const HospitalityTemplate: FC<HospitalityTemplateProps> = ({
         </h1>
 
         {addressLine ? (
-          <div className="mb-5 flex items-center gap-2 text-[14px] text-[#1f2937]">
+          <div className="mb-3 flex items-center gap-2 text-[14px] text-[#1f2937]">
             <MapPin size={16} className="text-[#6b7280]" />
             <span>{addressLine}</span>
+          </div>
+        ) : null}
+
+        {a?.cin_code ? (
+          <div
+            data-testid="cin-badge"
+            className="mb-5 inline-flex items-center gap-1.5 rounded border border-[#bcd4f6] bg-[#eff6ff] px-2.5 py-1 text-[12px] font-semibold text-[#003b95]"
+            title="Codice Identificativo Nazionale (D.L. 145/2023)"
+          >
+            <ShieldCheck size={14} />
+            <span>CIN</span>
+            <span className="font-mono text-[#0b1220]">{a.cin_code}</span>
           </div>
         ) : null}
 

@@ -1,6 +1,13 @@
 @import "tailwindcss";
 @import "@touracore/config/tailwind/tokens.css";
 
+/* next/font Inter (self-hosted via --font-inter from app/layout.tsx) overrides
+   the legacy "Inter" reference in tokens.css with the optimized variable, so
+   no Google Fonts link tag is emitted. */
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
 /* WCAG 2.1 AA: Always-visible focus indicators, respects prefers-reduced-motion */
 @layer base {
   *:focus-visible {

@@ -11,6 +11,9 @@ import {
   getBikeTypesPublic as _getBikeTypesPublic,
   getBikeLocationsPublic as _getBikeLocationsPublic,
   getListingPhotos as _getListingPhotos,
+  getReviewAggregate as _getReviewAggregate,
+  getRecentPublicReviews as _getRecentPublicReviews,
+  getPublicEntityLegal as _getPublicEntityLegal,
 } from '@touracore/listings'
 import { createPublicClient } from '@/lib/supabase-public'
 import { CacheTags } from '@/lib/cache-tags'
@@ -108,6 +111,30 @@ export const getBikeLocationsPublicCached = cache(async (entityId: string) => {
   return unstable_cache(
     () => _getBikeLocationsPublic(createPublicClient(), entityId),
     ['bike-locations-public', entityId],
+    { revalidate: 3600, tags: [CacheTags.listing(entityId)] }
+  )()
+})
+
+export const getReviewAggregateCached = cache(async (entityId: string) => {
+  return unstable_cache(
+    () => _getReviewAggregate(createPublicClient(), entityId),
+    ['review-aggregate', entityId],
+    { revalidate: 3600, tags: [CacheTags.listing(entityId)] }
+  )()
+})
+
+export const getRecentPublicReviewsCached = cache(async (entityId: string, limit = 5) => {
+  return unstable_cache(
+    () => _getRecentPublicReviews(createPublicClient(), entityId, limit),
+    ['recent-public-reviews', entityId, String(limit)],
+    { revalidate: 3600, tags: [CacheTags.listing(entityId)] }
+  )()
+})
+
+export const getPublicEntityLegalCached = cache(async (entityId: string) => {
+  return unstable_cache(
+    () => _getPublicEntityLegal(createPublicClient(), entityId),
+    ['public-entity-legal', entityId],
     { revalidate: 3600, tags: [CacheTags.listing(entityId)] }
   )()
 })

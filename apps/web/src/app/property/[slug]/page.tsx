@@ -14,14 +14,23 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const data = await getPublicPropertyAction(slug)
-  if (!data) return {}
+  if (!data) return { robots: { index: false, follow: false } }
 
-  return buildMetadata({
+  const base = buildMetadata({
     title: `${data.property.name} - Prenota ora`,
     description: data.property.description || `Prenota il tuo soggiorno presso ${data.property.name}`,
     ogImage: data.media[0]?.url,
-    canonicalUrl: `/property/${slug}`,
+    canonicalUrl: data.canonicalPath ?? `/property/${slug}`,
   })
+
+  return {
+    ...base,
+    robots: { index: false, follow: true },
+    alternates: {
+      ...(base.alternates ?? {}),
+      canonical: data.canonicalPath ?? `/property/${slug}`,
+    },
+  }
 }
 
 export default async function PublicPropertyPage({ params }: Props) {
@@ -59,7 +68,8 @@ export default async function PublicPropertyPage({ params }: Props) {
               alt={media[0].alt || property.name}
               className="h-80 w-full object-cover opacity-60 sm:h-96"
               fill
-              unoptimized
+              priority
+              sizes="100vw"
             />
           )}
           <div className="absolute inset-0 flex items-end">

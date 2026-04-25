@@ -2,6 +2,7 @@ import type { PublicListing, EntityKind } from './types'
 import type { AccommodationDetails } from './accommodation'
 import type { RestaurantDetails } from './restaurant'
 import type { BikeRentalDetails } from './bike-rental'
+import type { ReviewAggregate, PublicReview } from './reviews'
 import { WEEKDAY_KEYS, getWeekdaySchemaOrg, formatPriceRange } from './restaurant'
 
 const SCHEMA_TYPE_BY_KIND: Record<EntityKind, string> = {
@@ -26,6 +27,8 @@ export function buildListingJsonLd(
     accommodation?: AccommodationDetails | null
     restaurant?: RestaurantDetails | null
     bikeRental?: BikeRentalDetails | null
+    reviewAggregate?: ReviewAggregate | null
+    reviews?: PublicReview[] | null
   } = { baseUrl: '' }
 ): ListingJsonLd {
   const type = SCHEMA_TYPE_BY_KIND[listing.entity_kind]
@@ -92,6 +95,13 @@ export function buildListingJsonLd(
     if (a.email) payload.email = a.email
     if (a.check_in_time) payload.checkinTime = a.check_in_time.slice(0, 5)
     if (a.check_out_time) payload.checkoutTime = a.check_out_time.slice(0, 5)
+    if (a.cin_code) {
+      payload.identifier = {
+        '@type': 'PropertyValue',
+        propertyID: 'CIN',
+        value: a.cin_code,
+      }
+    }
   }
 
   // Restaurant-specific enrichment
@@ -147,6 +157,38 @@ export function buildListingJsonLd(
         },
       }))
     }
+  }
+
+  // AggregateRating + Review enrichment (optional)
+  if (opts.reviewAggregate && opts.reviewAggregate.review_count > 0) {
+    payload.aggregateRating = {
+      '@type': 'AggregateRating',
+      ratingValue: opts.reviewAggregate.avg_rating,
+      reviewCount: opts.reviewAggregate.review_count,
+      bestRating: 5,
+      worstRating: 1,
+    }
+  }
+  if (opts.reviews && opts.reviews.length > 0) {
+    payload.review = opts.reviews.map((r) => {
+      const rev: Record<string, unknown> = {
+        '@type': 'Review',
+        reviewRating: {
+          '@type': 'Rating',
+          ratingValue: r.rating,
+          bestRating: 5,
+          worstRating: 1,
+        },
+        datePublished: r.created_at,
+      }
+      if (r.reviewer_name) {
+        rev.author = { '@type': 'Person', name: r.reviewer_name }
+      }
+      if (r.title) rev.name = r.title
+      if (r.body) rev.reviewBody = r.body
+      if (r.language) rev.inLanguage = r.language
+      return rev
+    })
   }
 
   return payload

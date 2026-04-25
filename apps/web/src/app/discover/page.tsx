@@ -6,7 +6,9 @@ import {
   type PublicListingCard,
   ENTITY_KINDS,
 } from '@touracore/listings'
+import { buildBreadcrumbLd } from '@touracore/seo'
 import { listAllPublicListingsCardsCached } from '@/lib/listings-cache'
+import { getSiteBaseUrl } from '@/lib/site-url'
 
 export const revalidate = 3600
 
@@ -56,8 +58,25 @@ export default async function DiscoverPage({ searchParams }: Props) {
   const counts: Record<string, number> = {}
   for (const l of listings) counts[l.entity_kind] = (counts[l.entity_kind] ?? 0) + 1
 
+  const baseUrl = getSiteBaseUrl()
+  const breadcrumbItems = [
+    { name: 'Home', url: new URL('/', baseUrl).toString() },
+    { name: 'Discover', url: new URL('/discover', baseUrl).toString() },
+  ]
+  if (kind && KIND_LABEL[kind]) {
+    breadcrumbItems.push({
+      name: KIND_LABEL[kind],
+      url: new URL(`/discover?kind=${kind}`, baseUrl).toString(),
+    })
+  }
+  const breadcrumbLd = buildBreadcrumbLd(breadcrumbItems)
+
   return (
     <div className="min-h-screen bg-[#f5f7fa] text-[#0b1220]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
       <div className="bg-[#003b95] py-2.5 text-[13px] text-white">
         <div className="mx-auto flex max-w-[1280px] items-center justify-between px-6">
           <span className="font-bold text-[18px]">TouraCore</span>

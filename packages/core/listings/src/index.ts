@@ -32,6 +32,27 @@ export type { ListingShellProps, ListingLocale } from './shell'
 export { buildListingJsonLd, getSchemaType } from './json-ld'
 export type { ListingJsonLd } from './json-ld'
 
+// Public reviews aggregate + recent
+export {
+  getReviewAggregate,
+  getRecentPublicReviews,
+  reviewAggregateSchema,
+  publicReviewSchema,
+} from './reviews'
+export type { ReviewAggregate, PublicReview } from './reviews'
+
+// Listing FAQs (auto-generated + JSON-LD)
+export { buildListingFaqs, buildFaqJsonLd } from './faq'
+export type { FaqItem } from './faq'
+
+// Public legal info (VAT, REA, legal address, CIN) for footer compliance
+export {
+  getPublicEntityLegal,
+  formatLegalAddress,
+  publicEntityLegalSchema,
+} from './legal-info'
+export type { PublicEntityLegal } from './legal-info'
+
 // Accommodation vertical data
 export {
   getAccommodationDetails,

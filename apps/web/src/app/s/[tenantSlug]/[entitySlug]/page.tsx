@@ -4,6 +4,8 @@ import Link from 'next/link'
 import {
   BikeRentalTemplate,
   buildListingJsonLd,
+  buildListingFaqs,
+  buildFaqJsonLd,
   filterKnownAmenities,
   GenericVerticalTemplate,
   getBookingUrl,
@@ -21,7 +23,12 @@ import {
   getBikeLocationsPublicCached,
   getListingPhotosCached,
   getExperienceData,
+  getReviewAggregateCached,
+  getRecentPublicReviewsCached,
+  getPublicEntityLegalCached,
+  listTenantPublicListingsCached,
 } from '@/lib/listings-cache'
+import { formatLegalAddress } from '@touracore/listings'
 import { getSiteBaseUrl } from '@/lib/site-url'
 
 export const revalidate = 60
@@ -70,8 +77,8 @@ export default async function PublicListingPage({ params }: PageProps) {
 
   if (!listing) notFound()
 
-  // Parallel fetch kind-specific details + photo gallery
-  const [accommodation, restaurant, bikeRental, bikeTypes, bikeLocations, photos] = await Promise.all([
+  // Parallel fetch kind-specific details + photo gallery + reviews aggregate + legal info
+  const [accommodation, restaurant, bikeRental, bikeTypes, bikeLocations, photos, reviewAggregate, reviews, legalInfo] = await Promise.all([
     listing.entity_kind === 'accommodation'
       ? getAccommodationDetailsCached(listing.entity_id)
       : Promise.resolve(null),
@@ -88,6 +95,9 @@ export default async function PublicListingPage({ params }: PageProps) {
       ? getBikeLocationsPublicCached(listing.entity_id)
       : Promise.resolve([]),
     getListingPhotosCached(listing.listing_id),
+    getReviewAggregateCached(listing.entity_id),
+    getRecentPublicReviewsCached(listing.entity_id, 5),
+    getPublicEntityLegalCached(listing.entity_id),
   ])
 
   const featuredAmenities = filterKnownAmenities(listing.featured_amenities)
@@ -111,12 +121,35 @@ export default async function PublicListingPage({ params }: PageProps) {
     accommodation,
     restaurant,
     bikeRental,
+    reviewAggregate,
+    reviews,
   })
+  const faqs = buildListingFaqs(listing, { accommodation, restaurant, bikeRental })
+  const faqLd = buildFaqJsonLd(faqs)
+
+  const tenantOthers = (await listTenantPublicListingsCached(tenantSlug))
+    .filter((l) => l.listing_id !== listing.listing_id)
+    .slice(0, 4)
 
   return (
     <ListingShell
       tenantName={listing.tenant_name}
       listingId={shortId}
+      legal={
+        legalInfo
+          ? {
+              legalName: legalInfo.company_name ?? legalInfo.display_name,
+              vatNumber: legalInfo.vat_number,
+              reaNumber: legalInfo.rea_number,
+              legalAddress: formatLegalAddress(legalInfo),
+              cinCode:
+                legalInfo.legal_cin_code ??
+                (listing.entity_kind === 'accommodation' ? accommodation?.cin_code ?? null : null),
+            }
+          : listing.entity_kind === 'accommodation' && accommodation?.cin_code
+            ? { cinCode: accommodation.cin_code }
+            : undefined
+      }
       breadcrumb={
         <>
           <Link href="/" className="text-[#003b95] hover:underline">Home</Link>
@@ -131,6 +164,12 @@ export default async function PublicListingPage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {faqLd ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
+        />
+      ) : null}
       {photos.length > 0 ? (
         <ListingGallery
           photos={photos}
@@ -197,6 +236,68 @@ export default async function PublicListingPage({ params }: PageProps) {
           featuredAmenities={featuredAmenities}
         />
       )}
+
+      {faqs.length >= 3 ? (
+        <section
+          data-testid="listing-faq"
+          className="mt-8 rounded-md border border-[#e5e7eb] bg-white p-5"
+          aria-labelledby="faq-heading"
+        >
+          <h2 id="faq-heading" className="mb-4 text-[18px] font-bold">
+            Domande frequenti
+          </h2>
+          <dl className="divide-y divide-[#e5e7eb]">
+            {faqs.map((f, i) => (
+              <div key={i} className="py-3 first:pt-0 last:pb-0">
+                <dt className="text-[14px] font-semibold text-[#0b1220]">{f.question}</dt>
+                <dd className="mt-1 text-[14px] leading-relaxed text-[#1f2937]">{f.answer}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      ) : null}
+
+      {tenantOthers.length > 0 ? (
+        <section
+          data-testid="related-listings"
+          className="mt-8 rounded-md border border-[#e5e7eb] bg-white p-5"
+          aria-labelledby="related-heading"
+        >
+          <h2 id="related-heading" className="mb-4 text-[18px] font-bold">
+            Altre strutture di {listing.tenant_name}
+          </h2>
+          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {tenantOthers.map((other) => (
+              <li key={other.listing_id}>
+                <Link
+                  href={`/s/${other.tenant_slug}/${other.slug}`}
+                  prefetch={false}
+                  className="group block overflow-hidden rounded-md border border-[#e5e7eb] hover:border-[#003b95]"
+                >
+                  {other.hero_url ? (
+                    <div
+                      className="aspect-[4/3] w-full bg-cover bg-center"
+                      style={{ backgroundImage: `url(${other.hero_url})` }}
+                      role="img"
+                      aria-label={other.entity_name}
+                    />
+                  ) : (
+                    <div className="aspect-[4/3] w-full bg-gray-100" />
+                  )}
+                  <div className="p-3">
+                    <div className="text-[14px] font-semibold text-[#0b1220] group-hover:text-[#003b95]">
+                      {other.entity_name}
+                    </div>
+                    <div className="mt-0.5 text-[12px] text-[#6b7280]">
+                      {other.tagline ?? ''}
+                    </div>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </ListingShell>
   )
 }

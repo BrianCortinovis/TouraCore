@@ -20,6 +20,7 @@ export const accommodationDetailsSchema = z.object({
   check_in_time: z.string().nullable(),
   check_out_time: z.string().nullable(),
   default_currency: z.string().nullable(),
+  cin_code: z.string().nullable().optional(),
 })
 export type AccommodationDetails = z.infer<typeof accommodationDetailsSchema>
 
@@ -65,7 +66,7 @@ export async function getAccommodationDetails(
   const { data, error } = await supabase
     .from('public_accommodation_view')
     .select(
-      'entity_id, property_type, amenities, address, city, province, zip, country, region, email, phone, website, latitude, longitude, check_in_time, check_out_time, default_currency'
+      'entity_id, property_type, amenities, address, city, province, zip, country, region, email, phone, website, latitude, longitude, check_in_time, check_out_time, default_currency, cin_code'
     )
     .eq('entity_id', entityId)
     .maybeSingle()

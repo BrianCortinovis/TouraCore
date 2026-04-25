@@ -1,9 +1,22 @@
 import { chromium, type FullConfig } from '@playwright/test'
 import { TEST_USER } from './fixtures'
+import fs from 'node:fs'
+import path from 'node:path'
 
 export default async function globalSetup(config: FullConfig) {
-  const baseURL = config.projects[0]?.use?.baseURL ?? 'http://localhost:3000'
+  const baseURL =
+    process.env.PLAYWRIGHT_TEST_BASE_URL ??
+    config.projects[0]?.use?.baseURL ??
+    'http://localhost:3000'
   const storageState = 'e2e/.auth/user.json'
+
+  // Skip auth setup for public-only suites (anonymous flows). Honored by
+  // tests that call test.use({ storageState: { cookies: [], origins: [] } }).
+  if (process.env.E2E_SKIP_AUTH === '1') {
+    fs.mkdirSync(path.dirname(storageState), { recursive: true })
+    fs.writeFileSync(storageState, JSON.stringify({ cookies: [], origins: [] }))
+    return
+  }
 
   const browser = await chromium.launch()
   const page = await browser.newPage({ baseURL })

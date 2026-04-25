@@ -30,7 +30,7 @@ export function PropertyGallery({ media }: { media: MediaItem[] }) {
               alt={item.alt || ''}
               className="h-full w-full object-cover transition-transform group-hover:scale-105"
               fill
-              unoptimized
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             />
           </button>
         ))}
@@ -44,7 +44,7 @@ export function PropertyGallery({ media }: { media: MediaItem[] }) {
             className="w-full rounded-lg"
             width={selected.width || 1200}
             height={selected.height || 800}
-            unoptimized
+            sizes="(max-width: 1024px) 100vw, 1024px"
           />
         )}
       </Modal>

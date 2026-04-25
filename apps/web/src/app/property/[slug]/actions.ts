@@ -29,9 +29,22 @@ export async function getPublicPropertyAction(slug: string) {
     .order('created_at', { ascending: false })
     .limit(20)
 
+  let canonicalPath: string | null = null
+  if (property.tenant_id) {
+    const { data: tenant } = await supabase
+      .from('tenants')
+      .select('slug')
+      .eq('id', property.tenant_id)
+      .single()
+    if (tenant?.slug && property.slug) {
+      canonicalPath = `/s/${tenant.slug}/${property.slug}`
+    }
+  }
+
   return {
     property: property as Property,
     roomTypes: (roomTypes ?? []) as RoomType[],
     media: media ?? [],
+    canonicalPath,
   }
 }

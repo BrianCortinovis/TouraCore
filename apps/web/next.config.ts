@@ -44,6 +44,24 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'cdn.touracore.com' },
     ],
   },
+  // Security headers (HSTS/CSP/XFO/Referrer/Permissions/CTO) are applied by the
+  // middleware via @touracore/security `applySecurityHeaders`. This `headers()`
+  // export only adds SEO-specific cache hints + a DNS prefetch nudge for routes
+  // the middleware does not customize.
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [{ key: 'X-DNS-Prefetch-Control', value: 'on' }],
+      },
+      {
+        source: '/s/:tenantSlug/:entitySlug',
+        headers: [
+          { key: 'Cache-Control', value: 'public, s-maxage=60, stale-while-revalidate=300' },
+        ],
+      },
+    ]
+  },
 };
 
 export default nextConfig;

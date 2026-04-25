@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -13,6 +14,35 @@ import {
 } from 'lucide-react'
 import { createServerSupabaseClient, createServiceRoleClient } from '@touracore/db/server'
 import { getAuthBootstrapData } from '@touracore/auth'
+
+export const metadata: Metadata = {
+  title: 'TouraCore — Piattaforma multi-verticale per il turismo italiano',
+  description:
+    'Hospitality, ristorazione, noleggi, attività outdoor: channel manager, booking engine, fattura elettronica, CIN, Alloggiati Web e tassa di soggiorno integrate.',
+  keywords: [
+    'gestionale turismo',
+    'channel manager Italia',
+    'booking engine hotel',
+    'CIN affitti brevi',
+    'Alloggiati Web',
+    'fattura elettronica turismo',
+    'PMS multi-vertical',
+  ],
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    title: 'TouraCore — Piattaforma multi-verticale per il turismo italiano',
+    description:
+      'Hospitality, ristorazione, noleggi, attività outdoor in un\'unica piattaforma compliant con la normativa italiana.',
+    siteName: 'TouraCore',
+    locale: 'it_IT',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'TouraCore',
+    description: 'Gestisci la tua attività turistica. Tutto da un posto.',
+  },
+}
 
 export default async function HomePage() {
   const bootstrap = await getAuthBootstrapData()
@@ -290,12 +320,24 @@ function Footer() {
             <span className="text-xs text-gray-400">© {new Date().getFullYear()}</span>
           </div>
 
-          <div className="flex items-center gap-6 text-sm text-gray-600">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-gray-600">
+            <Link href="/discover" className="hover:text-gray-900">
+              Esplora
+            </Link>
             <Link href="/login" className="hover:text-gray-900">
               Accedi
             </Link>
             <Link href="/register" className="hover:text-gray-900">
               Registrati
+            </Link>
+            <Link href="/legal/privacy" className="hover:text-gray-900">
+              Privacy
+            </Link>
+            <Link href="/legal/cookie-policy" className="hover:text-gray-900">
+              Cookie
+            </Link>
+            <Link href="/legal/terms" className="hover:text-gray-900">
+              Termini
             </Link>
             <Link
               href="/superadmin-login"

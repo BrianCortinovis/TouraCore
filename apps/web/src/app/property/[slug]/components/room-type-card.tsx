@@ -20,7 +20,7 @@ export function RoomTypeCard({ roomType, slug }: { roomType: RoomType; slug: str
           className="h-28 w-40 flex-shrink-0 rounded-lg object-cover"
           width={160}
           height={112}
-          unoptimized
+          sizes="160px"
         />
       )}
       <div className="flex flex-1 flex-col justify-between">

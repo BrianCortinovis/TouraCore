@@ -2,6 +2,19 @@ import type { FC, ReactNode } from 'react'
 
 export type ListingLocale = 'it' | 'en' | 'de' | 'fr'
 
+export type ListingShellLegal = {
+  /** Ragione sociale (legal name) of the operator */
+  legalName?: string | null
+  /** P.IVA / VAT number */
+  vatNumber?: string | null
+  /** REA / chamber-of-commerce number */
+  reaNumber?: string | null
+  /** Sede legale (legal address single line) */
+  legalAddress?: string | null
+  /** CIN code if single-entity tenant */
+  cinCode?: string | null
+}
+
 export type ListingShellProps = {
   children: ReactNode
   /** Tenant display name (footer + topbar subtitle) */
@@ -14,6 +27,8 @@ export type ListingShellProps = {
   subnav?: ReactNode
   /** Optional breadcrumb slot rendered above main content */
   breadcrumb?: ReactNode
+  /** Optional legal info displayed in footer (Italy compliance) */
+  legal?: ListingShellLegal
 }
 
 const LOCALES: ListingLocale[] = ['it', 'en', 'de', 'fr']
@@ -25,6 +40,7 @@ export const ListingShell: FC<ListingShellProps> = ({
   listingId,
   subnav,
   breadcrumb,
+  legal,
 }) => {
   return (
     <div className="min-h-screen bg-[#f5f7fa] text-[#0b1220] antialiased">
@@ -69,10 +85,67 @@ export const ListingShell: FC<ListingShellProps> = ({
       <main className="mx-auto max-w-[1280px] px-6 pb-16 pt-4">{children}</main>
 
       {/* FOOTER */}
-      <footer className="mt-10 bg-[#1a1a1a] py-10 text-[13px] text-[#cccccc]">
+      <footer
+        data-testid="listing-footer"
+        className="mt-10 bg-[#1a1a1a] py-10 text-[13px] text-[#cccccc]"
+      >
         <div className="mx-auto max-w-[1280px] px-6">
-          <div className="mb-4 font-bold text-white text-[20px]">{tenantName}</div>
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#333] pt-4 text-[12px] text-[#888]">
+          <div className="grid gap-6 md:grid-cols-3">
+            <div>
+              <div className="mb-2 font-bold text-white text-[18px]">{tenantName}</div>
+              {legal?.legalName ? (
+                <div className="text-[12px] text-[#aaa]">{legal.legalName}</div>
+              ) : null}
+              {legal?.legalAddress ? (
+                <div className="mt-1 text-[12px] text-[#888]">{legal.legalAddress}</div>
+              ) : null}
+              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[12px] text-[#888]">
+                {legal?.vatNumber ? (
+                  <span data-testid="footer-vat">P.IVA {legal.vatNumber}</span>
+                ) : null}
+                {legal?.reaNumber ? <span>REA {legal.reaNumber}</span> : null}
+                {legal?.cinCode ? (
+                  <span data-testid="footer-cin">CIN {legal.cinCode}</span>
+                ) : null}
+              </div>
+            </div>
+            <div>
+              <div className="mb-2 font-semibold text-white">Informazioni legali</div>
+              <ul className="space-y-1 text-[12px]">
+                <li>
+                  <a href="/legal/privacy" className="hover:text-white">
+                    Privacy policy
+                  </a>
+                </li>
+                <li>
+                  <a href="/legal/cookie-policy" className="hover:text-white">
+                    Cookie policy
+                  </a>
+                </li>
+                <li>
+                  <a href="/legal/terms" className="hover:text-white">
+                    Termini di servizio
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <div className="mb-2 font-semibold text-white">Esplora</div>
+              <ul className="space-y-1 text-[12px]">
+                <li>
+                  <a href="/discover" className="hover:text-white">
+                    Tutte le strutture
+                  </a>
+                </li>
+                <li>
+                  <a href="/sitemap_index.xml" className="hover:text-white">
+                    Sitemap
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-[#333] pt-4 text-[12px] text-[#888]">
             <span>© {new Date().getFullYear()} {tenantName}. All rights reserved.</span>
             <span>
               Distribuito con <b className="text-white">TouraCore</b>

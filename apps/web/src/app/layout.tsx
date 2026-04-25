@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
@@ -7,6 +8,12 @@ import { GlobalSchemaLd } from "@/components/seo/GlobalSchemaLd";
 import { SkipToContent } from "@/components/a11y/SkipToContent";
 import { WebVitalsCollector } from "@/components/perf/WebVitalsCollector";
 import { CookieBannerWrapper } from "@touracore/hospitality/src/components/compliance/cookie-banner-wrapper";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
 
 export const metadata: Metadata = {
   title: "TouraCore",
@@ -19,12 +26,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="it">
+    <html lang="it" className={inter.variable}>
       <head>
         <ConsentModeScript />
         <GlobalSchemaLd />
       </head>
-      <body>
+      <body className="font-sans">
         <SkipToContent />
         {children}
         <WebVitalsCollector />
