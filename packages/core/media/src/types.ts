@@ -26,25 +26,25 @@ export const ALLOWED_MIME_TYPES = [
   ...ALLOWED_DOCUMENT_TYPES,
 ] as const;
 
-// Limiti: 50MB per RAW/large photo
-export const MAX_FILE_SIZE = 50 * 1024 * 1024;
-export const MAX_IMAGE_DIMENSION = 2560; // retina 5K friendly
+// Limiti: 15MB per foto smartphone moderne (raw/iphone pro stanno sotto 12MB)
+export const MAX_FILE_SIZE = 15 * 1024 * 1024;
+export const MAX_IMAGE_DIMENSION = 3200; // 4K friendly per hero stretching
 
 // Variant tiers — progressive responsive
 export const VARIANT_SIZES = {
   thumb: 320,
-  card: 640,
-  hero: 1280,
-  full: 2560,
+  card: 800,
+  hero: 1600,
+  full: 3200,
 } as const;
 
 export type VariantKey = keyof typeof VARIANT_SIZES;
 
-// Quality per tier — higher on larger sizes
+// Quality per tier — higher su tier grossi, alzato per visual turismo
 export const VARIANT_QUALITY = {
-  webp: { thumb: 78, card: 82, hero: 86, full: 90 },
-  avif: { thumb: 60, card: 65, hero: 70, full: 75 },
-  jpeg: { thumb: 80, card: 84, hero: 88, full: 92 },
+  webp: { thumb: 80, card: 86, hero: 90, full: 92 },
+  avif: { thumb: 62, card: 72, hero: 78, full: 82 },
+  jpeg: { thumb: 82, card: 88, hero: 92, full: 94 },
 } as const;
 
 export const THUMBNAIL_SIZE = VARIANT_SIZES.thumb;
