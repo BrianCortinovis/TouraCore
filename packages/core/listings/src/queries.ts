@@ -109,7 +109,7 @@ export async function listAllPublicListingsCards(
 ): Promise<PublicListingCard[]> {
   let q = supabase
     .from('public_listings_view')
-    .select('listing_id, tenant_slug, tenant_name, slug, entity_id, entity_kind, entity_name, hero_url, tagline, updated_at')
+    .select('listing_id, tenant_slug, tenant_name, slug, entity_id, entity_kind, entity_name, hero_url, og_image_url, tagline, updated_at')
     .order('published_at', { ascending: false, nullsFirst: false })
 
   if (opts.kind) q = q.eq('entity_kind', opts.kind)
@@ -117,5 +117,8 @@ export async function listAllPublicListingsCards(
 
   const { data, error } = await q
   if (error || !data) return []
-  return data as PublicListingCard[]
+  return (data as Array<PublicListingCard & { og_image_url: string | null }>).map((r) => ({
+    ...r,
+    hero_url: r.hero_url ?? r.og_image_url,
+  }))
 }

@@ -42,6 +42,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '*.r2.cloudflarestorage.com' },
       { protocol: 'https', hostname: '*.r2.dev' },
       { protocol: 'https', hostname: 'cdn.touracore.com' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
     ],
   },
   // Security headers (HSTS/CSP/XFO/Referrer/Permissions/CTO) are applied by the
