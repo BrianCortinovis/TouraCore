@@ -18,6 +18,7 @@ import {
   Globe,
   Code2,
   Palette,
+  Banknote,
 } from 'lucide-react'
 
 interface SettingsSidebarProps {
@@ -39,6 +40,7 @@ export function SettingsSidebar({
     { href: `${base}/business`, label: 'Azienda', icon: Building2 },
     { href: `${base}/legal-entities`, label: 'Fiscale', icon: Receipt },
     { href: `${base}/billing`, label: 'Fatturazione', icon: CreditCard },
+    { href: `${base}/payments`, label: 'Pagamenti', icon: Banknote },
     { href: `${base}/team`, label: 'Team', icon: Users },
     { href: `${base}/modules`, label: 'Moduli', icon: Package },
     { href: `${base}/booking-engine`, label: 'Booking', icon: Sparkles },

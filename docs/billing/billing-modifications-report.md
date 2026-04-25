@@ -1,8 +1,58 @@
-# Billing — Report modifiche v2
+# Billing — Report modifiche v3
 
 **Data**: 2026-04-26
-**Versione**: v2 (loop chiuso)
+**Versione**: v3 (Stripe Connect Direct Charge — Fase 1)
 **Audience**: super admin (Brian) + dev follow-up
+**Scope**: regola architetturale "TouraCore mai banca" — Fase 1 (onboarding Stripe Connect tenant) implementata.
+
+---
+
+## v3 — Cosa cambia
+
+### Decisione architetturale
+
+Brian ha esplicitato (2026-04-26) che TouraCore non deve mai essere banca: tutti i pagamenti cliente devono passare via Stripe Connect Direct Charge, con TouraCore che riceve solo `application_fee_amount`. Memoria: `feedback_no_banking.md`.
+
+### v3 — Fase 1: Onboarding Stripe Connect tenant (DONE)
+
+| Cosa | File |
+|------|------|
+| Migration colonne tenants | `supabase/migrations/00149_tenants_stripe_connect.sql` |
+| Server actions onboarding/refresh/dashboard | `apps/web/src/app/(app)/[tenantSlug]/settings/payments/actions.ts` |
+| UI pagina pagamenti tenant | `apps/web/src/app/(app)/[tenantSlug]/settings/payments/page.tsx` |
+| Voce sidebar "Pagamenti" | `apps/web/src/app/(app)/[tenantSlug]/settings/settings-sidebar.tsx` |
+| Webhook account.updated mirror su tenants | `apps/web/src/app/api/webhooks/stripe/route.ts:410` |
+| Block pubblicazione senza Connect attivo | `apps/web/src/app/(dashboard)/settings/distribution/actions.ts` |
+
+Stripe API utilizzate (tutte native, zero PSP custom):
+- `POST /v1/accounts` con `type=express`, `capabilities[card_payments]=true`, `capabilities[transfers]=true`
+- `POST /v1/account_links` per onboarding URL
+- `POST /v1/accounts/{id}/login_links` per Express Dashboard
+- `GET /v1/accounts/{id}` per refresh stato
+- Webhook `account.updated` per sync charges_enabled / payouts_enabled / requirements
+
+Verifiche:
+- `pnpm typecheck` → 17/17 PASS
+- `pnpm lint` → 0 errors
+
+### v3 — Fasi successive (TODO)
+
+| Fase | Scope | Stima |
+|------|-------|-------|
+| 2 | Switch checkout pubblici (4 verticali) a Direct Charge con `application_fee_amount` | 3h |
+| 3 | Rate plans: free_cancellation / deposit_30 / partially_refundable / non_refundable + UI tenant per ogni verticale | 4h |
+| 4 | Auto-charge differito 7gg prima check-in (pre-auth + capture) | 2h |
+| 5 | Orchestratore booking >30gg con SetupIntent al booking + charge a T-30gg | 2h |
+| 6 | Retry custom + auto-cancel + magic link aggiorna carta | 2h |
+| Test E2E | Stripe test mode, scenari success + insufficient_funds + expired_card | 3h |
+
+**Totale rimanente**: ~16h dev + 3h test.
+
+---
+
+## v2 — Snapshot precedente (mantenuto per storico)
+
+**Versione**: v2 (loop chiuso wiring commissioni)
 **Scope**: tutti i gap segnalati nella v1 sono stati implementati e testati a livello typecheck
 
 ---

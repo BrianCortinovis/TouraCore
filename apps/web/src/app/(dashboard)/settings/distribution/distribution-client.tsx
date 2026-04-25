@@ -30,7 +30,11 @@ export function DistributionClient({ rows: initialRows, tenantSlug }: Props) {
     startTransition(async () => {
       const res = await togglePublicListingAction({ entityId, isPublic: !currentPublic })
       if (!res.success) {
-        setError(res.error ?? 'Errore durante aggiornamento')
+        const msg =
+          res.error === 'STRIPE_CONNECT_REQUIRED'
+            ? 'Per pubblicare devi prima collegare Stripe in Impostazioni → Pagamenti.'
+            : res.error ?? 'Errore durante aggiornamento'
+        setError(msg)
         setBusyId(null)
         return
       }

@@ -117,6 +117,19 @@ export async function togglePublicListingAction(
     return { success: false, error: 'ENTITY_NOT_FOUND' }
   }
 
+  // Stripe Connect gating: per pubblicare serve charges_enabled
+  if (isPublic) {
+    const { data: tenant } = await supabase
+      .from('tenants')
+      .select('stripe_connect_charges_enabled')
+      .eq('id', entity.tenant_id)
+      .maybeSingle()
+    const ok = (tenant as { stripe_connect_charges_enabled: boolean } | null)?.stripe_connect_charges_enabled === true
+    if (!ok) {
+      return { success: false, error: 'STRIPE_CONNECT_REQUIRED' }
+    }
+  }
+
   // Upsert public_listing
   const { error: upsertErr } = await supabase
     .from('public_listings')

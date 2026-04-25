@@ -417,6 +417,20 @@ export async function POST(request: NextRequest) {
         payouts_enabled: account.payouts_enabled ?? false,
         onboarding_complete: (account.charges_enabled && account.payouts_enabled) ?? false,
       })
+
+      // Mirror su tenants per gating pubblicazione + UI status
+      await supabase
+        .from('tenants')
+        .update({
+          stripe_connect_account_id: account.id,
+          stripe_connect_charges_enabled: account.charges_enabled ?? false,
+          stripe_connect_payouts_enabled: account.payouts_enabled ?? false,
+          stripe_connect_details_submitted: account.details_submitted ?? false,
+          stripe_connect_country: account.country ?? null,
+          stripe_connect_requirements: account.requirements ?? null,
+          stripe_connect_updated_at: new Date().toISOString(),
+        })
+        .eq('id', tenantId)
       break
     }
 

@@ -401,11 +401,11 @@
   <h1>Sistema Billing</h1>
   <p class="lede">Come si muovono i soldi dentro TouraCore: dal cliente che prenota fino al super admin. Senza gergo tecnico, con esempi e calcolatore live.</p>
   <div class="meta">
-    <span>v2 · 2026-04-26</span>
+    <span>v3 · 2026-04-26</span>
     <span>Branch: main</span>
     <span>Audience: non-developer</span>
-    <span>Tempo lettura: ~12 min</span>
-    <span class="pill ok" style="margin-left:6px;">loop chiuso</span>
+    <span>Tempo lettura: ~14 min</span>
+    <span class="pill ok" style="margin-left:6px;">Stripe Connect Direct Charge</span>
   </div>
 </header>
 
@@ -423,7 +423,8 @@
     <li><a href="#cron">Automazioni notturne (cron)</a></li>
     <li><a href="#ui">Dove il super admin vede tutto</a></li>
     <li><a href="#mental">Mental model finale</a></li>
-    <li><a href="#changelog">Cosa è stato chiuso (v2)</a></li>
+    <li><a href="#money-flow">Flusso fisico soldi (Stripe Connect)</a></li>
+    <li><a href="#changelog">Changelog v2 · v3</a></li>
   </ol>
 </nav>
 
@@ -866,9 +867,98 @@ export async function accrueCommission(input) {
 </section>
 
 <!-- ==================================================== -->
+<section id="money-flow">
+  <h2><span class="num">12</span>Flusso fisico soldi — Stripe Connect Direct Charge</h2>
+  <p class="subtitle">Regola architetturale TouraCore: <strong>mai banca</strong>. I soldi del cliente non transitano mai sul conto TouraCore. Stripe splitta alla fonte.</p>
+
+  <div class="callout success">
+    <strong>Obiettivo</strong>
+    Cliente paga €1000 → €900 vanno direttamente al conto del tenant (hotel/ristorante/bike/tour) → €100 vanno direttamente al conto TouraCore (commissione). Zero spostamenti manuali, zero TouraCore-come-cassa-temporanea.
+  </div>
+
+  <h3>Come funziona tecnicamente</h3>
+  <ol class="clean">
+    <li><strong>Tenant fa onboarding Stripe Connect Express</strong> da <code>/[tenantSlug]/settings/payments</code> (5 minuti, KYC + IBAN gestiti da Stripe).</li>
+    <li><strong>Stripe verifica</strong> documenti + banca → <code>charges_enabled=true</code>.</li>
+    <li><strong>Tenant può ora pubblicare</strong> entity. Senza Connect attivo la pubblicazione è bloccata con messaggio chiaro.</li>
+    <li><strong>Cliente prenota</strong>: il <code>PaymentIntent</code> viene creato con <code>on_behalf_of</code> + <code>transfer_data.destination</code> sul Connect account del tenant + <code>application_fee_amount</code> = commissione TouraCore.</li>
+    <li><strong>Stripe esegue lo split alla fonte</strong>: tenant riceve gross meno fee, TouraCore riceve solo la fee.</li>
+    <li><strong>Stripe bonifica al tenant via SEPA</strong> automatico (giornaliero) sul suo IBAN. TouraCore riceve i propri payout sul proprio IBAN.</li>
+  </ol>
+
+  <h3>Stripe-first, custom solo dove necessario</h3>
+  <table class="data">
+    <thead><tr><th>Funzione</th><th>Stripe nativo</th><th>Custom TouraCore</th></tr></thead>
+    <tbody>
+      <tr><td>Onboarding KYC tenant</td><td>✅ Express</td><td>—</td></tr>
+      <tr><td>Salva carta cliente per addebiti futuri</td><td>✅ SetupIntent + Customer</td><td>—</td></tr>
+      <tr><td>Carta scaduta tra booking e charge</td><td>✅ Card Updater (Visa/MC network)</td><td>—</td></tr>
+      <tr><td>3DS / SCA Italia</td><td>✅ automatico</td><td>—</td></tr>
+      <tr><td>Split fee tenant/TouraCore</td><td>✅ application_fee_amount</td><td>—</td></tr>
+      <tr><td>Payout SEPA al tenant</td><td>✅ daily auto</td><td>—</td></tr>
+      <tr><td>Refund / dispute</td><td>✅ Dashboard Stripe</td><td>—</td></tr>
+      <tr><td>Aggiorna carta cliente loggato</td><td>✅ Customer Portal</td><td>—</td></tr>
+      <tr><td>Smart retry pagamenti falliti (one-shot)</td><td>❌ (solo Subscriptions)</td><td>cron retry × 4 a 24h</td></tr>
+      <tr><td>Auto-cancel prenotazione dopo N fail</td><td>❌</td><td>cron auto-cancel</td></tr>
+      <tr><td>Block pubblicazione senza Connect attivo</td><td>❌</td><td>guard server action</td></tr>
+      <tr><td>Booking &gt; 30gg (pre-auth max 7gg Stripe)</td><td>❌</td><td>orchestrator + SetupIntent</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Roadmap fasi</h3>
+  <ul class="clean">
+    <li><strong>Fase 1 (DONE v3)</strong> — Onboarding Stripe Connect tenant + gating pubblicazione.</li>
+    <li><strong>Fase 2</strong> — Switch checkout pubblici (4 verticali) a Direct Charge con <code>application_fee_amount</code>.</li>
+    <li><strong>Fase 3</strong> — Rate plans (free_cancellation / deposit_30 / partially_refundable / non_refundable) con UI tenant per ogni verticale.</li>
+    <li><strong>Fase 4</strong> — Auto-charge differito 7gg prima check-in (pre-auth + capture).</li>
+    <li><strong>Fase 5</strong> — Orchestratore booking &gt;30gg con SetupIntent al booking + charge a T-30gg.</li>
+    <li><strong>Fase 6</strong> — Retry custom + auto-cancel + magic link aggiorna carta.</li>
+  </ul>
+
+  <div class="callout info">
+    <strong>Stima totale rimanente</strong>
+    ~17h dev (fasi 2-6) + ~3h test E2E con Stripe test mode. 80% del lavoro è configurazione Stripe nativa, 20% custom orchestration.
+  </div>
+</section>
+
+<!-- ==================================================== -->
 <section id="changelog">
-  <h2><span class="num">12</span>Cosa è stato chiuso (v2 · 2026-04-26)</h2>
-  <p class="subtitle">Tutti i gap critici della v1 sono stati implementati. Loop end-to-end ora attivo: prenotazione → maturazione → payout mensile.</p>
+  <h2><span class="num">13</span>Changelog v2 · v3</h2>
+
+  <h3 style="margin-top:8px;">v3 — 2026-04-26 (Stripe Connect tenant — Fase 1)</h3>
+
+  <div class="card">
+    <h3><span class="pill ok">done</span> Migration <code>00149_tenants_stripe_connect</code></h3>
+    <p>Aggiunta colonne su <code>tenants</code>: <code>stripe_connect_account_id</code> (UNIQUE), <code>stripe_connect_charges_enabled</code>, <code>stripe_connect_payouts_enabled</code>, <code>stripe_connect_details_submitted</code>, <code>stripe_connect_country</code>, <code>stripe_connect_requirements</code> (JSONB), <code>stripe_connect_updated_at</code>. Index parziale su <code>account_id</code> non-null.</p>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill ok">done</span> Server actions onboarding tenant</h3>
+    <p>Nuove action in <span class="file-ref">apps/web/src/app/(app)/[tenantSlug]/settings/payments/actions.ts</span>:</p>
+    <ul class="clean">
+      <li><code>connectStripeTenantAction</code> — crea Express account con capabilities <code>card_payments</code> + <code>transfers</code>, metadata <code>tenant_id</code>+<code>tenant_slug</code>, redirect a Stripe Account Link per onboarding.</li>
+      <li><code>refreshStripeStatusAction</code> — pull stato corrente da Stripe, aggiorna DB.</li>
+      <li><code>openStripeDashboardAction</code> — genera login link Express dashboard per tenant.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill ok">done</span> UI <code>/[tenantSlug]/settings/payments</code></h3>
+    <p>Pagina con badge stato (<em>Non collegato / Da completare / In verifica / Operativo</em>), dettagli account Stripe, lista <code>requirements.currently_due</code> se mancano dati, 3 bottoni (collega / aggiorna stato / apri dashboard Stripe). Voce sidebar <strong>Pagamenti</strong> con icona Banknote.</p>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill ok">done</span> Webhook <code>account.updated</code> esteso</h3>
+    <p>Oltre a popolare <code>connect_accounts</code> (esistente), ora mirror anche su <code>tenants.stripe_connect_*</code> per gating pubblicazione + UI status. File <span class="file-ref">apps/web/src/app/api/webhooks/stripe/route.ts:410</span>.</p>
+  </div>
+
+  <div class="card">
+    <h3><span class="pill ok">done</span> Block pubblicazione entity senza Connect attivo</h3>
+    <p>In <span class="file-ref">apps/web/src/app/(dashboard)/settings/distribution/actions.ts</span> <code>togglePublicListingAction</code>: se <code>isPublic=true</code> e <code>tenants.stripe_connect_charges_enabled=false</code> → ritorna <code>STRIPE_CONNECT_REQUIRED</code>. Client mappa in messaggio chiaro: <em>"Per pubblicare devi prima collegare Stripe in Impostazioni → Pagamenti."</em></p>
+  </div>
+
+  <h3 style="margin-top:32px;">v2 — 2026-04-26 (wiring commission + payout)</h3>
+  <p class="subtitle">Tutti i gap critici della v1 sono stati implementati. Loop accrual → payout mensile attivo (pre-Stripe Connect).</p>
 
   <div class="card">
     <h3><span class="pill ok">done</span> Helper condiviso <code>onReservationStatusChange</code></h3>
