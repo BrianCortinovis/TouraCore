@@ -18,10 +18,11 @@ mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Resources"
 # launcher
 cat > "$APP_DIR/Contents/MacOS/launcher" <<EOF
 #!/bin/bash
+# GUI HTML on loopback + Terminal log
 osascript <<APPLESCRIPT
 tell application "Terminal"
   activate
-  do script "cd '$REPO' && clear && pnpm secrets"
+  do script "cd '$REPO' && clear && echo '🔐 TouraCore Secrets · GUI starting...' && pnpm secrets"
 end tell
 APPLESCRIPT
 EOF
