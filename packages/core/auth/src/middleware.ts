@@ -47,6 +47,12 @@ function isPublicRoute(pathname: string): boolean {
     pathname === '/sitemap_index.xml' ||
     pathname === '/sitemap.xml' ||
     pathname === '/robots.txt' ||
+    pathname === '/opengraph-image' ||
+    pathname === '/twitter-image' ||
+    pathname === '/icon' ||
+    pathname === '/apple-icon' ||
+    pathname === '/manifest.webmanifest' ||
+    pathname === '/favicon.ico' ||
     pathname.startsWith('/legal/') ||
     pathname === '/legal' ||
     pathname === '/api/cookie-consent' ||
