@@ -203,3 +203,41 @@ export const CATEGORY_LABELS: Record<string, string> = {
   security: '🔑  Security',
   integrations: '🔌  Integrations',
 }
+
+export const CATEGORY_META: Record<string, { icon: string; title: string; description: string }> = {
+  storage: {
+    icon: '🗄',
+    title: 'Storage',
+    description: 'Bucket e CDN per asset, foto, file utenti e media tenant.',
+  },
+  auth: {
+    icon: '🔐',
+    title: 'Auth & Database',
+    description: 'Database principale, autenticazione utenti, service-role keys.',
+  },
+  payments: {
+    icon: '💳',
+    title: 'Payments',
+    description: 'Stripe e gateway pagamento — checkout, subscription, payout.',
+  },
+  email: {
+    icon: '✉️',
+    title: 'Email & Messaging',
+    description: 'Email transazionali, marketing, notification triggers.',
+  },
+  security: {
+    icon: '🔑',
+    title: 'Security & Crypto',
+    description: 'Encryption keys, JWT secrets, cron HMAC — secrets generati internamente.',
+  },
+  integrations: {
+    icon: '🔌',
+    title: 'Integrations',
+    description: 'API esterne: Twilio, OTA channels, CRM, distribution.',
+  },
+  observability: {
+    icon: '📊',
+    title: 'Platform & Deploy',
+    description: 'Vercel deployment, monitoring, logs, infrastructure tools.',
+  },
+}

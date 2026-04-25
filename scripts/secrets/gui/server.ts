@@ -5,7 +5,7 @@ import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { randomBytes } from 'node:crypto'
 import { exec } from 'node:child_process'
-import { PROVIDERS, CATEGORY_LABELS, type ProviderDef } from '../registry'
+import { PROVIDERS, CATEGORY_LABELS, CATEGORY_META, type ProviderDef } from '../registry'
 import { readEnvLocal, updateEnvLocal, maskValue } from '../lib/env-local'
 import { upsertVercelEnv, listVercelEnvs, getVercelCtx, triggerRedeploy } from '../lib/vercel'
 import * as tests from '../lib/test-providers'
@@ -90,6 +90,7 @@ const server = createServer(async (req, res) => {
       PROVIDERS.map(async (prov) => ({
         id: prov.id, name: prov.name, category: prov.category,
         categoryLabel: CATEGORY_LABELS[prov.category] ?? prov.category,
+        categoryMeta: CATEGORY_META[prov.category] ?? null,
         dashboardUrl: prov.dashboardUrl, rotateUrl: prov.rotateUrl, docsUrl: prov.docsUrl,
         rotateMaxAgeDays: prov.rotateMaxAgeDays,
         rotateInstructions: prov.rotateInstructions,
