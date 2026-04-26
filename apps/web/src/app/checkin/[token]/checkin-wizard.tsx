@@ -122,7 +122,7 @@ export function CheckinWizard({
   async function handlePayTax() {
     setError('')
     startTransition(async () => {
-      const res = await createTouristTaxPaymentIntentAction({ token, amountCents: taxAmountCents })
+      const res = await createTouristTaxPaymentIntentAction({ token })
       if (!res.ok || !res.clientSecret) {
         setError(`Errore pagamento: ${res.error}`)
         return
