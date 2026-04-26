@@ -2,9 +2,44 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServerSupabaseClient, createServiceRoleClient } from '@touracore/db/server'
+import { getCurrentUser } from '@touracore/auth'
 import { z } from 'zod'
 import { encryptConfig, decryptConfig } from '@/lib/integration-crypto'
 import { issueLockPin } from '@/lib/lock-providers'
+
+async function assertOwnsTenant(tenantSlug: string): Promise<{ tenantId: string }> {
+  const user = await getCurrentUser()
+  if (!user) throw new Error('Not authenticated')
+  const supabase = await createServerSupabaseClient()
+  const { data: tenant } = await supabase.from('tenants').select('id').eq('slug', tenantSlug).single()
+  if (!tenant) throw new Error('Tenant not found')
+
+  const admin = await createServiceRoleClient()
+  const { data: pa } = await admin.from('platform_admins').select('user_id').eq('user_id', user.id).maybeSingle()
+  if (pa) return { tenantId: tenant.id as string }
+
+  const { data: m } = await admin.from('memberships').select('id').eq('user_id', user.id).eq('tenant_id', tenant.id).eq('is_active', true).maybeSingle()
+  if (!m) throw new Error('Forbidden')
+  return { tenantId: tenant.id as string }
+}
+
+async function assertEntityInTenant(entityId: string, tenantId: string): Promise<void> {
+  const admin = await createServiceRoleClient()
+  const { data: entity } = await admin.from('entities').select('id').eq('id', entityId).eq('tenant_id', tenantId).maybeSingle()
+  if (!entity) throw new Error('Entity not in tenant')
+}
+
+async function assertLockInTenant(lockId: string, tenantId: string): Promise<{ entityId: string }> {
+  const admin = await createServiceRoleClient()
+  const { data: lock } = await admin
+    .from('smart_locks')
+    .select('id, entity_id, entities!inner(tenant_id)')
+    .eq('id', lockId)
+    .eq('entities.tenant_id', tenantId)
+    .maybeSingle()
+  if (!lock) throw new Error('Lock not in tenant')
+  return { entityId: lock.entity_id as string }
+}
 
 const CreateLockSchema = z.object({
   entityId: z.string().uuid(),
@@ -20,9 +55,8 @@ const CreateLockSchema = z.object({
 
 export async function createSmartLock(input: z.infer<typeof CreateLockSchema>) {
   const parsed = CreateLockSchema.parse(input)
-  const supabase = await createServerSupabaseClient()
-  const { data: entity } = await supabase.from('entities').select('id').eq('id', parsed.entityId).maybeSingle()
-  if (!entity) throw new Error('Entity not found')
+  const { tenantId } = await assertOwnsTenant(parsed.tenantSlug)
+  await assertEntityInTenant(parsed.entityId, tenantId)
 
   const admin = await createServiceRoleClient()
 
@@ -54,6 +88,9 @@ const IssuePinSchema = z.object({
 
 export async function issueLockAccessCode(input: z.infer<typeof IssuePinSchema>): Promise<{ ok: boolean; pinCode?: string; error?: string }> {
   const parsed = IssuePinSchema.parse(input)
+  const { tenantId } = await assertOwnsTenant(parsed.tenantSlug)
+  await assertLockInTenant(parsed.lockId, tenantId)
+
   const admin = await createServiceRoleClient()
 
   const { data: lock } = await admin
@@ -100,7 +137,17 @@ export async function issueLockAccessCode(input: z.infer<typeof IssuePinSchema>)
 }
 
 export async function revokeLockAccessCode(codeId: string, tenantSlug: string, entitySlug: string): Promise<void> {
+  const { tenantId } = await assertOwnsTenant(tenantSlug)
   const admin = await createServiceRoleClient()
+
+  const { data: code } = await admin
+    .from('lock_access_codes')
+    .select('id, smart_locks!inner(entity_id, entities!inner(tenant_id))')
+    .eq('id', codeId)
+    .eq('smart_locks.entities.tenant_id', tenantId)
+    .maybeSingle()
+  if (!code) throw new Error('Code not in tenant')
+
   await admin
     .from('lock_access_codes')
     .update({ status: 'revoked', revoked_at: new Date().toISOString() })
@@ -111,13 +158,23 @@ export async function revokeLockAccessCode(codeId: string, tenantSlug: string, e
 /**
  * Revoca tutti i PIN attivi associati a una prenotazione.
  * Chiamata in checkout/cancel — best-effort: errori vendor non bloccano flusso.
+ * Server-to-server only (no user context). Lo scope è implicito nella reservation_id.
  */
 export async function revokePinsForReservation(reservationId: string): Promise<{ revoked: number; failed: number }> {
   const admin = await createServiceRoleClient()
+
+  const { data: reservation } = await admin
+    .from('reservations')
+    .select('id, entity_id')
+    .eq('id', reservationId)
+    .maybeSingle()
+  if (!reservation) return { revoked: 0, failed: 0 }
+
   const { data: codes } = await admin
     .from('lock_access_codes')
-    .select('id, lock_id, pin_provider_id, status, smart_locks(provider, config_encrypted, config_meta)')
+    .select('id, lock_id, pin_provider_id, status, smart_locks!inner(entity_id, provider, config_encrypted, config_meta)')
     .eq('reservation_id', reservationId)
+    .eq('smart_locks.entity_id', reservation.entity_id)
     .eq('status', 'active')
 
   if (!codes || codes.length === 0) return { revoked: 0, failed: 0 }
