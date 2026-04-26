@@ -10,8 +10,34 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
     rules: [
       {
         userAgent: '*',
-        allow: ['/s/', '/u/', '/discover', '/portal/', '/portali/', '/book/', '/property/', '/legal/', '/'],
-        disallow: ['/api/', '/account/', '/dashboard/', '/(app)/', '/(dashboard)/', '/superadmin-login'],
+        // Public-facing routes che vogliamo indicizzare
+        allow: ['/s/', '/u/', '/discover', '/portali/', '/book/', '/legal/', '/'],
+        // Disallow:
+        // - /api/* technical endpoints
+        // - /account/, /platform/, /a/, /superadmin* dashboard areas
+        // - /r/, /checkin/, /checkout/, /credits/, /gift-card/, /portal/ token-based pages
+        // - /preferences/, /onboarding, /register, /login auth flows (no SEO value)
+        // - /wiring-proof debug dev page
+        // (route group /(app)/ e /(dashboard)/ NON appaiono negli URL pubblici, no Disallow inutile)
+        disallow: [
+          '/api/',
+          '/account/',
+          '/platform/',
+          '/a/',
+          '/superadmin',
+          '/superadmin-login',
+          '/r/',
+          '/checkin/',
+          '/checkout/',
+          '/credits/',
+          '/gift-card/',
+          '/portal/',
+          '/preferences/',
+          '/onboarding',
+          '/register',
+          '/login',
+          '/wiring-proof',
+        ],
       },
     ],
     sitemap: `${baseUrl}/sitemap_index.xml`,
