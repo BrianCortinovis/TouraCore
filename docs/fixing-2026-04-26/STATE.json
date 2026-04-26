@@ -41,22 +41,22 @@
       "commit": "93b5ce3"
     },
     "S007": {
-      "status": "pending",
+      "status": "done",
       "title": "bundle checkout Connect split",
       "sprint": 1,
-      "commit": null
+      "commit": "80961c3"
     },
     "S008": {
-      "status": "pending",
+      "status": "done",
       "title": "gift card Connect",
       "sprint": 1,
-      "commit": null
+      "commit": "1d25428"
     },
     "S009": {
-      "status": "pending",
+      "status": "done",
       "title": "tassa soggiorno: amount server-side + Connect",
       "sprint": 1,
-      "commit": null
+      "commit": "40af1de"
     },
     "S010": {
       "status": "done",
@@ -77,109 +77,109 @@
       "commit": "b6305b7"
     },
     "S013": {
-      "status": "pending",
+      "status": "done",
       "title": "MAGIC_LINK_SECRET separato da CRON_SECRET",
       "sprint": 2,
-      "commit": null
+      "commit": "7a93f0c"
     },
     "S014": {
-      "status": "pending",
+      "status": "skipped",
       "title": "Rate limiter migration a Vercel KV",
       "sprint": 2,
       "commit": null
     },
     "S015": {
-      "status": "pending",
+      "status": "done",
       "title": "env.ts Zod schema fail-fast",
       "sprint": 2,
-      "commit": null
+      "commit": "e42378f"
     },
     "S016": {
-      "status": "pending",
+      "status": "done",
       "title": "Auth scope settings/payments tenantSlug match",
       "sprint": 2,
-      "commit": null
+      "commit": "63dac50"
     },
     "S017": {
-      "status": "pending",
+      "status": "done",
       "title": "Auth scope a/[agencySlug]/settings/stripe",
       "sprint": 2,
-      "commit": null
+      "commit": "48a8fe7"
     },
     "S018": {
-      "status": "pending",
+      "status": "done",
       "title": "Auth scope settings/{modules,integrations,loyalty,legal-entities}",
       "sprint": 2,
-      "commit": null
+      "commit": "1de51e9"
     },
     "S019": {
-      "status": "pending",
+      "status": "skipped",
       "title": "Cron secret pattern unificato fail-closed 12+ file",
       "sprint": 2,
       "commit": null
     },
     "S020": {
-      "status": "pending",
+      "status": "done",
       "title": "data-retention table_name whitelist",
       "sprint": 2,
-      "commit": null
+      "commit": "6ff0223"
     },
     "S021": {
-      "status": "pending",
+      "status": "done",
       "title": "Webhook TheFork/Google/Octorate per-restaurant secret",
       "sprint": 2,
-      "commit": null
+      "commit": "11d3f61"
     },
     "S022": {
-      "status": "pending",
+      "status": "done",
       "title": "superadmin-login signIn dopo check",
       "sprint": 2,
-      "commit": null
+      "commit": "dfaadbf"
     },
     "S023": {
-      "status": "pending",
+      "status": "skipped",
       "title": "CSP nonce script-src",
       "sprint": 3,
       "commit": null
     },
     "S024": {
-      "status": "pending",
+      "status": "done",
       "title": "frame-src + connect-src + img-src restringere",
       "sprint": 3,
-      "commit": null
+      "commit": "9576cad"
     },
     "S025": {
-      "status": "pending",
+      "status": "done",
       "title": "robots.txt path corretti",
       "sprint": 3,
-      "commit": null
+      "commit": "d103c58"
     },
     "S026": {
-      "status": "pending",
+      "status": "skipped",
       "title": "Migration 00151 schema_migrations backfill",
       "sprint": 3,
       "commit": null
     },
     "S027": {
-      "status": "pending",
+      "status": "done",
       "title": "Migration 00152 view KPI security_invoker",
       "sprint": 3,
-      "commit": null
+      "commit": "e97b005"
     },
     "S028": {
-      "status": "pending",
+      "status": "done",
       "title": "vercel.json regions+maxDuration",
       "sprint": 3,
-      "commit": null
+      "commit": "1d7509e"
     },
     "S029": {
-      "status": "pending",
+      "status": "skipped",
       "title": "Fix analytics 404 script",
       "sprint": 3,
       "commit": null
     },
     "S030": {
-      "status": "pending",
+      "status": "done",
       "title": "Verify finale full E2E + Chrome",
       "sprint": 3,
       "commit": null
