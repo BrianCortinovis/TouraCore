@@ -4,35 +4,185 @@
   "base_commit": "7771701",
   "current_step": null,
   "steps": {
-    "S001": { "status": "pending", "title": "locks/actions.ts tenant ownership check", "sprint": 1, "commit": null },
-    "S002": { "status": "pending", "title": "(dashboard)/admin/actions.ts assertPlatformAdmin wrap", "sprint": 1, "commit": null },
-    "S003": { "status": "pending", "title": "pricing/actions.ts tenant check", "sprint": 1, "commit": null },
-    "S004": { "status": "pending", "title": "reviews/actions.ts tenant check", "sprint": 1, "commit": null },
-    "S005": { "status": "pending", "title": "messaggi/actions.ts tenant check", "sprint": 1, "commit": null },
-    "S006": { "status": "pending", "title": "rate-plans deleteRatePlan tenant check", "sprint": 1, "commit": null },
-    "S007": { "status": "pending", "title": "bundle checkout Connect split", "sprint": 1, "commit": null },
-    "S008": { "status": "pending", "title": "gift card Connect", "sprint": 1, "commit": null },
-    "S009": { "status": "pending", "title": "tassa soggiorno: amount server-side + Connect", "sprint": 1, "commit": null },
-    "S010": { "status": "pending", "title": "cron notifications-dispatch fail-closed", "sprint": 1, "commit": null },
-    "S011": { "status": "pending", "title": "INTEGRATIONS_ENCRYPTION_KEY no SR fallback", "sprint": 1, "commit": null },
-    "S012": { "status": "pending", "title": "VOUCHER_JWT_SECRET no SR fallback", "sprint": 1, "commit": null },
-    "S013": { "status": "pending", "title": "MAGIC_LINK_SECRET separato da CRON_SECRET", "sprint": 2, "commit": null },
-    "S014": { "status": "pending", "title": "Rate limiter migration a Vercel KV", "sprint": 2, "commit": null },
-    "S015": { "status": "pending", "title": "env.ts Zod schema fail-fast", "sprint": 2, "commit": null },
-    "S016": { "status": "pending", "title": "Auth scope settings/payments tenantSlug match", "sprint": 2, "commit": null },
-    "S017": { "status": "pending", "title": "Auth scope a/[agencySlug]/settings/stripe", "sprint": 2, "commit": null },
-    "S018": { "status": "pending", "title": "Auth scope settings/{modules,integrations,loyalty,legal-entities}", "sprint": 2, "commit": null },
-    "S019": { "status": "pending", "title": "Cron secret pattern unificato fail-closed 12+ file", "sprint": 2, "commit": null },
-    "S020": { "status": "pending", "title": "data-retention table_name whitelist", "sprint": 2, "commit": null },
-    "S021": { "status": "pending", "title": "Webhook TheFork/Google/Octorate per-restaurant secret", "sprint": 2, "commit": null },
-    "S022": { "status": "pending", "title": "superadmin-login signIn dopo check", "sprint": 2, "commit": null },
-    "S023": { "status": "pending", "title": "CSP nonce script-src", "sprint": 3, "commit": null },
-    "S024": { "status": "pending", "title": "frame-src + connect-src + img-src restringere", "sprint": 3, "commit": null },
-    "S025": { "status": "pending", "title": "robots.txt path corretti", "sprint": 3, "commit": null },
-    "S026": { "status": "pending", "title": "Migration 00151 schema_migrations backfill", "sprint": 3, "commit": null },
-    "S027": { "status": "pending", "title": "Migration 00152 view KPI security_invoker", "sprint": 3, "commit": null },
-    "S028": { "status": "pending", "title": "vercel.json regions+maxDuration", "sprint": 3, "commit": null },
-    "S029": { "status": "pending", "title": "Fix analytics 404 script", "sprint": 3, "commit": null },
-    "S030": { "status": "pending", "title": "Verify finale full E2E + Chrome", "sprint": 3, "commit": null }
+    "S001": {
+      "status": "pending",
+      "title": "locks/actions.ts tenant ownership check",
+      "sprint": 1,
+      "commit": null
+    },
+    "S002": {
+      "status": "pending",
+      "title": "(dashboard)/admin/actions.ts assertPlatformAdmin wrap",
+      "sprint": 1,
+      "commit": null
+    },
+    "S003": {
+      "status": "pending",
+      "title": "pricing/actions.ts tenant check",
+      "sprint": 1,
+      "commit": null
+    },
+    "S004": {
+      "status": "pending",
+      "title": "reviews/actions.ts tenant check",
+      "sprint": 1,
+      "commit": null
+    },
+    "S005": {
+      "status": "pending",
+      "title": "messaggi/actions.ts tenant check",
+      "sprint": 1,
+      "commit": null
+    },
+    "S006": {
+      "status": "pending",
+      "title": "rate-plans deleteRatePlan tenant check",
+      "sprint": 1,
+      "commit": null
+    },
+    "S007": {
+      "status": "pending",
+      "title": "bundle checkout Connect split",
+      "sprint": 1,
+      "commit": null
+    },
+    "S008": {
+      "status": "pending",
+      "title": "gift card Connect",
+      "sprint": 1,
+      "commit": null
+    },
+    "S009": {
+      "status": "pending",
+      "title": "tassa soggiorno: amount server-side + Connect",
+      "sprint": 1,
+      "commit": null
+    },
+    "S010": {
+      "status": "done",
+      "title": "cron notifications-dispatch fail-closed",
+      "sprint": 1,
+      "commit": "ffb3903"
+    },
+    "S011": {
+      "status": "pending",
+      "title": "INTEGRATIONS_ENCRYPTION_KEY no SR fallback",
+      "sprint": 1,
+      "commit": null
+    },
+    "S012": {
+      "status": "pending",
+      "title": "VOUCHER_JWT_SECRET no SR fallback",
+      "sprint": 1,
+      "commit": null
+    },
+    "S013": {
+      "status": "pending",
+      "title": "MAGIC_LINK_SECRET separato da CRON_SECRET",
+      "sprint": 2,
+      "commit": null
+    },
+    "S014": {
+      "status": "pending",
+      "title": "Rate limiter migration a Vercel KV",
+      "sprint": 2,
+      "commit": null
+    },
+    "S015": {
+      "status": "pending",
+      "title": "env.ts Zod schema fail-fast",
+      "sprint": 2,
+      "commit": null
+    },
+    "S016": {
+      "status": "pending",
+      "title": "Auth scope settings/payments tenantSlug match",
+      "sprint": 2,
+      "commit": null
+    },
+    "S017": {
+      "status": "pending",
+      "title": "Auth scope a/[agencySlug]/settings/stripe",
+      "sprint": 2,
+      "commit": null
+    },
+    "S018": {
+      "status": "pending",
+      "title": "Auth scope settings/{modules,integrations,loyalty,legal-entities}",
+      "sprint": 2,
+      "commit": null
+    },
+    "S019": {
+      "status": "pending",
+      "title": "Cron secret pattern unificato fail-closed 12+ file",
+      "sprint": 2,
+      "commit": null
+    },
+    "S020": {
+      "status": "pending",
+      "title": "data-retention table_name whitelist",
+      "sprint": 2,
+      "commit": null
+    },
+    "S021": {
+      "status": "pending",
+      "title": "Webhook TheFork/Google/Octorate per-restaurant secret",
+      "sprint": 2,
+      "commit": null
+    },
+    "S022": {
+      "status": "pending",
+      "title": "superadmin-login signIn dopo check",
+      "sprint": 2,
+      "commit": null
+    },
+    "S023": {
+      "status": "pending",
+      "title": "CSP nonce script-src",
+      "sprint": 3,
+      "commit": null
+    },
+    "S024": {
+      "status": "pending",
+      "title": "frame-src + connect-src + img-src restringere",
+      "sprint": 3,
+      "commit": null
+    },
+    "S025": {
+      "status": "pending",
+      "title": "robots.txt path corretti",
+      "sprint": 3,
+      "commit": null
+    },
+    "S026": {
+      "status": "pending",
+      "title": "Migration 00151 schema_migrations backfill",
+      "sprint": 3,
+      "commit": null
+    },
+    "S027": {
+      "status": "pending",
+      "title": "Migration 00152 view KPI security_invoker",
+      "sprint": 3,
+      "commit": null
+    },
+    "S028": {
+      "status": "pending",
+      "title": "vercel.json regions+maxDuration",
+      "sprint": 3,
+      "commit": null
+    },
+    "S029": {
+      "status": "pending",
+      "title": "Fix analytics 404 script",
+      "sprint": 3,
+      "commit": null
+    },
+    "S030": {
+      "status": "pending",
+      "title": "Verify finale full E2E + Chrome",
+      "sprint": 3,
+      "commit": null
+    }
   }
 }

@@ -11,3 +11,4 @@ Format: `YYYY-MM-DD HH:MM:SS UTC | STEP | event | details`
 2026-04-26 14:30:00 UTC | INIT | PLAN.md scritto, 30 step
 2026-04-26 14:30:00 UTC | INIT | STATE.json inizializzato
 ```
+2026-04-26 14:19:59 UTC | S010 | done | commit=ffb3903 | fail-closed pattern applied
