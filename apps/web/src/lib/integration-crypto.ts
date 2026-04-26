@@ -1,10 +1,25 @@
 import 'server-only'
 import { createCipheriv, createDecipheriv, randomBytes, createHash } from 'node:crypto'
 
+let warned = false
+
 function encryptionKey(): Buffer {
-  const secret = process.env.INTEGRATIONS_ENCRYPTION_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
-  if (!secret) throw new Error('INTEGRATIONS_ENCRYPTION_KEY missing')
-  return createHash('sha256').update(secret).digest()
+  const explicit = process.env.INTEGRATIONS_ENCRYPTION_KEY
+  if (explicit) return createHash('sha256').update(explicit).digest()
+
+  // Production: fail-closed. Mai usare service role key come encryption key in prod.
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('INTEGRATIONS_ENCRYPTION_KEY env var is required in production')
+  }
+
+  // Dev/preview: fallback documentato + warning una volta sola.
+  const fallback = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!fallback) throw new Error('INTEGRATIONS_ENCRYPTION_KEY missing (no SR fallback either)')
+  if (!warned) {
+    console.warn('[integration-crypto] Using SUPABASE_SERVICE_ROLE_KEY fallback (dev only). Set INTEGRATIONS_ENCRYPTION_KEY for proper key isolation.')
+    warned = true
+  }
+  return createHash('sha256').update(fallback).digest()
 }
 
 export function encryptConfig(plaintext: string): { ciphertext: string; iv: string } {
