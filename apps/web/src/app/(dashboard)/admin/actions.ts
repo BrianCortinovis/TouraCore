@@ -1,6 +1,7 @@
 'use server'
 
 import { createServiceRoleClient } from '@touracore/db/server'
+import { getCurrentUser } from '@touracore/auth'
 
 interface ActionResult {
   success: boolean
@@ -8,7 +9,16 @@ interface ActionResult {
   data?: unknown
 }
 
+async function requirePlatformAdmin(): Promise<void> {
+  const user = await getCurrentUser()
+  if (!user) throw new Error('Not authenticated')
+  const supabase = await createServiceRoleClient()
+  const { data } = await supabase.from('platform_admins').select('user_id').eq('user_id', user.id).maybeSingle()
+  if (!data) throw new Error('Forbidden')
+}
+
 export async function listTenantsAction(page = 1, search?: string) {
+  await requirePlatformAdmin()
   const supabase = await createServiceRoleClient()
   const perPage = 20
 
@@ -29,6 +39,7 @@ export async function listTenantsAction(page = 1, search?: string) {
 }
 
 export async function listPropertiesAdminAction(page = 1, search?: string) {
+  await requirePlatformAdmin()
   const supabase = await createServiceRoleClient()
   const perPage = 20
 
@@ -49,6 +60,7 @@ export async function listPropertiesAdminAction(page = 1, search?: string) {
 }
 
 export async function listPortalsAdminAction() {
+  await requirePlatformAdmin()
   const supabase = await createServiceRoleClient()
 
   const { data } = await supabase
@@ -60,6 +72,7 @@ export async function listPortalsAdminAction() {
 }
 
 export async function getAdminStatsAction() {
+  await requirePlatformAdmin()
   const supabase = await createServiceRoleClient()
 
   const [tenants, properties, portals, reservations] = await Promise.all([
@@ -78,7 +91,7 @@ export async function getAdminStatsAction() {
 }
 
 export async function togglePropertyActiveAction(id: string, isActive: boolean): Promise<ActionResult> {
-
+  await requirePlatformAdmin()
   const supabase = await createServiceRoleClient()
   const { error } = await supabase
     .from('entities')
@@ -90,6 +103,7 @@ export async function togglePropertyActiveAction(id: string, isActive: boolean):
 }
 
 export async function listIcalFeedsAction(entityId: string) {
+  await requirePlatformAdmin()
   const supabase = await createServiceRoleClient()
 
   const { data } = await supabase
@@ -109,7 +123,7 @@ export async function createIcalFeedAction(input: {
   roomId?: string
   roomTypeId?: string
 }): Promise<ActionResult> {
-
+  await requirePlatformAdmin()
   const supabase = await createServiceRoleClient()
 
   const { data, error } = await supabase
@@ -130,6 +144,7 @@ export async function createIcalFeedAction(input: {
 }
 
 export async function listRoomsForEntityAction(entityId: string) {
+  await requirePlatformAdmin()
   const supabase = await createServiceRoleClient()
   const { data } = await supabase
     .from('rooms')
@@ -141,7 +156,7 @@ export async function listRoomsForEntityAction(entityId: string) {
 }
 
 export async function deleteIcalFeedAction(id: string): Promise<ActionResult> {
-
+  await requirePlatformAdmin()
   const supabase = await createServiceRoleClient()
   const { error } = await supabase.from('ical_feeds').delete().eq('id', id)
 
