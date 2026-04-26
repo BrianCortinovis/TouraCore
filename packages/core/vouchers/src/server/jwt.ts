@@ -10,18 +10,28 @@ import { SignJWT, jwtVerify } from 'jose'
 
 const DEFAULT_ISSUER = 'touracore-vouchers'
 
+let warned = false
+
 function getSecret(): Uint8Array {
   let raw = process.env.VOUCHER_JWT_SECRET
-  // Fallback: deriva da SUPABASE_SERVICE_ROLE_KEY se VOUCHER_JWT_SECRET non settato.
-  // Production SHOULD set a dedicated secret — questo fallback garantisce deploy senza manual env setup.
+
   if (!raw) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('VOUCHER_JWT_SECRET env required in production (no SR fallback allowed)')
+    }
+    // Dev/preview only: fallback derivato da SR key con warning loud.
     const fallback = process.env.SUPABASE_SERVICE_ROLE_KEY
     if (fallback && fallback.length >= 32) {
       raw = `touracore-vouchers-${fallback}`
+      if (!warned) {
+        console.warn('[vouchers] Using SUPABASE_SERVICE_ROLE_KEY-derived fallback (dev only). Set VOUCHER_JWT_SECRET for proper key isolation.')
+        warned = true
+      }
     }
   }
+
   if (!raw) {
-    throw new Error('VOUCHER_JWT_SECRET env required (or SUPABASE_SERVICE_ROLE_KEY fallback)')
+    throw new Error('VOUCHER_JWT_SECRET env required')
   }
   if (raw.length < 32) {
     throw new Error('VOUCHER_JWT_SECRET must be at least 32 chars')
