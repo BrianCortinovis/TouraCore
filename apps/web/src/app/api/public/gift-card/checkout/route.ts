@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { createServiceRoleClient } from '@touracore/db/server'
-import { getStripe } from '@touracore/billing/server'
+import { getStripe, buildConnectChargeParamsSafe } from '@touracore/billing/server'
 import { jsonWithCors } from '../_shared'
 
 export async function OPTIONS(req: NextRequest) {
@@ -54,6 +54,19 @@ export async function POST(req: NextRequest) {
       '{CHECKOUT_SESSION_ID}',
     )
 
+    // Connect Direct Charge: tenant emittente è merchant of record.
+    const connectParams = await buildConnectChargeParamsSafe({
+      tenantId: tenant.id,
+      moduleCode: 'gift_card',
+      baseAmountCents: amountCents,
+    })
+    if (!connectParams) {
+      return jsonWithCors(
+        { error: 'tenant_stripe_connect_not_ready', detail: 'Il tenant non ha completato l\'onboarding Stripe Connect' },
+        { status: 400, origin },
+      )
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
@@ -72,6 +85,11 @@ export async function POST(req: NextRequest) {
           quantity: 1,
         },
       ],
+      payment_intent_data: {
+        application_fee_amount: connectParams.application_fee_amount,
+        on_behalf_of: connectParams.on_behalf_of,
+        transfer_data: connectParams.transfer_data,
+      },
       customer_email: body.senderEmail,
       success_url: successUrl,
       cancel_url: body.cancelUrl,
