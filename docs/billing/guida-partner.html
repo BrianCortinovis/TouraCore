@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TouraCore — Guida pagamenti per partner</title>
+<style>
+  :root {
+    --bg: #faf9f5;
+    --card: #ffffff;
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --ink-mute: #8a8a8a;
+    --line: #e8e4d8;
+    --accent: #c96442;
+    --accent-soft: #f4ddd1;
+    --success: #4a7c59;
+    --success-soft: #e1ecdf;
+    --warn: #b8860b;
+    --warn-soft: #f5ecd0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 800px; margin: 0 auto; padding: 60px 32px 80px; }
+
+  header {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 24px;
+    margin-bottom: 40px;
+  }
+  header .brand {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  header h1 {
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+  header p {
+    color: var(--ink-soft);
+    font-size: 17px;
+  }
+  header .meta {
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--ink-mute);
+  }
+
+  h2 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 48px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  h2 .num {
+    color: var(--accent);
+    margin-right: 12px;
+  }
+  h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 24px 0 8px;
+  }
+  p { margin-bottom: 14px; color: var(--ink-soft); }
+  p strong { color: var(--ink); }
+
+  ul, ol { margin: 0 0 16px 24px; }
+  li { margin-bottom: 8px; color: var(--ink-soft); }
+
+  .callout {
+    background: var(--accent-soft);
+    border-left: 4px solid var(--accent);
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+  }
+  .callout.success { background: var(--success-soft); border-left-color: var(--success); }
+  .callout.warn { background: var(--warn-soft); border-left-color: var(--warn); }
+  .callout strong { display: block; margin-bottom: 4px; color: var(--ink); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 15px;
+  }
+  th { text-align: left; padding: 12px 16px; background: var(--line); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
+  td { padding: 12px 16px; border-top: 1px solid var(--line); vertical-align: top; }
+
+  code {
+    background: #f0ece0;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: "SF Mono", Menlo, monospace;
+  }
+
+  .step {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+  .step-num {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+  }
+  .step-body strong { display: block; margin-bottom: 4px; color: var(--ink); }
+
+  .faq details {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 8px;
+  }
+  .faq summary { cursor: pointer; font-weight: 600; padding: 4px 0; list-style: none; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: " +"; color: var(--ink-mute); }
+  .faq details[open] summary::after { content: " −"; }
+  .faq details > p { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+
+  /* Diagram */
+  .diagram {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 24px 0;
+    text-align: center;
+  }
+  .diagram svg { width: 100%; height: auto; max-width: 720px; }
+
+  footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    text-align: center;
+    color: var(--ink-mute);
+    font-size: 13px;
+  }
+
+  .print-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--ink);
+    color: var(--bg);
+    border: 0;
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  }
+  .print-btn:hover { background: var(--accent); }
+
+  @media print {
+    body { background: white; }
+    .wrap { padding: 20px; max-width: 100%; }
+    .print-btn { display: none; }
+    h2 { page-break-before: auto; page-break-after: avoid; }
+    .step, table, .callout { page-break-inside: avoid; }
+    a { text-decoration: none; color: var(--ink); }
+  }
+
+  @media (max-width: 700px) {
+    .wrap { padding: 32px 20px 60px; }
+    header h1 { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<button class="print-btn" onclick="window.print()">🖨 Stampa / Salva PDF</button>
+
+<div class="wrap">
+
+<header>
+  <div class="brand">TouraCore · Guida Partner</div>
+  <h1>Come funzionano i pagamenti</h1>
+  <p>Tutto quello che devi sapere per ricevere i soldi delle tue prenotazioni direttamente sul tuo conto, senza passaggi intermedi.</p>
+  <div class="meta">v1 · Aprile 2026 · 8 minuti di lettura</div>
+</header>
+
+<!-- ========== 1. La promessa ========== -->
+<h2><span class="num">01</span>La promessa in una riga</h2>
+<p style="font-size:20px;line-height:1.4;color:var(--ink);">
+  <strong>Cliente paga il tuo conto, non il nostro.</strong> TouraCore preleva solo la commissione concordata. Mai un euro del cliente passa per il nostro conto bancario.
+</p>
+
+<div class="callout success">
+  <strong>✓ Differenza chiave rispetto a Booking / Airbnb</strong>
+  Le piattaforme tradizionali incassano tutto e ti girano i soldi dopo 30-60 giorni. Su TouraCore i soldi sono tuoi dal momento del pagamento: Stripe splitta alla fonte tra te e noi.
+</div>
+
+<!-- ========== 2. Diagramma ========== -->
+<h2><span class="num">02</span>Il flusso dei soldi</h2>
+
+<div class="diagram">
+  <svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, system-ui, sans-serif">
+    <defs>
+      <marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#4a7c59"/>
+      </marker>
+      <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#c96442"/>
+      </marker>
+    </defs>
+
+    <!-- Cliente -->
+    <rect x="280" y="20" width="160" height="50" rx="10" fill="#f4ddd1" stroke="#c96442" stroke-width="2"/>
+    <text x="360" y="42" text-anchor="middle" font-size="13" font-weight="700">CLIENTE FINALE</text>
+    <text x="360" y="59" text-anchor="middle" font-size="11" fill="#4a4a4a">paga €1000</text>
+
+    <!-- Stripe -->
+    <ellipse cx="360" cy="180" rx="160" ry="50" fill="#dde5f0" stroke="#4a6fa5" stroke-width="2"/>
+    <text x="360" y="172" text-anchor="middle" font-size="14" font-weight="700">STRIPE</text>
+    <text x="360" y="194" text-anchor="middle" font-size="11" fill="#4a4a4a">split alla fonte</text>
+
+    <!-- Tenant -->
+    <rect x="40" y="290" width="200" height="50" rx="10" fill="#e1ecdf" stroke="#4a7c59" stroke-width="2"/>
+    <text x="140" y="312" text-anchor="middle" font-size="13" font-weight="700">PARTNER (TU)</text>
+    <text x="140" y="329" text-anchor="middle" font-size="11" fill="#4a7c59" font-weight="600">€900 sul tuo IBAN</text>
+
+    <!-- TouraCore -->
+    <rect x="480" y="290" width="200" height="50" rx="10" fill="#1a1a1a"/>
+    <text x="580" y="312" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">TOURACORE</text>
+    <text x="580" y="329" text-anchor="middle" font-size="11" fill="#f4ddd1" font-weight="600">€100 commissione</text>
+
+    <!-- Frecce -->
+    <line x1="360" y1="70" x2="360" y2="130" stroke="#4a7c59" stroke-width="2.5" marker-end="url(#ar1)"/>
+    <text x="380" y="105" font-size="12" fill="#4a7c59" font-weight="700">€1000</text>
+
+    <path d="M 240 215 Q 170 250 145 290" stroke="#4a7c59" stroke-width="2.5" fill="none" marker-end="url(#ar1)"/>
+    <path d="M 480 215 Q 550 250 575 290" stroke="#c96442" stroke-width="2.5" fill="none" marker-end="url(#ar2)"/>
+  </svg>
+  <p style="margin-top:12px;font-size:13px;color:var(--ink-mute);font-style:italic;">Una transazione carta, due destinatari. Stripe gestisce tutto in automatico.</p>
+</div>
+
+<!-- ========== 3. Le 4 tariffe ========== -->
+<h2><span class="num">03</span>Le 4 tariffe disponibili</h2>
+<p>Per ogni struttura puoi scegliere quali politiche di pagamento offrire. Il cliente sceglie al momento della prenotazione.</p>
+
+<table>
+  <thead>
+    <tr><th>Tariffa</th><th>Quando paga</th><th>Cancellazione</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Cancellazione gratuita</strong><br><span style="font-size:12px;color:var(--ink-mute);">DEFAULT</span></td>
+      <td>Carta salvata. Addebito 7 giorni prima del check-in.</td>
+      <td>Gratuita fino a 7 giorni prima.</td>
+    </tr>
+    <tr>
+      <td><strong>Acconto 30%</strong></td>
+      <td>30% subito + saldo 30 giorni prima.</td>
+      <td>Gratis fino a 30gg prima, poi perdi il 30%.</td>
+    </tr>
+    <tr>
+      <td><strong>Parzialmente rimborsabile</strong></td>
+      <td>50% subito + saldo 14 giorni prima.</td>
+      <td>Rimborso 50% se cancelli.</td>
+    </tr>
+    <tr>
+      <td><strong>Non rimborsabile (-10%)</strong></td>
+      <td>Pagamento totale subito.</td>
+      <td>Nessun rimborso. Tariffa scontata.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>Consiglio</strong>
+  Inizia con <em>Cancellazione gratuita</em> di default. Aggiungi <em>Non rimborsabile</em> per offerte Early Bird scontate. Le altre due tariffe sono per casi avanzati.
+</div>
+
+<!-- ========== 4. Onboarding ========== -->
+<h2><span class="num">04</span>Onboarding: 5 minuti, una volta</h2>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-body">
+    <strong>Registrati su TouraCore</strong>
+    Crea il tuo account partner con email + password. Inserisci nome struttura, indirizzo, partita IVA.
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-body">
+    <strong>Vai in Impostazioni → Pagamenti</strong>
+    Click sul bottone <em>"Collega Stripe"</em>. Verrai reindirizzato sul sito Stripe (puoi tornare in qualsiasi momento).
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-body">
+    <strong>Inserisci dati banca + documento</strong>
+    Stripe ti chiede: IBAN del conto dove ricevere i bonifici, documento di identità, partita IVA (se hai). Procedura guidata, ~5 minuti.
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-body">
+    <strong>Stripe verifica (1-2 giorni)</strong>
+    Verifica documenti automatica. Quando completata, ricevi email + il tuo account TouraCore mostra status <em>"Operativo"</em>.
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">5</div>
+  <div class="step-body">
+    <strong>Pubblica struttura</strong>
+    Vai in Impostazioni → Distribuzione → seleziona la struttura → click <em>"Pubblica"</em>. Se Stripe non è ancora attivo, il bottone è disabilitato con messaggio chiaro.
+  </div>
+</div>
+
+<div class="callout success">
+  <strong>✓ Fatto</strong>
+  Da questo momento i clienti possono prenotare. I soldi arrivano sul tuo conto via SEPA giornaliero.
+</div>
+
+<!-- ========== 5. Esempio completo ========== -->
+<h2><span class="num">05</span>Esempio realistico: prenotazione 6 mesi prima</h2>
+
+<table>
+  <thead>
+    <tr><th>Quando</th><th>Cosa succede</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Mese 0</strong><br>Cliente prenota</td>
+      <td>Inserisce carta. Niente addebito (rate plan flexible). Carta salvata su Stripe in modo sicuro. Tu vedi prenotazione confermata in dashboard.</td>
+    </tr>
+    <tr>
+      <td><strong>Mesi 1-5</strong><br>Attesa</td>
+      <td>Niente. Se la carta scade, Stripe la aggiorna automaticamente tramite Card Updater Visa/MC.</td>
+    </tr>
+    <tr>
+      <td><strong>T-7 giorni</strong><br>Auto-addebito</td>
+      <td>Cron automatico crea PaymentIntent. Stripe pre-autorizza €1000 sulla carta del cliente. Tu vedi prenotazione "autorizzata".</td>
+    </tr>
+    <tr>
+      <td><strong>Check-in</strong><br>Capture</td>
+      <td>Premi <em>"Cattura"</em> dalla dashboard. Stripe esegue split: €900 al tuo conto + €100 a TouraCore. Stato: pagata.</td>
+    </tr>
+    <tr>
+      <td><strong>Giorno seguente</strong><br>Bonifico</td>
+      <td>Stripe esegue payout SEPA daily. €900 sul tuo IBAN.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ========== 6. Se la carta fallisce ========== -->
+<h2><span class="num">06</span>Cosa succede se la carta fallisce</h2>
+<p>Sistema di recupero automatico a 4 livelli. Tu non devi fare niente.</p>
+
+<ol>
+  <li><strong>Auto-retry × 4</strong> — il sistema riprova ogni 24 ore fino a T-3 giorni dal check-in.</li>
+  <li><strong>Email cliente</strong> — viene inviata email automatica con link sicuro per aggiornare la carta.</li>
+  <li><strong>Stripe Card Updater</strong> — se la carta è stata sostituita dalla banca, Stripe usa la nuova in automatico.</li>
+  <li><strong>Auto-cancel</strong> — se nulla funziona entro T-3gg, la prenotazione viene cancellata e lo slot/camera torna disponibile per nuove prenotazioni.</li>
+</ol>
+
+<div class="callout success">
+  <strong>Vantaggio chiave</strong>
+  Niente è mai stato addebitato → niente da rimborsare → zero refund da gestire. Tu hai tempo di rivendere lo slot se la prenotazione salta.
+</div>
+
+<!-- ========== 7. FAQ ========== -->
+<h2><span class="num">07</span>Domande frequenti</h2>
+
+<div class="faq">
+  <details>
+    <summary>Quanto è la commissione TouraCore?</summary>
+    <p>Dipende dal tuo accordo commerciale. Tipicamente tra il 5% e il 15% per prenotazione, in base al verticale e al volume mensile. Per i nuovi partner partiamo dalle tariffe standard, poi negoziamo in base al volume.</p>
+  </details>
+
+  <details>
+    <summary>Quando ricevo i soldi sul mio conto?</summary>
+    <p>Stripe esegue payout SEPA daily. In pratica: prenotazione catturata oggi → soldi sul tuo IBAN entro 1-2 giorni lavorativi.</p>
+  </details>
+
+  <details>
+    <summary>Devo emettere fattura al cliente?</summary>
+    <p>Sì, la fattura è tua. Il cliente è tuo cliente, non di TouraCore. Noi emettiamo fattura a te per la commissione (tramite Stripe Invoicing automatico).</p>
+  </details>
+
+  <details>
+    <summary>Cosa succede se devo rimborsare un cliente?</summary>
+    <p>Vai sulla dashboard Stripe e clicchi "Refund". Stripe esegue refund parziale o totale. La nostra commissione viene proporzionalmente restituita a te. Tutto automatico.</p>
+  </details>
+
+  <details>
+    <summary>Cosa succede se ricevo un chargeback?</summary>
+    <p>Il chargeback va sul tuo Stripe (sei tu il merchant). Stripe gestisce la procedura di disputa nella sua dashboard. Tu fornisci prove (prenotazione, fattura, comunicazioni). TouraCore non interviene perché legalmente non siamo parte della transazione.</p>
+  </details>
+
+  <details>
+    <summary>Posso usare TouraCore per più strutture?</summary>
+    <p>Sì. Ogni tenant può avere multiple entity (hotel, ristorante, bike shop, tour operator). Stripe Connect è uno solo per tenant ma copre tutte le entity.</p>
+  </details>
+
+  <details>
+    <summary>Cosa succede se non completo l'onboarding Stripe?</summary>
+    <p>Non puoi pubblicare strutture. La piattaforma blocca la pubblicazione con messaggio chiaro: <em>"Per pubblicare devi prima collegare Stripe in Impostazioni → Pagamenti"</em>.</p>
+  </details>
+
+  <details>
+    <summary>Quali carte sono accettate?</summary>
+    <p>Tutte le carte Visa, Mastercard, American Express, Apple Pay, Google Pay. Stripe aggiunge anche pagamenti locali (es. SEPA Direct Debit, Klarna) configurabili dalla tua dashboard Stripe.</p>
+  </details>
+</div>
+
+<!-- ========== 8. Contatti ========== -->
+<h2><span class="num">08</span>Contatti</h2>
+<p>Per qualsiasi domanda o assistenza:</p>
+<ul>
+  <li>📧 Email: <strong>contatti@touracore.it</strong></li>
+  <li>🌐 Website: <strong>touracore.it</strong></li>
+  <li>💬 Chat dashboard: bottone <em>Aiuto</em> in basso a destra</li>
+</ul>
+
+<footer>
+  TouraCore · Guida Partner · v1 · 2026
+</footer>
+
+</div>
+
+</body>
+</html>
