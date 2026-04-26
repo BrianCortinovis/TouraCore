@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServiceRoleClient } from '@touracore/db/server'
-import { getStripe } from '@touracore/billing/server'
+import { getStripe, buildConnectChargeParamsSafe } from '@touracore/billing/server'
 import { defaultFiscalRouter } from '@touracore/fiscal'
 import { extractVat, type VatRate } from '@touracore/fiscal'
 import type Stripe from 'stripe'
@@ -173,7 +173,20 @@ export async function POST(request: NextRequest) {
     try {
       const stripe = getStripe()
 
-      // Build transfer_data array for Connect split (TODO: per Stripe richiede destination single + separate transfers - v1 basic)
+      // Connect Direct Charge: tutti gli items dello stesso tenant (validato sopra),
+      // quindi un solo destination account. application_fee = somma fee per item type.
+      // TODO: ricalcolare unit_amount server-side via pricing engine (oggi accetta dal client).
+      const connectParams = await buildConnectChargeParamsSafe({
+        tenantId: tenant.id,
+        moduleCode: 'bundle',
+        baseAmountCents: totalCents,
+      })
+      if (!connectParams) {
+        return NextResponse.json({
+          error: 'Tenant Stripe Connect non attivo. Onboarding required: /[tenant]/settings/payments',
+        }, { status: 400 })
+      }
+
       const session = await stripe.checkout.sessions.create({
         mode: 'payment',
         currency: 'eur',
@@ -192,6 +205,11 @@ export async function POST(request: NextRequest) {
             },
           } satisfies Stripe.Checkout.SessionCreateParams.LineItem
         }),
+        payment_intent_data: {
+          application_fee_amount: connectParams.application_fee_amount,
+          on_behalf_of: connectParams.on_behalf_of,
+          transfer_data: connectParams.transfer_data,
+        },
         metadata: {
           type: 'bundle',
           bundle_id: bundle.id,
