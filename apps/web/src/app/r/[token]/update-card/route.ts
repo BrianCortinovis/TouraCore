@@ -68,7 +68,11 @@ function verifyToken(token: string): VerifiedToken | { ok: false } {
     const exp = Number(expStr)
     if (!exp || exp < Date.now() / 1000) return { ok: false }
 
-    const secret = process.env.MAGIC_LINK_SECRET ?? process.env.CRON_SECRET ?? ''
+    // Verify secret: prod richiede MAGIC_LINK_SECRET, dev accetta fallback CRON_SECRET.
+    let secret = process.env.MAGIC_LINK_SECRET
+    if (!secret && process.env.NODE_ENV !== 'production') {
+      secret = process.env.CRON_SECRET
+    }
     if (!secret) return { ok: false }
 
     const expected = createHmac('sha256', secret)

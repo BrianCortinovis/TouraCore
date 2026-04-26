@@ -13,9 +13,30 @@ export interface MagicLinkInput {
   ttlSeconds?: number
 }
 
+let warned = false
+
+function getMagicLinkSecret(): string {
+  const explicit = process.env.MAGIC_LINK_SECRET
+  if (explicit) return explicit
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('MAGIC_LINK_SECRET env required in production (no CRON_SECRET fallback allowed)')
+  }
+
+  // Dev/preview: fallback CRON_SECRET con warning. Non riusare due secret di domini diversi in prod.
+  const fallback = process.env.CRON_SECRET
+  if (fallback) {
+    if (!warned) {
+      console.warn('[magic-link] Using CRON_SECRET fallback (dev only). Set MAGIC_LINK_SECRET for proper key isolation.')
+      warned = true
+    }
+    return fallback
+  }
+  throw new Error('MAGIC_LINK_SECRET not configured')
+}
+
 export function generateUpdateCardToken(input: MagicLinkInput): string {
-  const secret = process.env.MAGIC_LINK_SECRET ?? process.env.CRON_SECRET ?? ''
-  if (!secret) throw new Error('MAGIC_LINK_SECRET not configured')
+  const secret = getMagicLinkSecret()
 
   const ttl = input.ttlSeconds ?? 7 * 24 * 3600
   const expSec = Math.floor(Date.now() / 1000) + ttl
