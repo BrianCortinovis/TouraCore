@@ -84,7 +84,8 @@ export function BookTableClient({ context, template, isEmbed, previewStep }: Pro
     setError(null)
     startTransition(async () => {
       try {
-        const idemp = `widget_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+        // crypto.randomUUID è CSPRNG (Web Crypto API). No collisioni.
+        const idemp = `widget_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`
         const res = await fetch('/api/public/restaurant/reserve', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idemp },

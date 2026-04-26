@@ -1,3 +1,4 @@
+import { randomInt } from 'node:crypto'
 import { createServiceRoleClient, createServerSupabaseClient } from '@touracore/db'
 import { redeemCredit } from '@touracore/vouchers/server'
 import { attributeCommission } from '@touracore/partners/server'
@@ -58,9 +59,8 @@ export async function createReservation(
     if (!br) return { success: false, error: 'bike_rental not found' }
 
     const tenantId = (br as { tenant_id: string }).tenant_id
-    const referenceCode = `BK-${new Date().getFullYear()}-${Math.floor(Math.random() * 1_000_000)
-      .toString()
-      .padStart(6, '0')}`
+    // CSPRNG: reference code visible al cliente, no collisioni accidentali
+    const referenceCode = `BK-${new Date().getFullYear()}-${String(randomInt(100000, 1000000))}`
 
     const { data: reservation, error: resErr } = await supabase
       .from('bike_rental_reservations')

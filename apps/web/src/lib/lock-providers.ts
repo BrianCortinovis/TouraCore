@@ -1,4 +1,5 @@
 import 'server-only'
+import { randomInt } from 'node:crypto'
 
 /**
  * Smart lock provider adapters: Nuki, TTLock, Igloohome.
@@ -24,7 +25,8 @@ const NUKI_BASE = 'https://api.nuki.io'
 const TTLOCK_BASE = 'https://api.ttlock.com'
 
 function generateLocalPin(): string {
-  return String(Math.floor(100000 + Math.random() * 900000))
+  // CSPRNG via node:crypto.randomInt. PIN apre porte fisiche, mai Math.random.
+  return String(randomInt(100000, 1000000))
 }
 
 export async function issueNukiPin(config: LockProviderConfig, validFrom: Date, validTo: Date, name?: string): Promise<PinIssueResult> {

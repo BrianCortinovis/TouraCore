@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServiceRoleClient } from '@touracore/db/server'
 
@@ -109,8 +109,10 @@ export function extractKey(req: NextRequest): string | null {
  * Salvare solo prefix+keyHash su DB. fullKey mostrata una sola volta all'utente.
  */
 export function generateApiKey(): { prefix: string; fullKey: string; keyHash: string } {
-  const slugB = (Math.random().toString(36).slice(2, 10)).padEnd(8, '0').slice(0, 8)
-  const secret = (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)).slice(0, 32)
+  // CSPRNG via node:crypto. Math.random non è cryptographic.
+  // 4 bytes hex = 8 char per slug; 16 bytes hex = 32 char per secret.
+  const slugB = randomBytes(4).toString('hex')
+  const secret = randomBytes(16).toString('hex')
   const prefix = `pbk_${slugB}`
   const fullKey = `${prefix}_${secret}`
   const keyHash = createHash('sha256').update(secret).digest('hex')

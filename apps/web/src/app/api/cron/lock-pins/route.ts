@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { randomInt } from 'node:crypto'
 import { createServiceRoleClient } from '@touracore/db/server'
 
 export const dynamic = 'force-dynamic'
@@ -12,7 +13,8 @@ function authorize(request: NextRequest): boolean {
 }
 
 function generatePin(): string {
-  return Array.from({ length: 6 }, () => Math.floor(Math.random() * 10)).join('')
+  // CSPRNG via node:crypto.randomInt. PIN apre porte fisiche, mai Math.random.
+  return String(randomInt(100000, 1000000))
 }
 
 interface LockProviderAdapter {
