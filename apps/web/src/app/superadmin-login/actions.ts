@@ -20,8 +20,9 @@ export async function superadminLoginAction(input: unknown): Promise<LoginResult
   }
 
   const supabase = await createServerSupabaseClient()
+  const adminClient = await createServiceRoleClient()
 
-  // 1. Tentativo login
+  // Sign-in: necessario per password verify (Supabase non espone verify-only API)
   const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
     email: parsed.data.email,
     password: parsed.data.password,
@@ -31,18 +32,24 @@ export async function superadminLoginAction(input: unknown): Promise<LoginResult
     return { success: false, error: 'Credenziali non valide' }
   }
 
-  // 2. Verifica platform_admin usando service_role (bypassa RLS)
-  const adminClient = await createServiceRoleClient()
+  const userId = authData.user.id
 
-  const { data: admin, error: adminError } = await adminClient
+  // Platform admin check (bypassa RLS via service role)
+  const { data: admin } = await adminClient
     .from('platform_admins')
     .select('id, role')
-    .eq('user_id', authData.user.id)
+    .eq('user_id', userId)
     .maybeSingle()
 
-  if (adminError || !admin) {
-    // Logout immediato — l'utente non è superadmin
+  if (!admin) {
+    // Non admin: logout immediato + revoca tutte le sessioni del utente via Admin API
+    // per chiudere race window se cookie session è stato già scritto.
     await supabase.auth.signOut()
+    try {
+      await adminClient.auth.admin.signOut(userId)
+    } catch {
+      // best-effort: se fallisce, signOut locale comunque ha rimosso il cookie
+    }
     return {
       success: false,
       error: 'Accesso non autorizzato. Questo account non ha privilegi superadmin.',
