@@ -37,6 +37,8 @@ e2e/.auth/
 **/e2e/.auth/
 .claude/settings.local.json
 .claude/projects/
+.claude/scheduled_tasks.lock
+.claude/scheduled_tasks/
 testsprite_tests/
 .secrets-rotations.log
 .secrets-backup/

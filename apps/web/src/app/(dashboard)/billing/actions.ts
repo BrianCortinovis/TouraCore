@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { getAuthBootstrapData } from '@touracore/auth/bootstrap'
 import { createServerSupabaseClient } from '@touracore/db/server'
+import { getSiteBaseUrl } from '@/lib/site-url'
 import {
   getSubscription,
   createCheckoutSession,
@@ -62,7 +63,7 @@ export async function createCheckoutAction(plan: SubscriptionPlan): Promise<Acti
   }
 
   try {
-    const origin = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+    const origin = process.env.NEXT_PUBLIC_APP_URL ?? getSiteBaseUrl()
     const url = await createCheckoutSession({
       tenantId: bootstrap.tenant.id,
       plan,
@@ -87,7 +88,7 @@ export async function openPortalAction(): Promise<ActionResult> {
       return { success: false, error: 'Nessun abbonamento attivo' }
     }
 
-    const origin = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+    const origin = process.env.NEXT_PUBLIC_APP_URL ?? getSiteBaseUrl()
     const url = await createCustomerPortalSession({
       customerId: sub.stripe_customer_id,
       returnUrl: `${origin}/billing`,
@@ -122,7 +123,7 @@ export async function startConnectOnboardingAction(): Promise<ActionResult> {
   if (!bootstrap.tenant) return { success: false, error: 'Non autenticato' }
 
   try {
-    const origin = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+    const origin = process.env.NEXT_PUBLIC_APP_URL ?? getSiteBaseUrl()
     const url = await createConnectOnboardingUrl({
       tenantId: bootstrap.tenant.id,
       refreshUrl: `${origin}/billing`,

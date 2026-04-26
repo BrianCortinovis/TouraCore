@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createServerSupabaseClient } from '@touracore/db/server'
 import { z } from 'zod'
+import { getSiteBaseUrl } from '@/lib/site-url'
 
 const ToggleSchema = z.object({
   entitySlug: z.string().min(1),
@@ -59,7 +60,7 @@ export async function getSelfCheckinStatus(
     .eq('entity_id', entity.id)
     .single()
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? getSiteBaseUrl()
 
   return {
     enabled: acc?.self_checkin_enabled ?? false,
