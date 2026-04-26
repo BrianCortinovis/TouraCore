@@ -5,6 +5,34 @@ import { createServerSupabaseClient, createServiceRoleClient } from '@touracore/
 import { getCurrentUser } from '@touracore/auth'
 import { z } from 'zod'
 
+async function assertOwnsTenant(tenantSlug: string): Promise<{ tenantId: string }> {
+  const user = await getCurrentUser()
+  if (!user) throw new Error('Not authenticated')
+  const supabase = await createServerSupabaseClient()
+  const { data: tenant } = await supabase.from('tenants').select('id').eq('slug', tenantSlug).single()
+  if (!tenant) throw new Error('Tenant not found')
+
+  const admin = await createServiceRoleClient()
+  const { data: pa } = await admin.from('platform_admins').select('user_id').eq('user_id', user.id).maybeSingle()
+  if (pa) return { tenantId: tenant.id as string }
+
+  const { data: m } = await admin.from('memberships').select('id').eq('user_id', user.id).eq('tenant_id', tenant.id).eq('is_active', true).maybeSingle()
+  if (!m) throw new Error('Forbidden')
+  return { tenantId: tenant.id as string }
+}
+
+async function assertThreadInTenant(threadId: string, tenantId: string): Promise<{ entityId: string }> {
+  const admin = await createServiceRoleClient()
+  const { data: thread } = await admin
+    .from('message_threads')
+    .select('id, entity_id, entities!inner(tenant_id)')
+    .eq('id', threadId)
+    .eq('entities.tenant_id', tenantId)
+    .maybeSingle()
+  if (!thread) throw new Error('Thread not in tenant')
+  return { entityId: thread.entity_id as string }
+}
+
 const ReplySchema = z.object({
   threadId: z.string().uuid(),
   tenantSlug: z.string(),
@@ -18,6 +46,15 @@ export async function replyToThread(input: z.infer<typeof ReplySchema>): Promise
 
   const user = await getCurrentUser()
   if (!user) return { success: false, error: 'Not authenticated' }
+
+  let tenantId: string
+  try {
+    const ctx = await assertOwnsTenant(parsed.data.tenantSlug)
+    tenantId = ctx.tenantId
+    await assertThreadInTenant(parsed.data.threadId, tenantId)
+  } catch (e) {
+    return { success: false, error: (e as Error).message }
+  }
 
   const admin = await createServiceRoleClient()
   const { data: thread } = await admin
@@ -48,6 +85,9 @@ export async function replyToThread(input: z.infer<typeof ReplySchema>): Promise
 }
 
 export async function markThreadRead(threadId: string, tenantSlug: string, entitySlug: string): Promise<void> {
+  const { tenantId } = await assertOwnsTenant(tenantSlug)
+  await assertThreadInTenant(threadId, tenantId)
+
   const admin = await createServiceRoleClient()
   await admin.from('message_threads').update({ unread_count: 0 }).eq('id', threadId)
   await admin.from('thread_messages').update({ read_at: new Date().toISOString() }).eq('thread_id', threadId).is('read_at', null)
@@ -72,11 +112,20 @@ export async function createThreadAndSend(input: z.infer<typeof NewThreadSchema>
   const user = await getCurrentUser()
   if (!user) return { success: false, error: 'Not authenticated' }
 
+  let tenantId: string
+  try {
+    const ctx = await assertOwnsTenant(parsed.data.tenantSlug)
+    tenantId = ctx.tenantId
+  } catch (e) {
+    return { success: false, error: (e as Error).message }
+  }
+
   const supabase = await createServerSupabaseClient()
   const { data: entity } = await supabase
     .from('entities')
-    .select('id')
+    .select('id, tenant_id')
     .eq('slug', parsed.data.entitySlug)
+    .eq('tenant_id', tenantId)
     .single()
   if (!entity) return { success: false, error: 'Entity not found' }
 
