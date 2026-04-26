@@ -18,6 +18,10 @@ export async function connectStripeAction(formData: FormData): Promise<void> {
     .eq('slug', agencySlug)
     .maybeSingle()
   if (!agency) redirect(`/a/${agencySlug}/settings/stripe?error=agency_not_found`)
+  // Verify caller is platform admin OR owner of this agency
+  if (!ctx.isPlatformAdmin && ctx.agencyId !== (agency as { id: string }).id) {
+    redirect(`/a/${agencySlug}/settings/stripe?error=forbidden`)
+  }
 
   const stripeKey = process.env.STRIPE_SECRET_KEY
   if (!stripeKey) redirect(`/a/${agencySlug}/settings/stripe?error=stripe_not_configured`)
