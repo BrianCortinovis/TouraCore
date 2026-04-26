@@ -139,9 +139,13 @@ export async function upsertRatePlan(input: UpsertRatePlanInput): Promise<RatePl
   return data as RatePlan
 }
 
-export async function deleteRatePlan(id: string): Promise<void> {
+export async function deleteRatePlan(id: string, tenantId: string): Promise<void> {
   const supabase = await createServiceRoleClient()
-  await supabase.from('rate_plans').delete().eq('id', id)
+  await supabase
+    .from('payment_rate_plans')
+    .delete()
+    .eq('id', id)
+    .eq('tenant_id', tenantId)
 }
 
 export async function ensureDefaultRatePlan(

@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { createServerSupabaseClient } from '@touracore/db/server'
+import { createServerSupabaseClient, createServiceRoleClient } from '@touracore/db/server'
+import { getCurrentUser } from '@touracore/auth'
 import {
   upsertRatePlan,
   deleteRatePlan,
@@ -56,8 +57,35 @@ export async function upsertRatePlanAction(
 
 export async function deleteRatePlanAction(id: string): Promise<{ ok: boolean; error?: string }> {
   if (!z.string().uuid().safeParse(id).success) return { ok: false, error: 'invalid_id' }
+
+  const user = await getCurrentUser()
+  if (!user) return { ok: false, error: 'not_authenticated' }
+
+  const admin = await createServiceRoleClient()
+
+  // Lookup rate plan to find its tenant_id
+  const { data: plan } = await admin
+    .from('payment_rate_plans')
+    .select('id, tenant_id')
+    .eq('id', id)
+    .maybeSingle()
+  if (!plan) return { ok: false, error: 'rate_plan_not_found' }
+
+  // Verify user is platform admin OR member of plan's tenant
+  const { data: pa } = await admin.from('platform_admins').select('user_id').eq('user_id', user.id).maybeSingle()
+  if (!pa) {
+    const { data: m } = await admin
+      .from('memberships')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('tenant_id', plan.tenant_id)
+      .eq('is_active', true)
+      .maybeSingle()
+    if (!m) return { ok: false, error: 'forbidden' }
+  }
+
   try {
-    await deleteRatePlan(id)
+    await deleteRatePlan(id, plan.tenant_id as string)
     return { ok: true }
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'unknown' }
