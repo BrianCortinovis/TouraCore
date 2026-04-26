@@ -11,34 +11,34 @@
       "commit": "694dce9"
     },
     "S002": {
-      "status": "pending",
+      "status": "done",
       "title": "(dashboard)/admin/actions.ts assertPlatformAdmin wrap",
       "sprint": 1,
-      "commit": null
+      "commit": "6c90649"
     },
     "S003": {
-      "status": "pending",
+      "status": "done",
       "title": "pricing/actions.ts tenant check",
       "sprint": 1,
-      "commit": null
+      "commit": "6adb9c9"
     },
     "S004": {
-      "status": "pending",
+      "status": "done",
       "title": "reviews/actions.ts tenant check",
       "sprint": 1,
-      "commit": null
+      "commit": "e96d1a6"
     },
     "S005": {
-      "status": "pending",
+      "status": "done",
       "title": "messaggi/actions.ts tenant check",
       "sprint": 1,
-      "commit": null
+      "commit": "eb6f506"
     },
     "S006": {
-      "status": "pending",
+      "status": "done",
       "title": "rate-plans deleteRatePlan tenant check",
       "sprint": 1,
-      "commit": null
+      "commit": "93b5ce3"
     },
     "S007": {
       "status": "pending",
@@ -65,16 +65,16 @@
       "commit": "ffb3903"
     },
     "S011": {
-      "status": "pending",
+      "status": "done",
       "title": "INTEGRATIONS_ENCRYPTION_KEY no SR fallback",
       "sprint": 1,
-      "commit": null
+      "commit": "f2b31eb"
     },
     "S012": {
-      "status": "pending",
+      "status": "done",
       "title": "VOUCHER_JWT_SECRET no SR fallback",
       "sprint": 1,
-      "commit": null
+      "commit": "b6305b7"
     },
     "S013": {
       "status": "pending",
