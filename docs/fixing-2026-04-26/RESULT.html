@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TouraCore Fixing 2026-04-26 — RESULT FINALE</title>
+<style>
+  :root{
+    --bg:#faf6f0; --surface:#fff; --ink:#2a1f17; --ink-soft:#5b4a3f;
+    --accent:#c45a3a; --good:#15803d; --good-bg:#f0fdf4;
+    --warn:#a16207; --warn-bg:#fefce8;
+    --info:#0369a1; --info-bg:#f0f9ff;
+    --border:#e8dccc;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+  header{background:linear-gradient(135deg,var(--good),#0e6029);color:#faf6f0;padding:48px 32px;border-bottom:4px solid var(--accent)}
+  header h1{font-size:2.4rem;font-weight:700}
+  header .meta{color:#d4f5dd;margin-top:8px;font-size:0.95rem}
+  header .badges{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap}
+  header .badges div{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);padding:8px 14px;border-radius:6px;font-size:0.88rem;font-weight:600}
+  main{max-width:1200px;margin:0 auto;padding:32px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:32px}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px;text-align:center}
+  .stat .num{font-size:2.4rem;font-weight:700;line-height:1;color:var(--good)}
+  .stat .lbl{color:var(--ink-soft);font-size:0.78rem;margin-top:4px;text-transform:uppercase;letter-spacing:0.05em}
+  .stat.warn .num{color:var(--warn)}
+  .stat.info .num{color:var(--info)}
+  h2{font-size:1.5rem;margin:36px 0 14px;padding-bottom:10px;border-bottom:2px solid var(--accent)}
+  h3{font-size:1.1rem;margin:20px 0 10px}
+  section{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:22px 26px;margin-bottom:18px}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:0.9rem}
+  th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+  th{background:#fafafa;font-weight:600;text-transform:uppercase;font-size:0.72rem;letter-spacing:0.05em;color:var(--ink-soft)}
+  td.ok{color:var(--good);font-weight:600}
+  td.skip{color:var(--warn);font-weight:600}
+  code{font-family:"SF Mono",Menlo,monospace;font-size:0.82rem;background:rgba(0,0,0,0.06);padding:1px 5px;border-radius:3px;color:var(--accent)}
+  .check{padding:10px 14px;margin:8px 0;background:var(--good-bg);border-left:4px solid var(--good);border-radius:0 6px 6px 0;font-size:0.92rem}
+  .check.warn{background:var(--warn-bg);border-left-color:var(--warn)}
+  .check.info{background:var(--info-bg);border-left-color:var(--info)}
+  .check strong{color:var(--good)}
+  .check.warn strong{color:var(--warn)}
+  pre{background:#1a120c;color:#faf6f0;padding:12px 16px;border-radius:6px;overflow-x:auto;font-family:"SF Mono",Menlo,monospace;font-size:0.78rem;margin:8px 0;line-height:1.5}
+  .commit{font-family:"SF Mono",Menlo,monospace;font-size:0.78rem;color:var(--accent);background:rgba(196,90,58,0.08);padding:1px 6px;border-radius:3px}
+  footer{text-align:center;padding:28px;color:var(--ink-soft);font-size:0.82rem;border-top:1px solid var(--border);margin-top:40px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>✅ TouraCore Fixing 2026-04-26 — COMPLETATO</h1>
+  <div class="meta">29 commit pushati su <code style="background:rgba(255,255,255,0.15);padding:1px 5px;border-radius:3px">main</code> · Vercel deploy LIVE · DB cloud migration 00151 applicata · 5/5 route Chrome smoke OK</div>
+  <div class="badges">
+    <div>✅ 25/30 step done</div>
+    <div>⏭️ 5 skipped (documentati)</div>
+    <div>❌ 0 failed</div>
+    <div>🔒 11 critici risolti</div>
+    <div>🌐 Prod live verificato</div>
+  </div>
+</header>
+
+<main>
+
+<div class="stats">
+  <div class="stat"><div class="num">29</div><div class="lbl">Commit</div></div>
+  <div class="stat"><div class="num">25</div><div class="lbl">Step done</div></div>
+  <div class="stat warn"><div class="num">5</div><div class="lbl">Step skip</div></div>
+  <div class="stat info"><div class="num">17</div><div class="lbl">Typecheck OK</div></div>
+  <div class="stat info"><div class="num">0</div><div class="lbl">Lint errors</div></div>
+  <div class="stat info"><div class="num">9/9</div><div class="lbl">View invoker</div></div>
+</div>
+
+<!-- ===== Verifiche LIVE ===== -->
+<section>
+  <h2>🌐 Verifiche LIVE produzione (post-deploy)</h2>
+
+  <h3>1. Security headers (curl)</h3>
+  <div class="check"><strong>✅ CSP frame-src include Stripe</strong>: <code>js.stripe.com</code>, <code>hooks.stripe.com</code>, <code>checkout.stripe.com</code>, <code>connect.stripe.com</code> — 3DS challenge ora funziona su carte Europa</div>
+  <div class="check"><strong>✅ CSP connect-src include Stripe API + GA + Vercel</strong>: <code>api.stripe.com</code>, <code>r.stripe.com</code>, <code>google-analytics.com</code>, <code>googletagmanager.com</code>, <code>vitals.vercel-insights.com</code></div>
+  <div class="check"><strong>✅ CSP img-src ristretto</strong>: solo <code>*.supabase.co</code>, <code>*.r2.*</code>, <code>unsplash.com</code>, <code>i.ytimg.com</code> (no più <code>https:</code> open)</div>
+  <div class="check"><strong>✅ HSTS preload attivo</strong>: <code>max-age=63072000; includeSubDomains; preload</code></div>
+  <div class="check"><strong>✅ X-Frame-Options DENY</strong> per route normali</div>
+  <div class="check"><strong>✅ Rate limit attivo</strong>: <code>x-ratelimit-limit: 120</code> (public tier)</div>
+  <div class="check"><strong>✅ CSRF cookie set</strong>: <code>__touracore_csrf=...</code>; Secure; SameSite=strict</div>
+
+  <h3>2. Cron security (S010 + S020)</h3>
+  <div class="check"><strong>✅ /api/cron/notifications-dispatch senza auth → 401</strong> (era fail-OPEN, ora fail-CLOSED)</div>
+  <div class="check"><strong>✅ /api/cron/data-retention senza auth → 401</strong></div>
+
+  <h3>3. Bundle endpoint (S007)</h3>
+  <div class="check"><strong>✅ POST /api/v1/bundles vuoto → 400 validation</strong></div>
+  <div class="check"><strong>✅ POST con tenant inesistente → 404 "Tenant not found"</strong></div>
+  <div class="check info"><strong>ℹ️ Connect split attivo</strong>: nuovi bundle ora usano <code>buildConnectChargeParamsSafe</code> (ritornerà 400 se tenant Connect non onboarded)</div>
+
+  <h3>4. /wiring-proof (S025)</h3>
+  <div class="check"><strong>✅ /wiring-proof → 307 redirect</strong> (auth gating attivo, robots.txt aggiunge disallow)</div>
+
+  <h3>5. robots.txt (S025)</h3>
+  <div class="check"><strong>✅ Disallow corretti</strong>: rimossi route group inutili <code>/(app)/</code> <code>/(dashboard)/</code>, aggiunti <code>/superadmin</code>, <code>/platform/</code>, <code>/a/</code>, <code>/r/</code>, <code>/checkin/</code>, <code>/checkout/</code>, <code>/credits/</code>, <code>/gift-card/</code>, <code>/portal/</code>, <code>/preferences/</code>, <code>/onboarding</code>, <code>/register</code>, <code>/login</code>, <code>/wiring-proof</code></div>
+  <div class="check"><strong>✅ Sitemap_index.xml 200 OK</strong></div>
+
+  <h3>6. Chrome smoke test (5 route pubbliche)</h3>
+  <table>
+    <thead><tr><th>Route</th><th>Stato</th><th>Errori console</th></tr></thead>
+    <tbody>
+      <tr><td><code>/</code></td><td class="ok">200 OK</td><td>solo Vercel Analytics anti-adblock probe (atteso)</td></tr>
+      <tr><td><code>/discover</code></td><td class="ok">200 OK</td><td>solo Vercel Analytics probe</td></tr>
+      <tr><td><code>/s/villa-irabo/alpina-bikes</code></td><td class="ok">200 OK</td><td>solo Vercel Analytics probe</td></tr>
+      <tr><td><code>/login</code></td><td class="ok">200 OK</td><td>solo Vercel Analytics probe</td></tr>
+      <tr><td><code>/book/bike/alpina-bikes</code></td><td class="ok">200 OK</td><td>solo Vercel Analytics probe</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7. DB cloud (S027)</h3>
+  <div class="check"><strong>✅ 9/9 view KPI in security_invoker mode</strong>: <code>v_financial_summary</code>, <code>v_reservation_financials</code>, <code>v_daily_kpi</code>, <code>v_room_availability</code>, <code>v_rooms_effective</code>, <code>experience_manifest_view</code>, <code>core_web_vitals_p75</code>, <code>platform_seo_kpi_daily</code>, <code>platform_seo_routes_problems</code></div>
+  <div class="check"><strong>✅ Schema billing v4 intatto</strong>: <code>payment_rate_plans</code>, <code>reservation_payment_methods</code>, <code>reservation_payment_attempts</code>, <code>agency_payouts</code>, <code>data_retention_policy</code> presenti</div>
+</section>
+
+<!-- ===== Risultato per step ===== -->
+<section>
+  <h2>📋 Step completati per Sprint</h2>
+
+  <h3>Sprint 1 — Critici reali (12/12)</h3>
+  <table>
+    <thead><tr><th>#</th><th>Titolo</th><th>Commit</th><th>Stato</th></tr></thead>
+    <tbody>
+      <tr><td>S001</td><td>locks/actions.ts tenant ownership (4 action)</td><td><span class="commit">694dce9</span></td><td class="ok">✅</td></tr>
+      <tr><td>S002</td><td>(dashboard)/admin requirePlatformAdmin (9 action)</td><td><span class="commit">6c90649</span></td><td class="ok">✅</td></tr>
+      <tr><td>S003</td><td>pricing/actions.ts tenant check (5 action)</td><td><span class="commit">6adb9c9</span></td><td class="ok">✅</td></tr>
+      <tr><td>S004</td><td>reviews/actions.ts tenant check (3 action)</td><td><span class="commit">e96d1a6</span></td><td class="ok">✅</td></tr>
+      <tr><td>S005</td><td>messaggi/actions.ts tenant check (3 action)</td><td><span class="commit">eb6f506</span></td><td class="ok">✅</td></tr>
+      <tr><td>S006</td><td>deleteRatePlan tabella corretta + tenant</td><td><span class="commit">93b5ce3</span></td><td class="ok">✅</td></tr>
+      <tr><td>S007</td><td>bundle checkout Stripe Connect Direct Charge</td><td><span class="commit">80961c3</span></td><td class="ok">✅</td></tr>
+      <tr><td>S008</td><td>gift-card checkout Stripe Connect</td><td><span class="commit">1d25428</span></td><td class="ok">✅</td></tr>
+      <tr><td>S009</td><td>tassa soggiorno: amount server + Connect</td><td><span class="commit">40af1de</span></td><td class="ok">✅</td></tr>
+      <tr><td>S010</td><td>cron notifications-dispatch fail-closed</td><td><span class="commit">ffb3903</span></td><td class="ok">✅</td></tr>
+      <tr><td>S011</td><td>INTEGRATIONS encryption fail-closed prod</td><td><span class="commit">f2b31eb</span></td><td class="ok">✅</td></tr>
+      <tr><td>S012</td><td>VOUCHER JWT fail-closed prod</td><td><span class="commit">b6305b7</span></td><td class="ok">✅</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Sprint 2 — High (8/10)</h3>
+  <table>
+    <thead><tr><th>#</th><th>Titolo</th><th>Commit</th><th>Stato</th></tr></thead>
+    <tbody>
+      <tr><td>S013</td><td>MAGIC_LINK_SECRET separato (prod fail-closed)</td><td><span class="commit">7a93f0c</span></td><td class="ok">✅</td></tr>
+      <tr><td>S014</td><td>Rate limiter Vercel KV</td><td>—</td><td class="skip">⏭️ infra</td></tr>
+      <tr><td>S015</td><td>env.ts Zod schema fail-fast</td><td><span class="commit">e42378f</span></td><td class="ok">✅</td></tr>
+      <tr><td>S016</td><td>settings/payments tenantSlug match (3 action)</td><td><span class="commit">63dac50</span></td><td class="ok">✅</td></tr>
+      <tr><td>S017</td><td>a/[agencySlug]/settings/stripe agency match</td><td><span class="commit">48a8fe7</span></td><td class="ok">✅</td></tr>
+      <tr><td>S018</td><td>settings/{modules,integrations,loyalty,legal-entities}</td><td><span class="commit">1de51e9</span></td><td class="ok">✅</td></tr>
+      <tr><td>S019</td><td>cron secret pattern unified</td><td>—</td><td class="skip">⏭️ già OK</td></tr>
+      <tr><td>S020</td><td>data-retention table+column whitelist</td><td><span class="commit">6ff0223</span></td><td class="ok">✅</td></tr>
+      <tr><td>S021</td><td>octorate webhook timingSafeEqual</td><td><span class="commit">11d3f61</span></td><td class="ok">✅</td></tr>
+      <tr><td>S022</td><td>superadmin-login revoca sessione globale</td><td><span class="commit">dfaadbf</span></td><td class="ok">✅</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Sprint 3 — Polish (5/8)</h3>
+  <table>
+    <thead><tr><th>#</th><th>Titolo</th><th>Commit</th><th>Stato</th></tr></thead>
+    <tbody>
+      <tr><td>S023</td><td>CSP nonce script-src</td><td>—</td><td class="skip">⏭️ refactor PR</td></tr>
+      <tr><td>S024</td><td>CSP frame-src+connect-src+img-src</td><td><span class="commit">9576cad</span></td><td class="ok">✅</td></tr>
+      <tr><td>S025</td><td>robots.txt path corretti</td><td><span class="commit">d103c58</span></td><td class="ok">✅</td></tr>
+      <tr><td>S026</td><td>schema_migrations backfill</td><td>—</td><td class="skip">⏭️ op DB</td></tr>
+      <tr><td>S027</td><td>migration 00151 view security_invoker</td><td><span class="commit">e97b005</span></td><td class="ok">✅</td></tr>
+      <tr><td>S028</td><td>vercel.json regions=fra1 + maxDuration</td><td><span class="commit">1d7509e</span></td><td class="ok">✅</td></tr>
+      <tr><td>S029</td><td>analytics 404</td><td>—</td><td class="skip">⏭️ falso pos.</td></tr>
+      <tr><td>S030</td><td>verify finale lint+typecheck</td><td>—</td><td class="ok">✅</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===== Step skipped giustificati ===== -->
+<section>
+  <h2>⏭️ Step skipped — perché</h2>
+  <table>
+    <thead><tr><th>Step</th><th>Motivo</th><th>Quando affrontare</th></tr></thead>
+    <tbody>
+      <tr><td>S014 Vercel KV rate limiter</td><td>Richiede setup infra Upstash/KV + dep <code>@upstash/redis</code>. Code-only fix non possibile</td><td>Quando viene scelto provider e env settate</td></tr>
+      <tr><td>S019 cron secret unified</td><td>Verificato grep: già fail-closed in tutti i cron (l'unico vulnerabile, notifications-dispatch, fixato S010)</td><td>N/A</td></tr>
+      <tr><td>S023 CSP nonce</td><td>Refactor pesante middleware Next 14+ + propagazione nonce su <code>&lt;Script&gt;</code> tutti</td><td>PR dedicata isolata</td></tr>
+      <tr><td>S026 schema_migrations backfill</td><td>Op invasiva su <code>supabase_migrations</code> registry. Drift non bug funzionale</td><td>Finestra manutenzione coordinata</td></tr>
+      <tr><td>S029 analytics 404</td><td>Vercel Analytics inietta path random anti-adblock. Il 404 è probe, comportamento documentato Vercel</td><td>N/A — non bug</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===== Bug critici risolti ===== -->
+<section>
+  <h2>🛡️ 11 bug critici risolti</h2>
+  <ol style="padding-left:24px;line-height:2">
+    <li>✅ Smart-lock cross-tenant decryption + PIN fisici (locks/actions.ts)</li>
+    <li>✅ (dashboard)/admin/actions.ts ZERO auth su 9 server action</li>
+    <li>✅ Bundle multi-vertical bypassa Connect → ora Direct Charge</li>
+    <li>✅ Gift card checkout bypassa Connect → ora Direct Charge</li>
+    <li>✅ Tassa soggiorno: amount client-controlled + Connect bypass → ricalcolo server + Connect</li>
+    <li>✅ cron <code>notifications-dispatch</code> fail-OPEN → fail-CLOSED</li>
+    <li>✅ INTEGRATIONS_ENCRYPTION_KEY fallback SUPABASE_SERVICE_ROLE_KEY → fail-closed prod</li>
+    <li>✅ VOUCHER_JWT_SECRET fallback SR_KEY → fail-closed prod</li>
+    <li>✅ MAGIC_LINK_SECRET fallback CRON_SECRET → fail-closed prod</li>
+    <li>✅ Pricing/reviews/messaggi/rate-plans cross-tenant tampering (15 server action total)</li>
+    <li>✅ View KPI cross-tenant leak (security_invoker=true su 9 view DB cloud)</li>
+  </ol>
+</section>
+
+<!-- ===== Bug noti residui ===== -->
+<section>
+  <h2>📝 Bug noti residui (TODO follow-up)</h2>
+  <p style="color:var(--ink-soft);margin-bottom:12px">Non in scope di questo fixing run. Da affrontare in PR dedicate.</p>
+  <table>
+    <thead><tr><th>Bug</th><th>Effort stimato</th></tr></thead>
+    <tbody>
+      <tr><td>Webhook Stripe dedup race (INSERT-first idempotency)</td><td>1h</td></tr>
+      <tr><td>Auto-charge processing → card_saved double-charge edge</td><td>2h</td></tr>
+      <tr><td>Customer Portal cross-reservation leak (Stripe customer 1:1)</td><td>4h</td></tr>
+      <tr><td>Refund flow non chiama Stripe (solo record DB)</td><td>3h</td></tr>
+      <tr><td>Rate limiter in-memory → Vercel KV (S014)</td><td>2h</td></tr>
+      <tr><td>CSP unsafe-inline → nonce (S023)</td><td>3h</td></tr>
+      <tr><td>102 policy UPDATE senza WITH CHECK</td><td>4h</td></tr>
+      <tr><td>161 FK senza indice (perf)</td><td>1h</td></tr>
+      <tr><td>Hardcoded prices unified-booking widget</td><td>6h+</td></tr>
+      <tr><td>next/image in ListingGallery (LCP)</td><td>1h</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===== Env Vercel ===== -->
+<section>
+  <h2>⚠️ Env Vercel da verificare in production</h2>
+  <p>Le seguenti env DEVONO essere settate (≥32 char) altrimenti S011/S012/S013 throw 503 in prod:</p>
+  <ul style="padding-left:24px;line-height:2;margin-top:8px">
+    <li><code>MAGIC_LINK_SECRET</code> — usato da magic-link customer-facing</li>
+    <li><code>INTEGRATIONS_ENCRYPTION_KEY</code> — cifratura credenziali integration</li>
+    <li><code>VOUCHER_JWT_SECRET</code> — firma gift card delivery JWT</li>
+  </ul>
+  <p style="margin-top:10px;color:var(--ink-soft);font-size:0.88rem">Verificare in <code>Vercel Dashboard → Project → Settings → Environment Variables → Production</code> che esistano. In dev fallback ancora attivo (con warning console).</p>
+</section>
+
+<!-- ===== File modificati ===== -->
+<section>
+  <h2>📂 File chiave modificati (28 file)</h2>
+  <pre>apps/web/src/app/api/cron/data-retention/route.ts            (S020 whitelist)
+apps/web/src/app/api/cron/notifications-dispatch/route.ts    (S010 fail-closed)
+apps/web/src/app/api/public/gift-card/checkout/route.ts      (S008 Connect)
+apps/web/src/app/api/v1/bundles/route.ts                     (S007 Connect)
+apps/web/src/app/api/webhooks/octorate/route.ts              (S021 timing-safe)
+apps/web/src/app/checkin/[token]/actions.ts                  (S009 amount + Connect)
+apps/web/src/app/(app)/[tenantSlug]/_shared/rate-plans/actions.ts (S006)
+apps/web/src/app/(app)/[tenantSlug]/settings/payments/actions.ts  (S016)
+apps/web/src/app/(app)/[tenantSlug]/settings/integrations/actions.ts (S018)
+apps/web/src/app/(app)/[tenantSlug]/settings/legal-entities/actions.ts (S018)
+apps/web/src/app/(app)/[tenantSlug]/settings/loyalty/actions.ts   (S018)
+apps/web/src/app/(app)/[tenantSlug]/settings/modules/actions.ts   (S018)
+apps/web/src/app/(app)/[tenantSlug]/stays/[entitySlug]/locks/actions.ts (S001)
+apps/web/src/app/(app)/[tenantSlug]/stays/[entitySlug]/messaggi/actions.ts (S005)
+apps/web/src/app/(app)/[tenantSlug]/stays/[entitySlug]/pricing/actions.ts (S003)
+apps/web/src/app/(app)/[tenantSlug]/stays/[entitySlug]/reviews/actions.ts (S004)
+apps/web/src/app/(app)/a/[agencySlug]/settings/stripe/actions.ts (S017)
+apps/web/src/app/(dashboard)/admin/actions.ts                (S002)
+apps/web/src/app/r/[token]/update-card/route.ts              (S013)
+apps/web/src/app/robots.ts                                    (S025)
+apps/web/src/app/superadmin-login/actions.ts                 (S022)
+apps/web/src/env.ts                                          (NEW S015 Zod)
+apps/web/src/lib/integration-crypto.ts                       (S011 fail-closed)
+apps/web/vercel.json                                         (S028 fra1)
+packages/core/billing/src/magic-link.ts                      (S013)
+packages/core/billing/src/rate-plans.ts                      (S006)
+packages/core/security/src/headers.ts                        (S024 CSP)
+packages/core/vouchers/src/server/jwt.ts                     (S012)
+supabase/migrations/00151_view_kpi_security_invoker.sql      (NEW S027)</pre>
+</section>
+
+<!-- ===== Resume ===== -->
+<section>
+  <h2>🔄 Riprendere fixing in nuova chat</h2>
+  <pre>cd /Users/briancortinovis/Documents/TouraCore
+bash docs/fixing-2026-04-26/scripts/status.sh   # vedi stato
+bash docs/fixing-2026-04-26/scripts/resume.sh   # prossimo step pending</pre>
+  <p style="margin-top:10px">File <code>STATE.json</code>, <code>LOG.md</code>, <code>SUMMARY.md</code>, <code>steps/SXXX-*.md</code> tutti auto-contenuti per riprendere senza memoria di sessione.</p>
+</section>
+
+</main>
+
+<footer>
+  Generato 2026-04-26 · Fixing TouraCore audit live · 29 commit pushati su <code>origin/main</code> · Vercel deploy LIVE verificato Chrome + curl<br>
+  <code>docs/fixing-2026-04-26/RESULT.html</code> · <code>docs/fixing-2026-04-26/SUMMARY.md</code> · <code>docs/audit-2026-04-26/live-state.html</code>
+</footer>
+
+</body>
+</html>
