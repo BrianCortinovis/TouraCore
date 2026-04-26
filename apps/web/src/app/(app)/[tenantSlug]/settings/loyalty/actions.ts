@@ -55,10 +55,11 @@ const TierSchema = z.object({
 
 export async function createLoyaltyTier(input: z.infer<typeof TierSchema>) {
   const parsed = TierSchema.parse(input)
+  const { tenantId } = await assertOwnsTenant(parsed.tenantSlug)
   const admin = await createServiceRoleClient()
   const { data: prog } = await admin.from('loyalty_programs').select('tenant_id, tenants(slug)').eq('id', parsed.programId).single()
   if (!prog) throw new Error('Program not found')
-  await assertOwnsTenant(parsed.tenantSlug)
+  if (prog.tenant_id !== tenantId) throw new Error('Forbidden: program in another tenant')
 
   await admin.from('loyalty_tiers').insert({
     program_id: parsed.programId,
@@ -81,11 +82,13 @@ const AdjustSchema = z.object({
 
 export async function adjustGuestPoints(input: z.infer<typeof AdjustSchema>) {
   const parsed = AdjustSchema.parse(input)
-  await assertOwnsTenant(parsed.tenantSlug)
+  const { tenantId } = await assertOwnsTenant(parsed.tenantSlug)
   const admin = await createServiceRoleClient()
 
-  const { data: gl } = await admin.from('guest_loyalty').select('points_balance, points_earned_total, points_redeemed_total').eq('id', parsed.guestLoyaltyId).single()
+  const { data: gl } = await admin.from('guest_loyalty').select('points_balance, points_earned_total, points_redeemed_total, loyalty_programs!inner(tenant_id)').eq('id', parsed.guestLoyaltyId).single()
   if (!gl) throw new Error('Guest loyalty not found')
+  const glProgram = gl.loyalty_programs as unknown as { tenant_id: string } | null
+  if (!glProgram || glProgram.tenant_id !== tenantId) throw new Error('Forbidden: guest_loyalty in another tenant')
 
   const update: Record<string, unknown> = {
     points_balance: Number(gl.points_balance) + parsed.points,

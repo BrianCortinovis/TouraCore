@@ -48,6 +48,14 @@ export async function toggleModuleAction(
   if (!tenant) return { success: false, error: 'Organizzazione non trovata' }
 
   const admin = await createServiceRoleClient()
+
+  // Membership check: utente deve essere membro del tenant o platform admin
+  const { data: pa } = await admin.from('platform_admins').select('user_id').eq('user_id', user.id).maybeSingle()
+  if (!pa) {
+    const { data: m } = await admin.from('memberships').select('id').eq('user_id', user.id).eq('tenant_id', tenant.id).eq('is_active', true).maybeSingle()
+    if (!m) return { success: false, error: 'Permessi insufficienti' }
+  }
+
   const current = (tenant.modules ?? {}) as Record<
     string,
     { active: boolean; source: string; since?: string; trial_until?: string }
