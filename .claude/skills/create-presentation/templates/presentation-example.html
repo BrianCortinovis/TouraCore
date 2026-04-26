@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TouraCore — Come funzionano i pagamenti</title>
+<style>
+  :root {
+    --bg: #faf9f5;
+    --card: #ffffff;
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --ink-mute: #8a8a8a;
+    --line: #e8e4d8;
+    --accent: #c96442;
+    --accent-soft: #f4ddd1;
+    --success: #4a7c59;
+    --success-soft: #e1ecdf;
+    --warn: #b8860b;
+    --info: #4a6fa5;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 60px; }
+
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 80px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    transform: translateY(30px);
+  }
+  .slide.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
+  .slide-inner { width: 100%; max-width: 1100px; text-align: left; }
+
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.8s ease, transform 0.8s ease; }
+  .slide.active .reveal { opacity: 1; transform: translateY(0); }
+  .slide.active .reveal-1 { transition-delay: 0.2s; }
+  .slide.active .reveal-2 { transition-delay: 0.5s; }
+  .slide.active .reveal-3 { transition-delay: 0.9s; }
+  .slide.active .reveal-4 { transition-delay: 1.3s; }
+  .slide.active .reveal-5 { transition-delay: 1.7s; }
+
+  .eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 0.18em; color: var(--accent); font-weight: 700; margin-bottom: 20px; }
+  h1.slide-title { font-size: clamp(40px, 6vw, 72px); font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 28px; }
+  h2.slide-h2 { font-size: clamp(28px, 4vw, 48px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 20px; }
+  p.slide-body { font-size: clamp(18px, 1.8vw, 24px); line-height: 1.5; color: var(--ink-soft); margin-bottom: 14px; }
+  p.slide-big { font-size: clamp(28px, 3.5vw, 44px); font-weight: 500; line-height: 1.3; color: var(--ink); }
+
+  .accent { color: var(--accent); font-weight: 600; }
+  .ok { color: var(--success); font-weight: 600; }
+
+  /* Cover */
+  .cover { background: linear-gradient(135deg, #faf9f5 0%, #f0ece0 100%); }
+  .cover h1 { font-size: clamp(56px, 8vw, 96px); font-weight: 700; letter-spacing: -0.04em; line-height: 0.95; margin-bottom: 24px; }
+  .cover .sub { font-size: clamp(20px, 2.2vw, 30px); color: var(--ink-soft); max-width: 700px; }
+  .cover .brand { position: absolute; top: 60px; left: 80px; font-weight: 700; letter-spacing: 0.05em; font-size: 14px; color: var(--accent); }
+
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 32px; }
+  .stat-card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 28px 24px; }
+  .stat-card .icon { font-size: 32px; margin-bottom: 10px; }
+  .stat-card .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 6px; }
+  .stat-card .val { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+  .stat-card .hint { font-size: 14px; color: var(--ink-soft); line-height: 1.5; }
+
+  .diagram { margin: 32px auto 0; max-width: 900px; }
+  .diagram svg { width: 100%; height: auto; }
+
+  .big-number { font-size: clamp(80px, 14vw, 200px); font-weight: 700; letter-spacing: -0.05em; line-height: 1; color: var(--accent); }
+
+  .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 32px; }
+  .comp-card { border-radius: 16px; padding: 28px; border: 1px solid var(--line); }
+  .comp-card.bad { background: var(--accent-soft); border-color: var(--accent); }
+  .comp-card.good { background: var(--success-soft); border-color: var(--success); }
+  .comp-card .head { font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 12px; }
+  .comp-card.bad .head { color: var(--accent); }
+  .comp-card.good .head { color: var(--success); }
+  .comp-card .body { font-size: 18px; line-height: 1.45; color: var(--ink); }
+
+  /* Controls */
+  .controls {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.95); backdrop-filter: blur(12px);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 8px 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); z-index: 100;
+  }
+  .controls button {
+    background: transparent; border: 0; cursor: pointer;
+    padding: 8px 14px; font-size: 14px; font-weight: 500; color: var(--ink-soft);
+    border-radius: 999px; font-family: inherit; display: flex; align-items: center; gap: 6px;
+  }
+  .controls button:hover { background: var(--line); color: var(--ink); }
+  .controls button.primary { background: var(--ink); color: var(--bg); }
+  .controls button.primary:hover { background: var(--accent); color: white; }
+  .controls .progress { font-variant-numeric: tabular-nums; font-size: 13px; color: var(--ink-mute); padding: 0 8px; }
+
+  .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); z-index: 99; transition: width 0.3s ease; width: 0%; }
+  .slide-num { position: fixed; bottom: 24px; right: 24px; font-size: 13px; color: var(--ink-mute); font-variant-numeric: tabular-nums; z-index: 100; }
+
+  /* Index modal */
+  .index-modal {
+    position: fixed; inset: 0;
+    background: rgba(26,26,26,0.6); backdrop-filter: blur(8px);
+    display: none; align-items: center; justify-content: center;
+    z-index: 200; padding: 40px;
+  }
+  .index-modal.open { display: flex; }
+  .index-panel {
+    background: var(--card); border-radius: 20px; padding: 32px;
+    max-width: 700px; width: 100%; max-height: 80vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .index-panel h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 20px; }
+  .index-list { list-style: none; }
+  .index-list li {
+    padding: 14px 18px; border-radius: 10px; cursor: pointer;
+    display: flex; align-items: center; gap: 14px;
+    border: 1px solid transparent; transition: all 0.15s;
+  }
+  .index-list li:hover { background: var(--accent-soft); border-color: var(--accent); }
+  .index-list li.current { background: var(--ink); color: var(--bg); }
+  .index-list li.current .num { color: var(--accent-soft); }
+  .index-list .num { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ink-mute); min-width: 30px; }
+  .index-list .title { flex: 1; font-weight: 500; }
+  .index-list .duration { font-size: 12px; color: var(--ink-mute); }
+  .index-list li.current .duration { color: var(--accent-soft); }
+
+  /* Money flow animations */
+  .coin {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  @keyframes fall1 {
+    0% { transform: translate(0, 0); opacity: 0; }
+    10% { opacity: 1; }
+    100% { transform: translate(-200px, 200px); opacity: 0; }
+  }
+  @keyframes fall2 {
+    0% { transform: translate(0, 0); opacity: 0; }
+    10% { opacity: 1; }
+    100% { transform: translate(200px, 200px); opacity: 0; }
+  }
+
+  .slide.active .anim-coin1 { animation: fall1 3s ease-in 1s infinite; }
+  .slide.active .anim-coin2 { animation: fall2 3s ease-in 1.5s infinite; }
+
+  @keyframes drawLine {
+    to { stroke-dashoffset: 0; }
+  }
+
+  .draw-line {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+  }
+  .slide.active .draw-line {
+    animation: drawLine 2s ease forwards 0.5s;
+  }
+
+  @keyframes ping {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(2.5); opacity: 0; }
+  }
+  .ping {
+    animation: ping 1.5s ease-out infinite;
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+
+  @keyframes flowDown {
+    0% { transform: translateY(-150px); opacity: 0; }
+    20% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { transform: translateY(150px); opacity: 0; }
+  }
+  .slide.active .flow-down-1 { animation: flowDown 2.5s ease-in-out infinite 0s; }
+  .slide.active .flow-down-2 { animation: flowDown 2.5s ease-in-out infinite 0.4s; }
+  .slide.active .flow-down-3 { animation: flowDown 2.5s ease-in-out infinite 0.8s; }
+  .slide.active .flow-down-4 { animation: flowDown 2.5s ease-in-out infinite 1.2s; }
+
+  @keyframes splitLeft {
+    0% { transform: translate(0, 0); opacity: 0; }
+    20% { opacity: 1; }
+    100% { transform: translate(-280px, 200px); opacity: 0; }
+  }
+  @keyframes splitRight {
+    0% { transform: translate(0, 0); opacity: 0; }
+    20% { opacity: 1; }
+    100% { transform: translate(280px, 200px); opacity: 0; }
+  }
+  .slide.active .split-left { animation: splitLeft 2.5s ease-in-out infinite; }
+  .slide.active .split-right { animation: splitRight 2.5s ease-in-out infinite 0.5s; }
+
+  /* Tariffe */
+  .tariff-row { display: flex; align-items: center; gap: 24px; padding: 18px; border-bottom: 1px solid var(--line); }
+  .tariff-row:last-child { border-bottom: 0; }
+  .tariff-icon { font-size: 32px; flex-shrink: 0; }
+
+  /* Final */
+  .final { background: linear-gradient(135deg, #1a1a1a 0%, #2b2a26 100%); color: var(--bg); }
+  .final h1, .final h2, .final p { color: var(--bg); }
+  .final .accent { color: #f4ddd1; }
+  .final .eyebrow { color: var(--accent-soft); }
+
+  body.playing .controls { opacity: 0.3; transition: opacity 0.3s; }
+  body.playing .controls:hover { opacity: 1; }
+
+  @media (max-width: 800px) {
+    .slide { padding: 40px 24px; }
+    .grid-3 { grid-template-columns: 1fr; gap: 16px; }
+    .comparison { grid-template-columns: 1fr; }
+    .controls { bottom: 12px; padding: 6px 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="stage">
+
+  <!-- ========== SLIDE 0: COVER ========== -->
+  <div class="slide cover active" data-slide="0">
+    <div class="slide-inner" style="text-align:center;">
+      <div class="brand">TOURACORE</div>
+      <h1 class="reveal reveal-1">Come funzionano<br>i pagamenti<br><span class="accent">su TouraCore</span></h1>
+      <p class="sub reveal reveal-2">Una guida visuale per le agenzie partner.<br>Cliente paga il tuo conto. Tu non sei banca.</p>
+      <p class="reveal reveal-3" style="margin-top:60px;font-size:14px;color:var(--ink-mute);">
+        Premi <strong>▶ Play</strong> per la versione audio guidata · 6 minuti
+      </p>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 1: PROBLEMA ========== -->
+  <div class="slide" data-slide="1">
+    <div class="slide-inner">
+      <div class="eyebrow reveal reveal-1">Il problema</div>
+      <h2 class="slide-h2 reveal reveal-1">Le piattaforme tradizionali sono <span class="accent">banche temporanee</span>.</h2>
+
+      <div class="diagram reveal reveal-2" style="margin:24px 0;">
+        <svg viewBox="0 0 900 240" xmlns="http://www.w3.org/2000/svg">
+          <!-- Cliente -->
+          <rect x="60" y="100" width="140" height="60" rx="10" fill="#f4ddd1" stroke="#c96442" stroke-width="2"/>
+          <text x="130" y="125" text-anchor="middle" font-size="13" font-weight="700">CLIENTE</text>
+          <text x="130" y="143" text-anchor="middle" font-size="11" fill="#4a4a4a">€1000</text>
+
+          <!-- Booking -->
+          <rect x="380" y="100" width="140" height="60" rx="10" fill="#1a1a1a" stroke="#1a1a1a"/>
+          <text x="450" y="125" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">BOOKING/AIRBNB</text>
+          <text x="450" y="143" text-anchor="middle" font-size="11" fill="#c96442">trattiene 30+ giorni</text>
+
+          <!-- Partner -->
+          <rect x="700" y="100" width="140" height="60" rx="10" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+          <text x="770" y="125" text-anchor="middle" font-size="13" font-weight="700">TU</text>
+          <text x="770" y="143" text-anchor="middle" font-size="11" fill="#8a8a8a">aspetta...</text>
+
+          <!-- Frecce -->
+          <line x1="200" y1="130" x2="380" y2="130" stroke="#4a7c59" stroke-width="3" class="draw-line"/>
+          <text x="290" y="120" text-anchor="middle" font-size="12" fill="#4a7c59" font-weight="700">€1000</text>
+
+          <line x1="520" y1="130" x2="700" y2="130" stroke="#c96442" stroke-width="3" stroke-dasharray="6 4"/>
+          <text x="610" y="120" text-anchor="middle" font-size="12" fill="#c96442" font-weight="700">€900 (poi)</text>
+          <text x="610" y="150" text-anchor="middle" font-size="10" fill="#8a8a8a">- commissione - tempo</text>
+        </svg>
+      </div>
+
+      <div class="comparison">
+        <div class="comp-card bad reveal reveal-3">
+          <div class="head">⚠️ Modello banca</div>
+          <div class="body">Cliente paga €1000 alla piattaforma → piattaforma trattiene tutto → bonifica €900 al partner dopo 30+ giorni.</div>
+        </div>
+        <div class="comp-card good reveal reveal-4">
+          <div class="head">✓ Modello TouraCore</div>
+          <div class="body">Cliente paga €1000 → €900 vanno <strong>direttamente</strong> al partner → €100 fee a TouraCore. Alla fonte.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 2: BIG NUMBER + ANIMAZIONE SOLDI ========== -->
+  <div class="slide" data-slide="2">
+    <div class="slide-inner" style="text-align:center;">
+      <div class="eyebrow reveal reveal-1">Quanto trattiene TouraCore</div>
+      <p class="big-number reveal reveal-1">0€</p>
+      <p class="slide-big reveal reveal-2" style="margin-top:24px;">Mai un euro del cliente passa per il nostro conto.</p>
+
+      <!-- Animazione: 4 monete che scendono attorno al "0€" -->
+      <div class="diagram reveal reveal-3" style="margin-top:32px;max-width:700px;">
+        <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg">
+          <text x="350" y="100" text-anchor="middle" font-size="60" font-weight="700" fill="#1a1a1a">→ €</text>
+
+          <!-- Monete che cadono e cambiano direzione -->
+          <g class="coin anim-coin1">
+            <circle cx="350" cy="40" r="18" fill="#f4ddd1" stroke="#c96442" stroke-width="2"/>
+            <text x="350" y="46" text-anchor="middle" font-size="14" font-weight="700" fill="#c96442">€</text>
+          </g>
+          <g class="coin anim-coin2">
+            <circle cx="350" cy="40" r="18" fill="#e1ecdf" stroke="#4a7c59" stroke-width="2"/>
+            <text x="350" y="46" text-anchor="middle" font-size="14" font-weight="700" fill="#4a7c59">€</text>
+          </g>
+
+          <text x="100" y="180" text-anchor="middle" font-size="13" fill="#4a7c59" font-weight="700">↘ TENANT</text>
+          <text x="600" y="180" text-anchor="middle" font-size="13" fill="#4a7c59" font-weight="700">↗ TOURACORE</text>
+        </svg>
+      </div>
+
+      <p class="slide-body reveal reveal-4" style="margin-top:24px;">Stripe Connect splitta il pagamento <strong>alla fonte</strong>. Il partner riceve direttamente sul proprio conto bancario via SEPA.</p>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 3: FLUSSO ANIMATO PRINCIPALE ========== -->
+  <div class="slide" data-slide="3">
+    <div class="slide-inner">
+      <div class="eyebrow reveal reveal-1">Come funziona</div>
+      <h2 class="slide-h2 reveal reveal-1">Stripe Connect Direct Charge.</h2>
+      <p class="slide-body reveal reveal-2">Una sola transazione carta. Stripe splitta i soldi in due al momento dell'addebito.</p>
+
+      <div class="diagram reveal reveal-3" style="margin-top:24px;">
+        <svg viewBox="0 0 900 480" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#4a7c59"/>
+            </marker>
+            <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#c96442"/>
+            </marker>
+          </defs>
+
+          <!-- Cliente -->
+          <rect x="370" y="20" width="160" height="60" rx="12" fill="#f4ddd1" stroke="#c96442" stroke-width="2"/>
+          <text x="450" y="44" text-anchor="middle" font-size="14" font-weight="700">CLIENTE</text>
+          <text x="450" y="64" text-anchor="middle" font-size="12" fill="#4a4a4a">paga €1000</text>
+
+          <!-- Stripe -->
+          <ellipse cx="450" cy="220" rx="170" ry="55" fill="#dde5f0" stroke="#4a6fa5" stroke-width="2"/>
+          <text x="450" y="210" text-anchor="middle" font-size="16" font-weight="700">STRIPE</text>
+          <text x="450" y="232" text-anchor="middle" font-size="11" fill="#4a4a4a">Direct Charge</text>
+          <text x="450" y="250" text-anchor="middle" font-size="10" fill="#8a8a8a">application_fee + transfer_data</text>
+
+          <!-- Tenant -->
+          <rect x="60" y="380" width="220" height="70" rx="12" fill="#e1ecdf" stroke="#4a7c59" stroke-width="2"/>
+          <text x="170" y="408" text-anchor="middle" font-size="15" font-weight="700">PARTNER</text>
+          <text x="170" y="430" text-anchor="middle" font-size="13" fill="#4a7c59" font-weight="700">€900 sul tuo IBAN</text>
+
+          <!-- TouraCore -->
+          <rect x="620" y="380" width="220" height="70" rx="12" fill="#1a1a1a"/>
+          <text x="730" y="408" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">TOURACORE</text>
+          <text x="730" y="430" text-anchor="middle" font-size="13" fill="#f4ddd1" font-weight="700">€100 fee</text>
+
+          <!-- Path cliente→Stripe -->
+          <line x1="450" y1="80" x2="450" y2="165" stroke="#4a7c59" stroke-width="3" marker-end="url(#ar1)"/>
+
+          <!-- Monete che scendono cliente→Stripe -->
+          <g class="flow-down-1">
+            <circle cx="445" cy="120" r="9" fill="#f4ddd1" stroke="#c96442" stroke-width="1.5"/>
+            <text x="445" y="124" text-anchor="middle" font-size="9" font-weight="700" fill="#c96442">€</text>
+          </g>
+          <g class="flow-down-2">
+            <circle cx="455" cy="120" r="9" fill="#f4ddd1" stroke="#c96442" stroke-width="1.5"/>
+            <text x="455" y="124" text-anchor="middle" font-size="9" font-weight="700" fill="#c96442">€</text>
+          </g>
+          <g class="flow-down-3">
+            <circle cx="450" cy="120" r="9" fill="#f4ddd1" stroke="#c96442" stroke-width="1.5"/>
+            <text x="450" y="124" text-anchor="middle" font-size="9" font-weight="700" fill="#c96442">€</text>
+          </g>
+
+          <!-- Path Stripe→Tenant -->
+          <path d="M 320 270 Q 220 330 175 380" stroke="#4a7c59" stroke-width="3" fill="none" marker-end="url(#ar1)"/>
+
+          <!-- Path Stripe→TouraCore -->
+          <path d="M 580 270 Q 680 330 725 380" stroke="#c96442" stroke-width="3" fill="none" marker-end="url(#ar2)"/>
+
+          <!-- Monete che si splittano dopo Stripe -->
+          <g class="split-left" style="transform-origin: 450px 270px;">
+            <circle cx="450" cy="270" r="11" fill="#e1ecdf" stroke="#4a7c59" stroke-width="2"/>
+            <text x="450" y="275" text-anchor="middle" font-size="11" font-weight="700" fill="#4a7c59">€</text>
+          </g>
+          <g class="split-right" style="transform-origin: 450px 270px;">
+            <circle cx="450" cy="270" r="11" fill="#f4ddd1" stroke="#c96442" stroke-width="2"/>
+            <text x="450" y="275" text-anchor="middle" font-size="11" font-weight="700" fill="#c96442">€</text>
+          </g>
+
+          <!-- Pulsazione Stripe -->
+          <circle cx="450" cy="220" r="55" fill="none" stroke="#4a6fa5" stroke-width="2" class="ping" opacity="0.4"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 4: 3 ATTORI ========== -->
+  <div class="slide" data-slide="4">
+    <div class="slide-inner">
+      <div class="eyebrow reveal reveal-1">I 3 attori</div>
+      <h2 class="slide-h2 reveal reveal-1">Chi fa cosa nel sistema.</h2>
+
+      <div class="grid-3">
+        <div class="stat-card reveal reveal-2">
+          <div class="icon">👤</div>
+          <div class="label">Cliente finale</div>
+          <div class="val">Paga e basta</div>
+          <div class="hint">Vede una sola transazione carta. Riceve fattura del partner. Non sa nulla del backstage Stripe.</div>
+        </div>
+        <div class="stat-card reveal reveal-3">
+          <div class="icon">🏨</div>
+          <div class="label">Partner (tu)</div>
+          <div class="val">Riceve diretto</div>
+          <div class="hint">Onboarding Stripe Express 5 minuti. Bonifico SEPA giornaliero sul tuo IBAN. Niente attese.</div>
+        </div>
+        <div class="stat-card reveal reveal-4">
+          <div class="icon">⚡</div>
+          <div class="label">TouraCore</div>
+          <div class="val">Solo fee</div>
+          <div class="hint">Riceve solo la commissione concordata. Non tocca mai i tuoi soldi.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 5: TARIFFE ========== -->
+  <div class="slide" data-slide="5">
+    <div class="slide-inner">
+      <div class="eyebrow reveal reveal-1">Le tariffe</div>
+      <h2 class="slide-h2 reveal reveal-1">4 modi di farti pagare. Scegli tu.</h2>
+      <p class="slide-body reveal reveal-2">Per ogni struttura puoi attivare una o più di queste tariffe.</p>
+
+      <div style="margin-top:24px;background:var(--card);border-radius:16px;border:1px solid var(--line);overflow:hidden;">
+        <div class="reveal reveal-3 tariff-row">
+          <div class="tariff-icon">🆓</div>
+          <div style="flex:1;">
+            <div style="font-weight:600;font-size:18px;">Cancellazione gratuita</div>
+            <div style="font-size:14px;color:var(--ink-mute);">Carta salvata. Addebito 7 giorni prima. Zero refund se cancella.</div>
+          </div>
+          <div class="ok" style="font-size:13px;">DEFAULT</div>
+        </div>
+        <div class="reveal reveal-3 tariff-row">
+          <div class="tariff-icon">💵</div>
+          <div style="flex:1;">
+            <div style="font-weight:600;font-size:18px;">Acconto 30%</div>
+            <div style="font-size:14px;color:var(--ink-mute);">30% subito + saldo 30 giorni prima. Cash flow garantito.</div>
+          </div>
+        </div>
+        <div class="reveal reveal-4 tariff-row">
+          <div class="tariff-icon">⚖️</div>
+          <div style="flex:1;">
+            <div style="font-weight:600;font-size:18px;">Parzialmente rimborsabile</div>
+            <div style="font-size:14px;color:var(--ink-mute);">50% subito. Rimborso parziale possibile.</div>
+          </div>
+        </div>
+        <div class="reveal reveal-4 tariff-row">
+          <div class="tariff-icon">🔒</div>
+          <div style="flex:1;">
+            <div style="font-weight:600;font-size:18px;">Non rimborsabile (-10%)</div>
+            <div style="font-size:14px;color:var(--ink-mute);">Pagamento totale subito. Niente rimborso. Tariffa scontata.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 6: TIMELINE ========== -->
+  <div class="slide" data-slide="6">
+    <div class="slide-inner">
+      <div class="eyebrow reveal reveal-1">Esempio realistico</div>
+      <h2 class="slide-h2 reveal reveal-1">Prenotazione 6 mesi prima.</h2>
+
+      <div class="diagram reveal reveal-2" style="max-width:1000px;">
+        <svg viewBox="0 0 1000 320" xmlns="http://www.w3.org/2000/svg">
+          <line x1="80" y1="170" x2="920" y2="170" stroke="#1a1a1a" stroke-width="2"/>
+
+          <!-- Step 1 -->
+          <g>
+            <circle cx="120" cy="170" r="16" fill="#c96442"/>
+            <text x="120" y="100" text-anchor="middle" font-size="13" font-weight="700">Mese 0</text>
+            <text x="120" y="120" text-anchor="middle" font-size="12" fill="#4a4a4a">Cliente prenota</text>
+            <text x="120" y="220" text-anchor="middle" font-size="11" fill="#8a8a8a">Carta salvata</text>
+            <text x="120" y="237" text-anchor="middle" font-size="13" fill="#4a7c59" font-weight="700">€0 addebitati</text>
+          </g>
+
+          <!-- Step 2 -->
+          <g>
+            <circle cx="400" cy="170" r="11" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+            <text x="400" y="100" text-anchor="middle" font-size="13" fill="#8a8a8a">Mese 1-5</text>
+            <text x="400" y="120" text-anchor="middle" font-size="12" fill="#8a8a8a">attesa</text>
+            <text x="400" y="220" text-anchor="middle" font-size="11" fill="#8a8a8a">Stripe Card Updater</text>
+            <text x="400" y="237" text-anchor="middle" font-size="11" fill="#8a8a8a">rinnova carte scadute</text>
+          </g>
+
+          <!-- Step 3 -->
+          <g>
+            <circle cx="700" cy="170" r="16" fill="#4a6fa5"/>
+            <circle cx="700" cy="170" r="16" fill="none" stroke="#4a6fa5" stroke-width="2" class="ping" opacity="0.5"/>
+            <text x="700" y="100" text-anchor="middle" font-size="13" font-weight="700">T-7gg</text>
+            <text x="700" y="120" text-anchor="middle" font-size="12" fill="#4a4a4a">Auto-addebito</text>
+            <text x="700" y="220" text-anchor="middle" font-size="11" fill="#8a8a8a">PaymentIntent</text>
+            <text x="700" y="237" text-anchor="middle" font-size="13" fill="#4a6fa5" font-weight="700">pre-autorizzato</text>
+          </g>
+
+          <!-- Step 4 -->
+          <g>
+            <circle cx="900" cy="170" r="16" fill="#4a7c59"/>
+            <text x="900" y="100" text-anchor="middle" font-size="13" font-weight="700">Check-in</text>
+            <text x="900" y="120" text-anchor="middle" font-size="12" fill="#4a4a4a">Capture</text>
+            <text x="900" y="220" text-anchor="middle" font-size="11" fill="#8a8a8a">Soldi splittati</text>
+            <text x="900" y="237" text-anchor="middle" font-size="13" fill="#4a7c59" font-weight="700">€900 al partner</text>
+          </g>
+        </svg>
+      </div>
+
+      <p class="slide-body reveal reveal-3" style="text-align:center;margin-top:20px;">
+        Cliente non vede addebito per 6 mesi. <span class="ok">Zero refund</span> se cancella prima.
+      </p>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 7: SE FALLISCE ========== -->
+  <div class="slide" data-slide="7">
+    <div class="slide-inner">
+      <div class="eyebrow reveal reveal-1">Se la carta fallisce</div>
+      <h2 class="slide-h2 reveal reveal-1">Sistema di recupero a 4 livelli.</h2>
+
+      <div style="margin-top:32px;">
+        <div class="reveal reveal-2" style="display:flex;align-items:flex-start;gap:24px;padding:18px;background:var(--card);border-radius:12px;margin-bottom:12px;border:1px solid var(--line);">
+          <div style="font-size:24px;font-weight:700;color:var(--accent);min-width:40px;">1</div>
+          <div>
+            <div style="font-weight:600;">Auto-retry × 4</div>
+            <div style="font-size:14px;color:var(--ink-mute);">Tentativo ripetuto ogni 24h fino a T-3 giorni dal check-in.</div>
+          </div>
+        </div>
+        <div class="reveal reveal-2" style="display:flex;align-items:flex-start;gap:24px;padding:18px;background:var(--card);border-radius:12px;margin-bottom:12px;border:1px solid var(--line);">
+          <div style="font-size:24px;font-weight:700;color:var(--accent);min-width:40px;">2</div>
+          <div>
+            <div style="font-weight:600;">Email cliente con magic link</div>
+            <div style="font-size:14px;color:var(--ink-mute);">Link sicuro per aggiornare carta tramite Stripe Customer Portal nativo.</div>
+          </div>
+        </div>
+        <div class="reveal reveal-3" style="display:flex;align-items:flex-start;gap:24px;padding:18px;background:var(--card);border-radius:12px;margin-bottom:12px;border:1px solid var(--line);">
+          <div style="font-size:24px;font-weight:700;color:var(--accent);min-width:40px;">3</div>
+          <div>
+            <div style="font-weight:600;">Card Updater Stripe</div>
+            <div style="font-size:14px;color:var(--ink-mute);">Carta scaduta ma rinnovata dalla banca → Stripe aggiorna token automatico.</div>
+          </div>
+        </div>
+        <div class="reveal reveal-4" style="display:flex;align-items:flex-start;gap:24px;padding:18px;background:var(--card);border-radius:12px;border:1px solid var(--line);">
+          <div style="font-size:24px;font-weight:700;color:var(--accent);min-width:40px;">4</div>
+          <div>
+            <div style="font-weight:600;">Auto-cancel + slot liberato</div>
+            <div style="font-size:14px;color:var(--ink-mute);">Se tutti i tentativi falliscono, prenotazione cancellata automaticamente. Camera/slot torna disponibile.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 8: PERCHÉ STRIPE ========== -->
+  <div class="slide" data-slide="8">
+    <div class="slide-inner">
+      <div class="eyebrow reveal reveal-1">Perché Stripe</div>
+      <h2 class="slide-h2 reveal reveal-1"><span class="accent">80% del lavoro</span> già fatto da Stripe.</h2>
+      <p class="slide-body reveal reveal-2">Niente reinvenzione della ruota. Strumenti enterprise, affidabili, testati su miliardi di transazioni.</p>
+
+      <div class="grid-3" style="margin-top:32px;">
+        <div class="stat-card reveal reveal-3"><div class="icon">🛡️</div><div class="val" style="font-size:18px;">PCI compliance</div><div class="hint">Stripe gestisce dati carta. Tu non vedi mai numeri carte.</div></div>
+        <div class="stat-card reveal reveal-3"><div class="icon">🌍</div><div class="val" style="font-size:18px;">3DS / SCA Italia</div><div class="hint">Autenticazione strong automatica per tutte le carte EU.</div></div>
+        <div class="stat-card reveal reveal-3"><div class="icon">🔄</div><div class="val" style="font-size:18px;">Card Updater</div><div class="hint">Carte scadute aggiornate auto via Visa/MC network.</div></div>
+        <div class="stat-card reveal reveal-4"><div class="icon">⚖️</div><div class="val" style="font-size:18px;">Refund + dispute</div><div class="hint">Gestione chargeback dalla dashboard Stripe nativa.</div></div>
+        <div class="stat-card reveal reveal-4"><div class="icon">🏦</div><div class="val" style="font-size:18px;">Payout SEPA daily</div><div class="hint">Bonifico al tuo IBAN ogni giorno. Niente attese mensili.</div></div>
+        <div class="stat-card reveal reveal-4"><div class="icon">💳</div><div class="val" style="font-size:18px;">Customer Portal</div><div class="hint">Cliente aggiorna carta nella UI nativa Stripe.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 9: ONBOARDING ========== -->
+  <div class="slide" data-slide="9">
+    <div class="slide-inner">
+      <div class="eyebrow reveal reveal-1">Onboarding</div>
+      <h2 class="slide-h2 reveal reveal-1">Per partire ti servono <span class="accent">5 minuti</span>.</h2>
+
+      <div style="margin-top:32px;">
+        <div class="reveal reveal-2" style="display:flex;align-items:center;gap:24px;padding:22px;background:var(--card);border-radius:12px;margin-bottom:14px;border:1px solid var(--line);">
+          <div style="font-size:36px;">1️⃣</div>
+          <div>
+            <div style="font-weight:600;font-size:18px;">Registrazione TouraCore</div>
+            <div style="font-size:14px;color:var(--ink-mute);">Crea il tuo account come partner. Inserisci nome struttura.</div>
+          </div>
+        </div>
+        <div class="reveal reveal-3" style="display:flex;align-items:center;gap:24px;padding:22px;background:var(--card);border-radius:12px;margin-bottom:14px;border:1px solid var(--line);">
+          <div style="font-size:36px;">2️⃣</div>
+          <div>
+            <div style="font-weight:600;font-size:18px;">Collega Stripe (5 min)</div>
+            <div style="font-size:14px;color:var(--ink-mute);">Impostazioni → Pagamenti → Collega Stripe. Inserisci IBAN + documento.</div>
+          </div>
+        </div>
+        <div class="reveal reveal-4" style="display:flex;align-items:center;gap:24px;padding:22px;background:var(--card);border-radius:12px;margin-bottom:14px;border:1px solid var(--line);">
+          <div style="font-size:36px;">3️⃣</div>
+          <div>
+            <div style="font-weight:600;font-size:18px;">Configura tariffe</div>
+            <div style="font-size:14px;color:var(--ink-mute);">Default <em>Cancellazione gratuita</em> auto-attivo. Aggiungi altre se vuoi.</div>
+          </div>
+        </div>
+        <div class="reveal reveal-5" style="display:flex;align-items:center;gap:24px;padding:22px;background:var(--success-soft);border-radius:12px;border:1px solid var(--success);">
+          <div style="font-size:36px;">✅</div>
+          <div>
+            <div style="font-weight:600;font-size:18px;color:var(--success);">Pubblica e ricevi prenotazioni</div>
+            <div style="font-size:14px;color:var(--ink);">Soldi via SEPA sul tuo conto. TouraCore preleva solo la commissione.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 10: FINALE ========== -->
+  <div class="slide final" data-slide="10">
+    <div class="slide-inner" style="text-align:center;">
+      <div class="eyebrow reveal reveal-1">Riassumendo</div>
+      <h1 class="slide-title reveal reveal-1" style="font-size:clamp(48px,7vw,84px);">
+        Tu incassi.<br>
+        <span class="accent">Noi mai.</span>
+      </h1>
+      <p class="slide-body reveal reveal-2" style="font-size:22px;margin-top:32px;color:#e8e4d8;max-width:700px;margin-left:auto;margin-right:auto;">
+        TouraCore è la prima piattaforma turistica italiana che usa Stripe Connect Direct Charge end-to-end. I tuoi soldi sono tuoi dal secondo zero.
+      </p>
+      <div class="reveal reveal-3" style="margin-top:60px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+        <div style="padding:16px 32px;background:#c96442;color:white;border-radius:12px;font-weight:600;">📧 contatti@touracore.it</div>
+        <div style="padding:16px 32px;background:transparent;color:#e8e4d8;border:1px solid #4a4a4a;border-radius:12px;">🌐 touracore.it</div>
+      </div>
+      <p class="reveal reveal-4" style="margin-top:80px;font-size:13px;color:#8a8a8a;letter-spacing:0.1em;text-transform:uppercase;">
+        Grazie per l'attenzione.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<!-- INDEX MODAL -->
+<div class="index-modal" id="indexModal">
+  <div class="index-panel">
+    <h3>Indice slide</h3>
+    <ul class="index-list" id="indexList"></ul>
+    <p style="margin-top:20px;font-size:12px;color:var(--ink-mute);">
+      Tasto <code>I</code> per aprire/chiudere · <code>ESC</code> per chiudere
+    </p>
+  </div>
+</div>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <button id="btnIndex" title="Indice slide">☰</button>
+  <button id="btnPrev" title="Slide precedente">←</button>
+  <button id="btnPlay" class="primary"><span id="playIcon">▶</span> <span id="playLabel">Play</span></button>
+  <button id="btnNext" title="Slide successiva">→</button>
+  <span class="progress" id="progressLabel">1 / 11</span>
+  <button id="btnMute" title="Audio on/off">🔊</button>
+  <button id="btnFullscreen" title="Fullscreen">⛶</button>
+</div>
+
+<div class="slide-num" id="slideNum">01 / 11</div>
+
+<!-- AUDIO POOL: 11 file MP3 OpenAI TTS pre-generati -->
+<audio id="audioPlayer" preload="auto"></audio>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const SLIDES_META = [
+  { title: 'Cover', file: '00-cover.mp3', duration: '20s' },
+  { title: 'Il problema', file: '01-problema.mp3', duration: '30s' },
+  { title: 'Big number 0€', file: '02-big-number.mp3', duration: '20s' },
+  { title: 'Flusso animato', file: '03-flusso.mp3', duration: '35s' },
+  { title: 'I 3 attori', file: '04-attori.mp3', duration: '25s' },
+  { title: 'Le 4 tariffe', file: '05-tariffe.mp3', duration: '40s' },
+  { title: 'Timeline 6 mesi', file: '06-timeline.mp3', duration: '40s' },
+  { title: 'Se la carta fallisce', file: '07-fail.mp3', duration: '40s' },
+  { title: 'Perché Stripe', file: '08-stripe.mp3', duration: '30s' },
+  { title: 'Onboarding 5 min', file: '09-onboarding.mp3', duration: '30s' },
+  { title: 'Finale', file: '10-finale.mp3', duration: '25s' },
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let currentSlide = 0;
+let isPlaying = false;
+let isMuted = false;
+const audio = document.getElementById('audioPlayer');
+const totalSlides = SLIDES_META.length;
+
+const slides = document.querySelectorAll('.slide');
+const progressBar = document.getElementById('progressBar');
+const slideNumEl = document.getElementById('slideNum');
+const progressLabel = document.getElementById('progressLabel');
+const playIcon = document.getElementById('playIcon');
+const playLabel = document.getElementById('playLabel');
+const btnMute = document.getElementById('btnMute');
+const indexModal = document.getElementById('indexModal');
+const indexList = document.getElementById('indexList');
+
+// ============================================================
+// INDEX MODAL
+// ============================================================
+function buildIndex() {
+  indexList.innerHTML = SLIDES_META.map((s, i) => `
+    <li data-idx="${i}" class="${i === currentSlide ? 'current' : ''}">
+      <span class="num">${String(i + 1).padStart(2, '0')}</span>
+      <span class="title">${s.title}</span>
+      <span class="duration">${s.duration}</span>
+    </li>
+  `).join('');
+  indexList.querySelectorAll('li').forEach(li => {
+    li.addEventListener('click', () => {
+      goTo(+li.dataset.idx);
+      closeIndex();
+    });
+  });
+}
+
+function openIndex() {
+  buildIndex();
+  indexModal.classList.add('open');
+}
+function closeIndex() {
+  indexModal.classList.remove('open');
+}
+
+// ============================================================
+// AUDIO PLAYBACK (pre-generated OpenAI TTS files)
+// ============================================================
+function playAudio(idx) {
+  if (isMuted) return;
+  const file = SLIDES_META[idx]?.file;
+  if (!file) return;
+  audio.src = `audio/${file}`;
+  audio.play().catch((err) => {
+    console.warn('Audio play blocked or missing:', err);
+    // Audio file probabilmente non ancora generato — silent fail
+  });
+}
+
+audio.addEventListener('ended', () => {
+  if (isPlaying && currentSlide < totalSlides - 1) {
+    setTimeout(() => goTo(currentSlide + 1), 1000);
+  } else if (isPlaying && currentSlide === totalSlides - 1) {
+    togglePlay();
+  }
+});
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function goTo(idx) {
+  if (idx < 0 || idx >= totalSlides) return;
+  currentSlide = idx;
+  slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+
+  const pct = ((idx + 1) / totalSlides) * 100;
+  progressBar.style.width = pct + '%';
+  slideNumEl.textContent = String(idx + 1).padStart(2, '0') + ' / ' + String(totalSlides).padStart(2, '0');
+  progressLabel.textContent = (idx + 1) + ' / ' + totalSlides;
+
+  audio.pause();
+  audio.currentTime = 0;
+  if (isPlaying) playAudio(idx);
+}
+
+function togglePlay() {
+  isPlaying = !isPlaying;
+  playIcon.textContent = isPlaying ? '⏸' : '▶';
+  playLabel.textContent = isPlaying ? 'Pausa' : 'Play';
+  document.body.classList.toggle('playing', isPlaying);
+  if (isPlaying) playAudio(currentSlide);
+  else audio.pause();
+}
+
+function toggleMute() {
+  isMuted = !isMuted;
+  btnMute.textContent = isMuted ? '🔇' : '🔊';
+  audio.muted = isMuted;
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+
+// ============================================================
+// EVENTS
+// ============================================================
+document.getElementById('btnIndex').addEventListener('click', openIndex);
+document.getElementById('btnPrev').addEventListener('click', () => goTo(currentSlide - 1));
+document.getElementById('btnNext').addEventListener('click', () => goTo(currentSlide + 1));
+document.getElementById('btnPlay').addEventListener('click', togglePlay);
+document.getElementById('btnMute').addEventListener('click', toggleMute);
+document.getElementById('btnFullscreen').addEventListener('click', toggleFullscreen);
+
+indexModal.addEventListener('click', (e) => {
+  if (e.target === indexModal) closeIndex();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeIndex();
+  else if (e.key === 'i' || e.key === 'I') {
+    indexModal.classList.contains('open') ? closeIndex() : openIndex();
+  }
+  else if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); goTo(currentSlide + 1); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(currentSlide - 1); }
+  else if (e.key === 'p' || e.key === 'P') { togglePlay(); }
+  else if (e.key === 'f' || e.key === 'F') { toggleFullscreen(); }
+  else if (e.key === 'm' || e.key === 'M') { toggleMute(); }
+  else if (e.key === 'Home') { goTo(0); }
+  else if (e.key === 'End') { goTo(totalSlides - 1); }
+});
+
+// Touch swipe
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 50) goTo(currentSlide + (dx < 0 ? 1 : -1));
+});
+
+// Init
+goTo(0);
+window.addEventListener('beforeunload', () => audio.pause());
+</script>
+
+</body>
+</html>
