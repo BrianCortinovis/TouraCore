@@ -5,10 +5,10 @@
   "current_step": null,
   "steps": {
     "S001": {
-      "status": "pending",
+      "status": "done",
       "title": "locks/actions.ts tenant ownership check",
       "sprint": 1,
-      "commit": null
+      "commit": "694dce9"
     },
     "S002": {
       "status": "pending",

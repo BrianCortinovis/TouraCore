@@ -12,3 +12,5 @@ Format: `YYYY-MM-DD HH:MM:SS UTC | STEP | event | details`
 2026-04-26 14:30:00 UTC | INIT | STATE.json inizializzato
 ```
 2026-04-26 14:19:59 UTC | S010 | done | commit=ffb3903 | fail-closed pattern applied
+2026-04-26 14:20:55 UTC | S001 | in_progress | started
+2026-04-26 14:22:24 UTC | S001 | done | commit=694dce9 | tenant ownership applied to 4 actions
