@@ -34,6 +34,10 @@ export async function connectStripeTenantAction(formData: FormData): Promise<voi
     .maybeSingle()
 
   if (!tenant) redirect(`/${tenantSlug}/settings/payments?error=tenant_not_found`)
+  // Membership check: l'utente deve appartenere a questo tenant (o essere platform admin).
+  if (!ctx.isPlatformAdmin && !ctx.tenantIds.includes((tenant as { id: string }).id)) {
+    redirect(`/${tenantSlug}/settings/payments?error=forbidden`)
+  }
   const t = tenant as { id: string; slug: string; name: string; stripe_connect_account_id: string | null; billing_email: string | null }
 
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -104,6 +108,9 @@ export async function refreshStripeStatusAction(formData: FormData): Promise<voi
   if (!t?.stripe_connect_account_id) {
     redirect(`/${tenantSlug}/settings/payments?error=no_account`)
   }
+  if (!ctx.isPlatformAdmin && !ctx.tenantIds.includes(t!.id)) {
+    redirect(`/${tenantSlug}/settings/payments?error=forbidden`)
+  }
 
   const key = process.env.STRIPE_SECRET_KEY
   if (!key) redirect(`/${tenantSlug}/settings/payments?error=stripe_not_configured`)
@@ -151,6 +158,9 @@ export async function openStripeDashboardAction(formData: FormData): Promise<voi
   const t = tenant as { id: string; stripe_connect_account_id: string | null } | null
   if (!t?.stripe_connect_account_id) {
     redirect(`/${tenantSlug}/settings/payments?error=no_account`)
+  }
+  if (!ctx.isPlatformAdmin && !ctx.tenantIds.includes(t!.id)) {
+    redirect(`/${tenantSlug}/settings/payments?error=forbidden`)
   }
 
   const loginRes = await stripePOST(`/accounts/${t!.stripe_connect_account_id}/login_links`, {})
