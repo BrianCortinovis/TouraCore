@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TouraCore — Audit Sicurezza & Funzionalità · 2026-04-26</title>
+<style>
+  :root{
+    --bg:#faf6f0;
+    --surface:#fff;
+    --ink:#2a1f17;
+    --ink-soft:#5b4a3f;
+    --accent:#c45a3a;
+    --accent-soft:#e8a98e;
+    --border:#e8dccc;
+    --crit:#b91c1c;
+    --crit-bg:#fef2f2;
+    --high:#c2410c;
+    --high-bg:#fff7ed;
+    --med:#a16207;
+    --med-bg:#fefce8;
+    --low:#0369a1;
+    --low-bg:#f0f9ff;
+    --info:#525252;
+    --info-bg:#fafafa;
+    --good:#15803d;
+    --good-bg:#f0fdf4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.6;
+    padding:0;
+  }
+  header{
+    background:linear-gradient(135deg,#2a1f17 0%,#1a120c 100%);
+    color:#faf6f0;
+    padding:48px 32px;
+    border-bottom:4px solid var(--accent);
+  }
+  header h1{font-size:2.5rem;font-weight:700;letter-spacing:-0.02em}
+  header .meta{color:#d4c5b3;margin-top:8px;font-size:0.95rem}
+  header .scope{margin-top:24px;display:flex;gap:24px;flex-wrap:wrap}
+  header .scope div{
+    background:rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.1);
+    padding:8px 16px;
+    border-radius:6px;
+    font-size:0.9rem;
+  }
+  main{max-width:1200px;margin:0 auto;padding:32px}
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+    gap:16px;
+    margin-bottom:48px;
+  }
+  .stat{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:20px;
+    text-align:center;
+  }
+  .stat .num{font-size:2.5rem;font-weight:700;line-height:1}
+  .stat .lbl{color:var(--ink-soft);font-size:0.85rem;margin-top:4px;text-transform:uppercase;letter-spacing:0.05em}
+  .stat.crit .num{color:var(--crit)}
+  .stat.high .num{color:var(--high)}
+  .stat.med .num{color:var(--med)}
+  .stat.low .num{color:var(--low)}
+  h2{
+    font-size:1.6rem;
+    margin:48px 0 16px;
+    padding-bottom:12px;
+    border-bottom:2px solid var(--accent);
+    color:var(--ink);
+  }
+  h3{
+    font-size:1.15rem;
+    margin:24px 0 12px;
+    color:var(--ink);
+  }
+  section.area{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:24px 28px;
+    margin-bottom:24px;
+  }
+  .area-head{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    margin-bottom:16px;
+  }
+  .area-head .icon{font-size:1.8rem}
+  .finding{
+    border-left:4px solid var(--border);
+    padding:14px 16px;
+    margin:12px 0;
+    background:var(--info-bg);
+    border-radius:0 6px 6px 0;
+  }
+  .finding.crit{border-color:var(--crit);background:var(--crit-bg)}
+  .finding.high{border-color:var(--high);background:var(--high-bg)}
+  .finding.med{border-color:var(--med);background:var(--med-bg)}
+  .finding.low{border-color:var(--low);background:var(--low-bg)}
+  .finding .head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  .badge{
+    display:inline-block;
+    padding:2px 10px;
+    border-radius:4px;
+    font-size:0.72rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+  }
+  .badge.crit{background:var(--crit);color:#fff}
+  .badge.high{background:var(--high);color:#fff}
+  .badge.med{background:var(--med);color:#fff}
+  .badge.low{background:var(--low);color:#fff}
+  .finding .title{font-weight:600;font-size:0.98rem}
+  .finding .body{font-size:0.92rem;color:var(--ink-soft);margin-top:6px}
+  .finding .body strong{color:var(--ink)}
+  .finding code,.finding a code{
+    font-family:"SF Mono",Menlo,Consolas,monospace;
+    font-size:0.82rem;
+    background:rgba(0,0,0,0.05);
+    padding:1px 6px;
+    border-radius:3px;
+    color:var(--accent);
+  }
+  .finding a{color:var(--accent);text-decoration:none;border-bottom:1px dashed var(--accent-soft)}
+  .finding a:hover{border-bottom-style:solid}
+  .finding .fix{
+    margin-top:8px;
+    padding:8px 12px;
+    background:rgba(255,255,255,0.6);
+    border-radius:4px;
+    font-size:0.88rem;
+  }
+  .finding .fix strong{color:var(--good)}
+  pre{
+    background:#1a120c;
+    color:#faf6f0;
+    padding:12px 16px;
+    border-radius:6px;
+    overflow-x:auto;
+    font-family:"SF Mono",Menlo,Consolas,monospace;
+    font-size:0.82rem;
+    margin:8px 0;
+    line-height:1.5;
+  }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin:16px 0;
+    font-size:0.9rem;
+  }
+  th,td{
+    padding:10px 12px;
+    text-align:left;
+    border-bottom:1px solid var(--border);
+  }
+  th{
+    background:var(--info-bg);
+    font-weight:600;
+    text-transform:uppercase;
+    font-size:0.75rem;
+    letter-spacing:0.05em;
+    color:var(--ink-soft);
+  }
+  tr:hover td{background:var(--info-bg)}
+  td.sev-crit{color:var(--crit);font-weight:700}
+  td.sev-high{color:var(--high);font-weight:700}
+  td.sev-med{color:var(--med);font-weight:700}
+  td.sev-low{color:var(--low);font-weight:700}
+  .toc{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:20px 24px;
+    margin-bottom:32px;
+  }
+  .toc h3{margin-top:0}
+  .toc ol{padding-left:20px;color:var(--ink-soft)}
+  .toc a{color:var(--accent);text-decoration:none}
+  .toc a:hover{text-decoration:underline}
+  .priority-box{
+    background:linear-gradient(135deg,var(--accent) 0%,#a04528 100%);
+    color:#fff;
+    padding:24px 28px;
+    border-radius:8px;
+    margin:32px 0;
+  }
+  .priority-box h2{
+    color:#fff;
+    border-color:rgba(255,255,255,0.3);
+    margin-top:0;
+  }
+  .priority-box ol{padding-left:24px;margin-top:12px}
+  .priority-box li{margin:8px 0}
+  .priority-box code{
+    background:rgba(0,0,0,0.2);
+    color:#fff;
+    padding:1px 6px;
+    border-radius:3px;
+    font-size:0.85rem;
+  }
+  footer{
+    text-align:center;
+    padding:32px;
+    color:var(--ink-soft);
+    font-size:0.85rem;
+    border-top:1px solid var(--border);
+    margin-top:48px;
+  }
+  details{
+    margin:12px 0;
+    border:1px solid var(--border);
+    border-radius:6px;
+    background:var(--surface);
+  }
+  summary{
+    padding:12px 16px;
+    cursor:pointer;
+    font-weight:600;
+    font-size:0.95rem;
+    list-style:none;
+  }
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"▸ ";color:var(--accent);transition:transform 0.2s}
+  details[open] summary::before{content:"▾ "}
+  details > div{padding:0 16px 16px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🔍 TouraCore — Audit Sicurezza & Funzionalità</h1>
+  <div class="meta">2026-04-26 · scope: monorepo completo (4 verticali, 150 migration, packages core, billing Stripe Connect LIVE)</div>
+  <div class="scope">
+    <div>📦 1015 file TS/TSX</div>
+    <div>🗄️ 150 migration Supabase</div>
+    <div>💳 Stripe Connect Direct Charge × 4 verticali</div>
+    <div>🌐 Vercel prod LIVE</div>
+  </div>
+</header>
+
+<main>
+
+<div class="stats">
+  <div class="stat crit">
+    <div class="num">16</div>
+    <div class="lbl">🔴 Critical</div>
+  </div>
+  <div class="stat high">
+    <div class="num">29</div>
+    <div class="lbl">🟠 High</div>
+  </div>
+  <div class="stat med">
+    <div class="num">38</div>
+    <div class="lbl">🟡 Medium</div>
+  </div>
+  <div class="stat low">
+    <div class="num">23</div>
+    <div class="lbl">🔵 Low/Info</div>
+  </div>
+  <div class="stat">
+    <div class="num">~106</div>
+    <div class="lbl">finding totali</div>
+  </div>
+</div>
+
+<div class="toc">
+  <h3>📑 Indice</h3>
+  <ol>
+    <li><a href="#priority">⚡ Priorità immediate (fix oggi)</a></li>
+    <li><a href="#security">🛡️ Security — OWASP & secrets</a></li>
+    <li><a href="#billing">💳 Billing & Stripe Connect</a></li>
+    <li><a href="#rls">🗄️ RLS & tenant isolation</a></li>
+    <li><a href="#frontend">⚛️ Frontend, performance & UX</a></li>
+    <li><a href="#good">✅ Cosa funziona bene</a></li>
+    <li><a href="#roadmap">🛣️ Roadmap fix consigliata</a></li>
+  </ol>
+</div>
+
+<!-- ============ PRIORITÀ ============ -->
+<div class="priority-box" id="priority">
+  <h2>⚡ Top 10 — Fix oggi (alto impatto, basso effort)</h2>
+  <ol>
+    <li><strong>Bug devastante 5 min:</strong> <code>deleteRatePlan</code> cancella tabella sbagliata <code>rate_plans</code> invece di <code>payment_rate_plans</code> → distrugge meal plan/channel mappings hospitality. <a href="../../packages/core/billing/src/rate-plans.ts#L142">packages/core/billing/src/rate-plans.ts:142</a></li>
+    <li><strong>Revenue leak:</strong> bundle checkout multi-vertical accetta <code>unitPriceCents</code> dal client → cliente paga €0.01 una camera da €500. <a href="../../apps/web/src/app/api/v1/bundles/route.ts#L23">apps/web/src/app/api/v1/bundles/route.ts:23</a></li>
+    <li><strong>Compliance:</strong> bundle checkout NON usa Stripe Connect → soldi finiscono nel conto TouraCore (viola "TouraCore mai banca"). <a href="../../apps/web/src/app/api/v1/bundles/route.ts#L177">apps/web/src/app/api/v1/bundles/route.ts:177</a></li>
+    <li><strong>Tourist tax bypass:</strong> <code>amountCents</code> dal client, nessun ricalcolo server. <a href="../../apps/web/src/app/checkin/[token]/actions.ts#L61">apps/web/src/app/checkin/[token]/actions.ts:61</a></li>
+    <li><strong>Crypto debole:</strong> API key + smart-lock PIN generati con <code>Math.random()</code> (predicibile). <a href="../../apps/web/src/app/api/cron/lock-pins/route.ts#L14">apps/web/src/app/api/cron/lock-pins/route.ts:14</a></li>
+    <li><strong>Secrets a anon:</strong> <code>seo_settings</code> espone <code>ga4_api_secret</code>, <code>search_console_oauth_token</code> via REST anon. <a href="../../supabase/migrations/00146_seo_analytics_admin.sql#L49">migrations/00146:49</a></li>
+    <li><strong>Privilege escalation:</strong> qualsiasi membro tenant può promuoversi <code>role='owner'</code>. <a href="../../supabase/migrations/00004_core_memberships.sql#L21">migrations/00004:21</a></li>
+    <li><strong>Cron fail-open:</strong> <code>notifications-dispatch</code> fa pass-through se <code>CRON_SECRET</code> unset. <a href="../../apps/web/src/app/api/cron/notifications-dispatch/route.ts#L11">apps/web/src/app/api/cron/notifications-dispatch/route.ts:11</a></li>
+    <li><strong>Magic link secret fallback:</strong> reuse <code>CRON_SECRET</code> per HMAC magic link → leak link = leak cron. <a href="../../packages/core/billing/src/magic-link.ts#L17">packages/core/billing/src/magic-link.ts:17</a></li>
+    <li><strong>Hardcoded prices:</strong> <code>unitPriceCents = 12000 // TODO</code> in unified booking widget. <a href="../../apps/web/src/app/book/multi/[slug]/unified-booking-client.tsx#L300">apps/web/src/app/book/multi/[slug]/unified-booking-client.tsx:300</a></li>
+  </ol>
+</div>
+
+<!-- ============ SECURITY ============ -->
+<section class="area" id="security">
+  <div class="area-head">
+    <div class="icon">🛡️</div>
+    <div>
+      <h2 style="margin:0;border:none;padding:0">Security — OWASP & secrets</h2>
+      <div style="color:var(--ink-soft);font-size:0.9rem;margin-top:4px">5 critical · 10 high · 12 medium · 8 low/info</div>
+    </div>
+  </div>
+
+  <h3>🔴 Critical</h3>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">C1 — Bundle checkout accetta prezzi client-controllati</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/v1/bundles/route.ts#L23">apps/web/src/app/api/v1/bundles/route.ts:23-31, 106, 187</a><br>
+      Endpoint <code>POST /api/v1/bundles</code> totalmente unauthenticated, accetta <code>unitPriceCents</code> + <code>vatRate</code> dal body e li passa verbatim a Stripe Checkout. <strong>PoC:</strong> <code>curl -d '{"unitPriceCents":1,...}'</code> → camera €500 pagata €0.01.
+      <div class="fix"><strong>Fix:</strong> ricalcolare server-side da <code>entityId</code>+<code>config</code> via pricing engine. Mai trustare amount client.</div>
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">C2 — Tourist tax PaymentIntent: amount client-controlled</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/checkin/[token]/actions.ts#L61">apps/web/src/app/checkin/[token]/actions.ts:61-94</a><br>
+      <code>createTouristTaxPaymentIntentAction</code> legge <code>amountCents</code> dal client senza ricalcolo da <code>tourist_tax_rates</code>.
+      <div class="fix"><strong>Fix:</strong> ricalcolare da <code>tourist_tax_rates × adults+children × nights</code> per <code>reservation_id</code>.</div>
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">C3 — Bundle checkout bypassa Stripe Connect (soldi a TouraCore)</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/v1/bundles/route.ts#L177">apps/web/src/app/api/v1/bundles/route.ts:177-204</a><br>
+      Crea Checkout senza <code>transfer_data</code>/<code>application_fee_amount</code>. Tutti i fondi finiscono nell'account platform → viola regola "TouraCore mai banca".
+      <div class="fix"><strong>Fix:</strong> usare <code>buildConnectChargeParamsSafe</code> come fa <code>/api/public/booking/checkout/route.ts</code>.</div>
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">C4 — API key generate con Math.random() (predicibile)</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/public/booking/_shared.ts#L111">apps/web/src/app/api/public/booking/_shared.ts:111</a><br>
+      <code>generateApiKey</code> usa <code>Math.random()</code> per prefix + secret 32-char. PRNG V8 non crypto-safe → reconstruct state.
+      <div class="fix"><strong>Fix:</strong> <code>crypto.randomBytes(16).toString('hex')</code>.</div>
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">C5 — Smart-lock PIN porte fisiche con Math.random()</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/cron/lock-pins/route.ts#L14">apps/web/src/app/api/cron/lock-pins/route.ts:14</a> + <a href="../../apps/web/src/lib/lock-providers.ts#L27">apps/web/src/lib/lock-providers.ts:27</a><br>
+      PIN 6-cifre per smart lock fisici generati con <code>Math.floor(Math.random()*10)</code>. Spazio 10⁶ + biased.
+      <div class="fix"><strong>Fix:</strong> <code>crypto.randomInt(100000, 1000000)</code>.</div>
+    </div>
+  </div>
+
+  <h3>🟠 High</h3>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">H1 — Cron secret fail-open con fallback <code>?? ''</code></span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/webhooks/stripe/route.ts#L189">webhooks/stripe/route.ts:189</a> chiama fulfill con <code>process.env.CRON_SECRET ?? ''</code>. Se unset → <code>'' === ''</code> = bypass auth.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">H2 — <code>notifications-dispatch</code> cron fail-OPEN</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/cron/notifications-dispatch/route.ts#L11">cron/notifications-dispatch/route.ts:11</a> — <code>if (cronSecret && ...)</code> permette flush queue email/SMS a chiunque se env unset.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">H3 — CSRF module esiste ma mai usato</span></div>
+    <div class="body">
+      <a href="../../packages/core/security/src/csrf-server.ts">packages/core/security/src/csrf-server.ts</a><br>
+      <code>assertCsrf</code>/<code>verifyCsrf</code> definiti, 0 chiamate. Cookie settato in middleware ma mai verificato. Endpoint <code>/api/user/delete</code>, <code>/api/cookie-consent</code>, <code>/api/restaurant/order-items</code> senza anti-CSRF.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">H4 — CORS riflette literal 'null' come Access-Control-Allow-Origin</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/public/restaurant/_shared.ts#L13">api/public/restaurant/_shared.ts:13</a><br>
+      Quando origin non whitelisted setta <code>Access-Control-Allow-Origin: 'null'</code>. iframe sandboxed/data: hanno origin <code>null</code> → CORS bypass.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">H5 — <code>/api/public/*</code> senza API key + rate limit lasco</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/public/booking/availability/route.ts">api/public/booking/*</a><br>
+      <code>validatePublicKey</code> definito in <code>_shared.ts</code> ma mai chiamato. Tutti gli endpoint pubblici accettano qualsiasi caller. Combinato con C1+C2 = abuse high-volume.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">H6 — Stored XSS via <code>seo_settings.custom_head_tags</code></span></div>
+    <div class="body">
+      <a href="../../apps/web/src/components/seo/SeoVerification.tsx#L21">SeoVerification.tsx:21</a><br>
+      Renderizza <code>custom_head_tags</code> da DB via <code>dangerouslySetInnerHTML</code> site-wide. CSP <code>script-src 'unsafe-inline'</code> permette esecuzione.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">H7 — CSP allow <code>'unsafe-inline'</code> in produzione</span></div>
+    <div class="body">
+      <a href="../../packages/core/security/src/headers.ts#L14">packages/core/security/src/headers.ts:14</a> — <code>script-src 'self' 'unsafe-inline'</code> anche prod. Defeats XSS mitigation. Next 14+ supporta nonce.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">H8 — Rate limiter in-memory (Map) — non multi-instance safe</span></div>
+    <div class="body">
+      <a href="../../packages/core/security/src/rate-limiter.ts#L8">rate-limiter.ts:8</a> — <code>new Map()</code> process-local. Vercel lambda multi-instance → attaccante ruota cold start → bypass.
+      <div class="fix"><strong>Fix:</strong> Vercel KV / Upstash Redis.</div>
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">H9 — Magic link secret fallback CRON_SECRET</span></div>
+    <div class="body">
+      <a href="../../packages/core/billing/src/magic-link.ts#L17">magic-link.ts:17</a> + <a href="../../apps/web/src/app/r/[token]/update-card/route.ts#L71">update-card/route.ts:71</a><br>
+      Se <code>CRON_SECRET</code> leakato → forge magic link arbitrario → update card altrui.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">H10 — R2 upload accetta image/svg+xml</span></div>
+    <div class="body">
+      <a href="../../packages/core/media/src/types.ts#L9">media/src/types.ts:9</a><br>
+      SVG può contenere <code>&lt;script&gt;</code>. Servito da R2 con MIME <code>image/svg+xml</code> e nessun sanitize.
+    </div>
+  </div>
+
+  <h3>🟡 Medium</h3>
+
+  <details>
+    <summary>M1-M12 (12 finding) — espandi</summary>
+    <div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">M1 — data-retention cron usa table_name DB-controllato</span></div><div class="body">Reads <code>policy.table_name</code> e fa <code>.from(table).delete()</code>. Se RLS leak permette insert in <code>data_retention_policy</code> → wipe arbitrario. <a href="../../apps/web/src/app/api/cron/data-retention/route.ts#L50">cron/data-retention:50</a></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">M2 — iCal token weak (length ≥16, no expiry, no rotation)</span></div><div class="body"><a href="../../apps/web/src/app/api/v1/ical/[token]/route.ts#L14">ical/[token]/route.ts:14</a></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">M3 — Open redirect via <code>next</code> param login</span></div><div class="body">Defense affidata a <code>sanitizeNextPath</code>. Verificare reject <code>//</code>, <code>\\</code>. <a href="../../apps/web/src/app/api/auth/login/route.ts#L20">auth/login:20</a></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">M4 — Restaurant deposit successUrl validato solo per origin</span></div><div class="body"><a href="../../apps/web/src/app/api/public/restaurant/checkout/route.ts#L17">restaurant/checkout:17</a></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">M5 — Idempotency-Key validation inconsistente tra endpoint</span></div><div class="body">Solo restaurant/reserve enforce length 8-200. Altri (booking/create, partner, gift-card) no.</div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">M6 — Octorate webhook compare key con <code>===</code> (timing attack)</span></div><div class="body"><a href="../../apps/web/src/app/api/webhooks/octorate/route.ts#L61">octorate:61</a> usa <code>!==</code> invece di <code>timingSafeEqual</code>.</div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">M7 — SSRF potenziale via iCal feed URL</span></div><div class="body"><code>fetch(feed.url)</code> con URL controllato tenant-admin. AWS metadata 169.254.169.254 reachable se Node self-hosted. <a href="../../apps/web/src/app/api/cron/ical-sync/route.ts#L70">ical-sync:70</a></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">M8 — AI prompt injection via review/text</span></div><div class="body">Input utente interpolato raw in prompt Anthropic senza delimitatori. <a href="../../apps/web/src/app/api/v1/ai/suggest-reply/route.ts#L21">ai/suggest-reply:21</a></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">M9 — Encryption key fallback su SUPABASE_SERVICE_ROLE_KEY</span></div><div class="body"><a href="../../apps/web/src/lib/integration-crypto.ts#L5">integration-crypto.ts:5</a> derive AES key da SR JWT. Compromise SR = compromise vendor secrets.</div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">M10 — Voucher JWT secret fallback derived</span></div><div class="body"><a href="../../packages/core/vouchers/src/server/jwt.ts#L14">vouchers/jwt.ts:14</a> stesso pattern.</div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">M11 — Register intent_scope client-trustato</span></div><div class="body"><a href="../../apps/web/src/app/(auth)/register/page.tsx#L71">(auth)/register:71</a> setta user_metadata.intent_scope client-side.</div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">M12 — Document scan upload trusts MIME (no magic-byte)</span></div><div class="body"><a href="../../apps/web/src/app/checkin/[token]/actions.ts#L25">checkin/actions:25</a> polyglot bypass.</div></div>
+    </div>
+  </details>
+
+  <details>
+    <summary>L1-L8 + Info (low/informational, espandi)</summary>
+    <div>
+      <div class="finding low"><div class="head"><span class="badge low">LOW</span><span class="title">L1 — IP loggato su <code>reservation_bundles</code> senza retention policy</span></div></div>
+      <div class="finding low"><div class="head"><span class="badge low">LOW</span><span class="title">L2 — Content-Disposition reflette <code>entitySlug</code> senza escape</span></div><div class="body"><a href="../../apps/web/src/app/api/allergens-qr/[entitySlug]/route.ts#L44">allergens-qr/[entitySlug]:44</a></div></div>
+      <div class="finding low"><div class="head"><span class="badge low">LOW</span><span class="title">L3 — CSP <code>img-src https:</code> troppo permissivo (exfil pixel)</span></div></div>
+      <div class="finding low"><div class="head"><span class="badge low">LOW</span><span class="title">L4 — Resend init con <code>?? ''</code> empty key fallback (silent fail email)</span></div></div>
+      <div class="finding low"><div class="head"><span class="badge low">LOW</span><span class="title">L5 — <code>/api/cookie-consent</code> POST senza rate limit dedicato</span></div></div>
+      <div class="finding low"><div class="head"><span class="badge low">LOW</span><span class="title">L6 — vitals sampling Math.random() (acceptable, just noted)</span></div></div>
+      <div class="finding low"><div class="head"><span class="badge low">LOW</span><span class="title">L7 — Magic link payload plaintext UUID in URL (browser history leak)</span></div></div>
+      <div class="finding low"><div class="head"><span class="badge low">LOW</span><span class="title">L8 — Account delete grace period non chiaro tra comment e codice</span></div></div>
+      <div class="finding low"><div class="head"><span class="badge low">LOW</span><span class="title">Info — Service role usato in 560 callsite (ogni uso bypassa RLS)</span></div></div>
+      <div class="finding low"><div class="head"><span class="badge low">LOW</span><span class="title">Info — Password policy 8 char senza HIBP check</span></div></div>
+    </div>
+  </details>
+</section>
+
+<!-- ============ BILLING ============ -->
+<section class="area" id="billing">
+  <div class="area-head">
+    <div class="icon">💳</div>
+    <div>
+      <h2 style="margin:0;border:none;padding:0">Billing & Stripe Connect</h2>
+      <div style="color:var(--ink-soft);font-size:0.9rem;margin-top:4px">6 critical · 10 high · 10 medium · note Connect/Rate Plan</div>
+    </div>
+  </div>
+
+  <h3>🔴 Critical</h3>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">B1 — <code>deleteRatePlan</code> cancella tabella sbagliata (legacy hospitality)</span></div>
+    <div class="body">
+      <a href="../../packages/core/billing/src/rate-plans.ts#L142">packages/core/billing/src/rate-plans.ts:142-145</a><br>
+      <code>.from('rate_plans')</code> invece di <code>'payment_rate_plans'</code> (tabella legacy hospitality meal plan/channel mappings). Service role → bypass RLS. <strong>Click "delete" UI rate plan editor = wipe meal plan tenant.</strong> Fix: 1 stringa.
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">B2 — Webhook dedup race non atomico</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/webhooks/stripe/route.ts#L31">webhooks/stripe/route.ts:31-33</a> + <a href="../../apps/web/src/lib/webhook-dedup.ts#L8">webhook-dedup.ts:8-36</a><br>
+      <code>isWebhookEventProcessed</code> (SELECT) e <code>recordWebhookEvent</code> (INSERT alla riga 533) separati da tutto handler. Stripe retry concorrenti → doppia <code>commission_ledger</code>, doppio <code>bundle.paid</code>, doppia gift_card.
+      <div class="fix"><strong>Fix:</strong> invertire ordine — <code>INSERT ... ON CONFLICT DO NOTHING RETURNING id</code> come gate atomico iniziale (UNIQUE già presente).</div>
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">B3 — Auto-charge cron stato <code>processing</code> diventa <code>card_saved</code> → double-charge</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/cron/auto-charge-bookings/route.ts#L167">auto-charge-bookings:167</a><br>
+      Se Stripe ritorna <code>processing</code>/<code>requires_action</code> → riserva torna <code>card_saved</code>. Prossimo cron incrementa <code>attempt_number</code> → NUOVO PaymentIntent stessa carta = double-charge se primo era processing.
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">B4 — Magic link Customer Portal leak cross-reservation</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/r/[token]/update-card/route.ts#L43">update-card/route.ts:43</a><br>
+      Customer Portal su <code>stripe_customer_id</code> espone TUTTE le carte+ricevute+subscription dello stesso customer (stessa email da 2 tenant = stesso customer). Cliente A vede dati cliente B. Inoltre <code>configuration: undefined</code>.
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">B5 — Magic link secret fallback CRON_SECRET</span></div>
+    <div class="body">
+      <a href="../../packages/core/billing/src/magic-link.ts#L17">magic-link.ts:17</a><br>
+      Stesso secret per HMAC magic link e Bearer cron. Leak link = leak cron. Nessun <code>iat</code>, nessun "consumed_at" (link valido 7gg riusabile).
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">B6 — payment_failed inserisce attempt_number=0 → idempotency key collide con cron</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/webhooks/stripe/route.ts#L513">webhooks/stripe:513-527</a><br>
+      Webhook resetta <code>charge_scheduled_at</code> a now+24h indipendentemente dallo stato → dopo attempt 4 finale, webhook rimette in coda → 5° tentativo.
+    </div>
+  </div>
+
+  <h3>🟠 High</h3>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">B7 — Refund flow NON chiama Stripe (solo record DB pending) + manca authz check</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/(app)/[tenantSlug]/stays/[entitySlug]/bookings/actions.ts#L401">stays/bookings/actions:401</a><br>
+      <code>refundReservationAction</code> insert riga <code>status='pending'</code>, decrementa <code>paid_amount</code> ma cliente non riceve mai soldi. Niente <code>hasPermission('billing.refund')</code>. Solo hospitality coperto, restaurant/bike/experience zero.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">B8 — agency_payouts cron race window — 2 cron concorrenti</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/cron/agency-payouts/route.ts#L140">agency-payouts:140</a> Pattern SELECT → check → UPSERT non atomico. Stripe idempotency salva il transfer ma <code>agency_commissions.update</code> gira due volte.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">B9 — Commissione accruita prima del capture → TouraCore in passivo</span></div>
+    <div class="body">
+      <a href="../../packages/core/agency/src/commissions.ts#L78">commissions.ts:78</a><br>
+      <code>accrueCommission</code> al booking, non al capture. Restaurant deposit (<code>capture_method: manual</code>) può essere voidato → TouraCore paga agency su soldi mai incassati.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">B10 — Manca handler <code>customer.subscription.created</code></span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/webhooks/stripe/route.ts#L319">webhooks/stripe:319</a> solo <code>updated</code>. Primo evento dopo checkout può essere <code>created</code> → record subscription incompleto.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">B11 — Restaurant manual capture: manca cron capture/void deposit</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/public/restaurant/checkout/route.ts#L93">restaurant/checkout:93</a> Stripe auto-release auth dopo 7gg → tenant non incassa nulla per no-show.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">B12 — bundle.paid re-fulfillment via fetch interno (silent fail)</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/webhooks/stripe/route.ts#L188">webhooks/stripe:188-214</a> HTTP fetch a <code>/api/v1/bundles/{id}/fulfill</code>. Se <code>NEXT_PUBLIC_APP_URL</code> empty + dedup blocca retry → bundle <code>paid</code> ma mai fulfilled.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">B13 — application_fee_amount calcolo float → off-by-1 cents</span></div>
+    <div class="body">
+      <a href="../../packages/core/billing/src/profiles.ts#L88">profiles.ts:88</a> + <a href="../../packages/core/billing/src/connect-charge.ts#L58">connect-charge.ts:58</a> Doppio cents→EUR→cents. 12345*0.15: math diretta=1851.75 cents=1852, codice 1851. Su 10K booking/mese = decine € persi.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">B14 — accrueCommission race tier rate</span></div>
+    <div class="body">
+      <a href="../../packages/core/agency/src/commissions.ts#L81">commissions.ts:81</a> 2 booking concorrenti leggono <code>monthRevenue=4900</code>, calcolano rate=0.10, ma collettivamente superano threshold 5000.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">B15 — auto-cancel cron cancella anche se cliente ha aggiornato carta</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/cron/auto-cancel-failed-payments/route.ts#L39">auto-cancel-failed-payments:39</a> Niente notifica/email cliente prima cancel. Niente grace period configurabile per tenant.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">B16 — Restaurant <code>appliesTo: 'coperto'</code> calcola su deposit_amount</span></div>
+    <div class="body">
+      Semantica ambigua → fee=0 anche se profilo configurato. <a href="../../apps/web/src/app/api/public/restaurant/checkout/route.ts#L74">checkout:74</a>
+    </div>
+  </div>
+
+  <h3>🟡 Medium / Note funzionali</h3>
+
+  <details>
+    <summary>B17-B26 + note funzionali (espandi)</summary>
+    <div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">B17 — <code>createDestinationCharge</code> dead code in EUR confonde dev</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">B18 — <code>.single()</code> throw "Found 0 rows" su lookup opzionali</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">B19 — payment_rate_plans esposte ad anon su tutti tenant (incl tariffe)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">B20 — payment_methods senza <code>expires_at</code> cleanup + niente UNIQUE primary</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">B21 — net_amount payout negativo clamp a 0 → debt agency mai tracciato</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">B22 — Stripe API version hardcoded acacia (SDK 17.7 = basil)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">B23 — Voucher JWT secret fallback service_role (mass invalidation on rotation)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">B24 — Magic link fallback URL hardcoded <code>touracore.vercel.app</code> (preview deploy bug)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">B25 — accrueCommission senza UNIQUE → idempotency app-side fragile</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">B26 — commission_ledger senza UNIQUE su (stripe_payment_intent_id, type)</span></div></div>
+      <div class="finding low"><div class="head"><span class="badge low">NOTE</span><span class="title">⚠️ Rate Plans NON wirati nei checkout</span></div><div class="body">M148-150 ha aggiunto schema + UI editor + tipi, ma <code>deposit_pct</code>, <code>charge_balance_days_before</code>, <code>discount_pct</code> non sono usati nei checkout. <code>SetupIntent</code> assente. Cattura saldo schedulata non implementata. Rate plan oggi è cosmetic.</div></div>
+      <div class="finding low"><div class="head"><span class="badge low">NOTE</span><span class="title">Bundle multi-tenant Connect TODO esplicito</span></div><div class="body"><a href="../../apps/web/src/app/api/v1/bundles/route.ts#L176">bundles:176</a> Stripe single destination → bundle 2 tenant diversi non funziona oggi.</div></div>
+      <div class="finding low"><div class="head"><span class="badge low">NOTE</span><span class="title">Tax fiscale: manca ritenuta acconto + regime forfettario</span></div></div>
+    </div>
+  </details>
+</section>
+
+<!-- ============ RLS ============ -->
+<section class="area" id="rls">
+  <div class="area-head">
+    <div class="icon">🗄️</div>
+    <div>
+      <h2 style="margin:0;border:none;padding:0">RLS & tenant isolation</h2>
+      <div style="color:var(--ink-soft);font-size:0.9rem;margin-top:4px">5 critical · 7 high · 9 medium · 4 low</div>
+    </div>
+  </div>
+
+  <h3>🔴 Critical</h3>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">R1 — Privilege escalation via <code>memberships</code></span></div>
+    <div class="body">
+      <a href="../../supabase/migrations/00004_core_memberships.sql#L21">migrations/00004:21-28</a><br>
+      Policy <code>memberships_insert</code>/<code>update</code> controllano solo <code>tenant_id = ANY(get_user_tenant_ids())</code>. Membro tenant T può:
+      <pre>UPDATE memberships SET role='owner' WHERE user_id = auth.uid();
+INSERT INTO memberships (tenant_id, user_id, role) VALUES (T, complice, 'owner');</pre>
+      Nessun <code>WITH CHECK</code>. Self-promote a owner.
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">R2 — <code>seo_settings</code> espone secrets a anon</span></div>
+    <div class="body">
+      <a href="../../supabase/migrations/00146_seo_analytics_admin.sql#L49">migrations/00146:49-52</a><br>
+      Policy <code>seo_settings_public_read</code> permette SELECT anon di TUTTE le colonne, inclusi <code>ga4_api_secret</code>, <code>search_console_oauth_token</code>, <code>bing_site_verification</code>.
+      <div class="fix"><strong>Fix:</strong> view <code>public_seo_settings_view</code> con solo colonne pubbliche, REVOKE su tabella.</div>
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">R3 — <code>experience_manifest_view</code> leak cross-tenant</span></div>
+    <div class="body">
+      <a href="../../supabase/migrations/00115_experience_public_views.sql#L45">migrations/00115:45-61</a><br>
+      View senza <code>WITH (security_invoker = true)</code> → gira con privilegi owner postgres bypassa RLS. Authenticated può leggere manifest (nomi, telefoni, QR, waiver) di qualunque tenant filtrando <code>entity_id</code>.
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">R4 — Migration 00125_notifications_suite priva di RLS</span></div>
+    <div class="body">
+      <a href="../../supabase/migrations/00125_notifications_suite.sql">migrations/00125</a><br>
+      File è stub ("via cloud Management API"). Non source-of-truth. <code>supabase db reset</code> crea tabelle SENZA RLS → <code>recipient_email</code>, <code>recipient_phone</code>, <code>body</code> esposti.
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">R5 — <code>agencies_insert WITH CHECK (true)</code></span></div>
+    <div class="body">
+      <a href="../../supabase/migrations/00012_agencies.sql#L76">migrations/00012:76-77</a> Qualsiasi authenticated può INSERT agency. Spam DDoS DB + confonde dashboard. Se futura server action linka creator → membership owner senza re-check = escalation.
+    </div>
+  </div>
+
+  <h3>🟠 High</h3>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">R6 — Tabelle senza ENABLE RLS</span></div>
+    <div class="body">
+      <code>fx_rates</code> (<a href="../../supabase/migrations/00055_competitive_hospitality.sql#L498">00055:498</a>) e <code>embed_request_logs</code> (<a href="../../supabase/migrations/00057_booking_engine_theme_and_apikeys.sql#L66">00057:66</a>).
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">R7 — UPDATE policy senza <code>WITH CHECK</code> ovunque (sistemico)</span></div>
+    <div class="body">
+      Pattern in 00002, 00004, 00006, 00012, 00044, 00103, 00138... Senza <code>WITH CHECK</code> un user può UPDATE <code>tenant_id</code>/<code>entity_id</code> per spostare righe tra tenant.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">R8 — <code>partners</code> UPDATE permette al partner di patchare ogni colonna</span></div>
+    <div class="body">
+      <a href="../../supabase/migrations/00103_partners.sql#L84">migrations/00103:84</a> Partner può modificare <code>commission_pct_default</code>, <code>bank_iban</code>, <code>tenant_id</code>.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">R9 — payment_rate_plans pubblico include tenant senza filtro is_public</span></div>
+    <div class="body">
+      <a href="../../supabase/migrations/00150_rate_plans_and_payments.sql#L63">migrations/00150:63</a>
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">R10 — analytics_events anon INSERT WITH CHECK (true) → data poisoning</span></div>
+    <div class="body">
+      <a href="../../supabase/migrations/00146_seo_analytics_admin.sql#L147">migrations/00146:147</a> Whitelist <code>event_category</code> mancante.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">R11 — data_retention_policy controlla claim <code>super_admin</code> inesistente</span></div>
+    <div class="body">
+      <a href="../../supabase/migrations/00136_dsar_retention_policy.sql#L43">migrations/00136:43</a> Dovrebbe usare <code>is_platform_admin()</code> (00140).
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">R12 — <code>listing_media</code> non append-only (memory dice di sì)</span></div>
+    <div class="body">
+      Discrepanza memoria/codice. Verificare intent.
+    </div>
+  </div>
+
+  <details>
+    <summary>R13-R21 Medium/Low (espandi)</summary>
+    <div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">R13 — Service role usato in 560 callsite — bypassa RLS sempre</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">R14 — JWT <code>is_platform_admin</code> non si refresha (delay 1h dopo revoke)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">R15 — <code>platform_admins_select</code> policy ricorsiva (loop risk)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">R16 — Header <code>x-touracore-tenant-slug</code> client-controllable (mitigato ma documentare)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">R17 — View pubbliche con <code>security_invoker = false</code> (drift risk futuro)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">R18 — cookie_consent_records anon INSERT senza rate limit DB</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">R19 — R2_PUBLIC_URL espone <code>document_scans</code> (passport!) se non bucket separato</span></div></div>
+      <div class="finding low"><div class="head"><span class="badge low">LOW</span><span class="title">R20 — pg_trgm su public schema (best-practice extensions)</span></div></div>
+      <div class="finding low"><div class="head"><span class="badge low">LOW</span><span class="title">R21 — agency_audit_logs append-only manca DENY esplicita</span></div></div>
+      <div class="finding low"><div class="head"><span class="badge low">LOW</span><span class="title">R22 — platform_config anon SELECT espone updated_by UUID</span></div></div>
+      <div class="finding low"><div class="head"><span class="badge low">LOW</span><span class="title">R23 — Doppione policy smart_locks tra 00055 e 00081</span></div></div>
+    </div>
+  </details>
+
+  <h3>✅ RPC SECURITY DEFINER — TUTTE OK</h3>
+  <div class="finding" style="background:var(--good-bg);border-left-color:var(--good)">
+    <div class="body">
+      Verificate 18 RPC: <code>is_platform_admin</code>, <code>get_user_*_ids</code>, <code>set_staff_pin</code>, <code>create_staff_with_pin</code>, <code>redeem_credit_instrument</code> (atomic FOR UPDATE+idempotency), <code>verify_staff_pin</code>, <code>accept_invitation</code>. <strong>Nessun bypass tenant trovato.</strong>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FRONTEND ============ -->
+<section class="area" id="frontend">
+  <div class="area-head">
+    <div class="icon">⚛️</div>
+    <div>
+      <h2 style="margin:0;border:none;padding:0">Frontend, performance & UX</h2>
+      <div style="color:var(--ink-soft);font-size:0.9rem;margin-top:4px">4 critical · 9 high · 15 cleanup</div>
+    </div>
+  </div>
+
+  <h3>🔴 Critical</h3>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">F1 — Hardcoded prices nel checkout multi-vertical</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/book/multi/[slug]/unified-booking-client.tsx#L300">unified-booking-client.tsx:300</a>: <code>unitPriceCents = 12000 // TODO</code><br>
+      Linea 401: <code>unitPriceCents = 4500 // TODO</code><br>
+      Widget unified-booking carica €120/notte e €45 fissi indipendentemente da rate plan reale.
+      <div class="fix"><strong>Fix:</strong> fetch da <code>/api/public/booking/quote</code> come <code>book-table</code>.</div>
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">F2 — <code>force-dynamic</code> rompe ISR su book/bike + book/experience</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/book/bike/[slug]/page.tsx#L6">book/bike/page.tsx:6</a> + <a href="../../apps/web/src/app/book/experience/[slug]/page.tsx#L7">book/experience/page.tsx:7</a><br>
+      SSR ogni request, 4 query Supabase per pageview. Dovrebbe essere ISR=60s.
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">F3 — Experience SSR fa fetch 30 giorni timeslots ad ogni hit</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/book/experience/[slug]/page.tsx#L54">book/experience/page.tsx:54-65</a><br>
+      ~155 timeslot/entity × ogni request × no cache. Combinato con F2 = costo Supabase enorme.
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">F4 — <code>&lt;img&gt;</code> raw nel ListingGallery (LCP critico)</span></div>
+    <div class="body">
+      <a href="../../packages/core/listings/src/gallery.tsx#L109">gallery.tsx:109,119,140,264</a> 5 raw <code>&lt;img&gt;</code> con eslint-disable. Hero foto su <code>/s/...</code> listing detail = LCP candidate non ottimizzato.
+    </div>
+  </div>
+
+  <h3>🟠 High</h3>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">F5 — <code>backgroundImage</code> CSS per related cards (4 unoptimized)</span></div>
+    <div class="body"><a href="../../apps/web/src/app/s/[tenantSlug]/[entitySlug]/page.tsx#L280">s/[t]/[e]/page.tsx:280</a></div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">F6 — Dashboard mass-<code>'use client'</code> invece di RSC (28/39 page)</span></div>
+    <div class="body">
+      Pattern: page client + auth-store + useEffect server actions = blank flash + bundle bloat. Convertire a RSC + client island.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">F7 — <code>alert()</code> nativo in 14 client component</span></div>
+    <div class="body">
+      Modal-blocking, ugly, mobile-hostile. Sostituire con <code>sonner</code> toast (già shadcn ecosystem).
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">F8 — <code>confirm()</code> nativo per destructive (28 instance)</span></div>
+    <div class="body">
+      Sostituire con shadcn <code>&lt;AlertDialog&gt;</code> Radix.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">F9 — Hospitality booking: 3 template caricati sempre</span></div>
+    <div class="body">
+      <a href="../../verticals/hospitality/src/components/booking/booking-engine.tsx">booking-engine.tsx</a> import sync di Minimal/Luxury/Mobile (~1100 LOC unused).
+      <div class="fix"><strong>Fix:</strong> <code>next/dynamic</code> per template per nome.</div>
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">F10 — Manca <code>global-error.tsx</code> + error.tsx per route pubbliche</span></div>
+    <div class="body">
+      Solo 1 <code>error.tsx</code> in <code>(dashboard)</code>. Public pages crash = blank screen.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">F11 — <code>/property/[slug]</code> dead duplicate di <code>/s/[t]/[e]</code></span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/property/[slug]/page.tsx">app/property/[slug]/page.tsx</a> nessun Link interno punta. Deletare.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">F12 — <code>/wiring-proof</code> debug page indexabile pubblicamente</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/wiring-proof/page.tsx">wiring-proof/page.tsx</a> espone tassonomia interna. <code>robots.ts</code> non disallow.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">F13 — E2E coverage gap su revenue path</span></div>
+    <div class="body">
+      Manca: Stripe webhook, payment success, register email reale, gift card buy, partner API. <code>public-booking.spec.ts</code> usa URL prod (line 8) → side-effect risk.
+    </div>
+  </div>
+
+  <details>
+    <summary>F14-F28 cleanup/hygiene (espandi)</summary>
+    <div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">F14 — Form validation manuale, niente Zod client (register, ecc.)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">F15 — <code>useEffect</code> deps disabled (book-table, discover, media-picker)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">F16 — <code>as unknown as</code> cast pattern in 20+ file (Supabase joined type)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">F17 — <code>accommodation as any</code> esplicito (viola regola progetto)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">F18 — Discover filtra in-memory client (re-render full)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">F19 — Hex colors hardcoded ovunque (no design token, ignora <code>tenant.brand_color</code>)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">F20 — <code>data-testid</code> count = 4 → E2E selector fragili</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">F21 — i18n assente (tutto IT inline → blocca espansione EN)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">F22 — <code>metadataBase</code> assente in root layout (build warning)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">F23 — <code>viewport</code> export Next 15 mancante</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">F24 — Sitemap-listings 5000 righe in memoria (scaling concern)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">F25 — discover THEMES table 130 righe colori manuali</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">F26 — recharts full bundle nei chunk dashboard (split per chart se LCP > 2s)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">F27 — Vercel Analytics + SpeedInsights + WebVitalsCollector tutti eager</span></div></div>
+      <div class="finding low"><div class="head"><span class="badge low">LOW</span><span class="title">F28 — Bundle size: import full lucide-react/auth-store on client pages</span></div></div>
+    </div>
+  </details>
+</section>
+
+<!-- ============ GOOD ============ -->
+<section class="area" id="good">
+  <div class="area-head">
+    <div class="icon">✅</div>
+    <div>
+      <h2 style="margin:0;border:none;padding:0">Cosa funziona bene</h2>
+      <div style="color:var(--ink-soft);font-size:0.9rem;margin-top:4px">Non rompere queste cose</div>
+    </div>
+  </div>
+  <div class="finding" style="background:var(--good-bg);border-left-color:var(--good)">
+    <div class="body">
+      <ul style="padding-left:20px;line-height:1.9">
+        <li><strong><a href="../../apps/web/src/lib/cache-tags.ts">lib/cache-tags.ts</a></strong> — tag-based revalidation eccellente</li>
+        <li><strong><a href="../../apps/web/src/lib/listings-cache.ts">lib/listings-cache.ts</a></strong> — two-layer cache pattern best-in-class</li>
+        <li><strong>RPC SECURITY DEFINER</strong> tutte 18 validano tenant scope manualmente, atomic FOR UPDATE dove serve</li>
+        <li><strong>Webhook idempotency</strong> Stripe + TheFork + Google usano <code>timingSafeEqual</code> + <code>UNIQUE(provider, external_event_id)</code> (manca solo race fix B2)</li>
+        <li><strong>Encryption AES-256-GCM</strong> in <a href="../../packages/core/security/src/encryption.ts">packages/core/security/src/encryption.ts</a> throw esplicito senza key (corretto)</li>
+        <li><strong>JSON-LD coverage</strong> robusto: LodgingBusiness + Restaurant + BicycleStore + FAQ + Breadcrumb</li>
+        <li><strong>Promise.all</strong> uso corretto su listing detail (parallel queries)</li>
+        <li><strong>recharts dynamic-import</strong> gating dashboard OK</li>
+        <li><strong>HSTS preload</strong> header settato correttamente</li>
+        <li><strong>CIN+RT+SDI compliance</strong> @touracore/fiscal strategy pattern pulito</li>
+        <li><strong>Stripe Connect Direct Charge</strong> implementato correttamente nei flussi principali (booking, restaurant, bike, experience)</li>
+        <li><strong>Atomic experience_timeslot_try_book RPC</strong> verificato no oversell</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ROADMAP ============ -->
+<section class="area" id="roadmap">
+  <div class="area-head">
+    <div class="icon">🛣️</div>
+    <div>
+      <h2 style="margin:0;border:none;padding:0">Roadmap fix consigliata</h2>
+    </div>
+  </div>
+
+  <h3>Sprint 1 (questa settimana — quick wins, alto impatto)</h3>
+  <table>
+    <thead><tr><th>#</th><th>Fix</th><th>Effort</th><th>Impatto</th></tr></thead>
+    <tbody>
+      <tr><td class="sev-crit">1</td><td>B1 <code>deleteRatePlan</code> tabella sbagliata</td><td>5 min</td><td>distrugge config tenant</td></tr>
+      <tr><td class="sev-crit">2</td><td>C1+C2+C3 price tampering bundle/tourist-tax + Connect bypass</td><td>2h</td><td>revenue leak</td></tr>
+      <tr><td class="sev-crit">3</td><td>C4+C5 <code>Math.random</code> → <code>crypto.randomBytes</code></td><td>30 min</td><td>predictable secrets/PIN</td></tr>
+      <tr><td class="sev-crit">4</td><td>F1 hardcoded prices unified-booking</td><td>1h</td><td>revenue + IVA wrong</td></tr>
+      <tr><td class="sev-crit">5</td><td>R1 memberships escalation + R5 agencies open insert</td><td>1h migration</td><td>privilege escalation</td></tr>
+      <tr><td class="sev-crit">6</td><td>R2 seo_settings secrets a anon</td><td>30 min migration</td><td>credential leak</td></tr>
+      <tr><td class="sev-crit">7</td><td>R3 experience_manifest_view security_invoker</td><td>15 min migration</td><td>cross-tenant PII</td></tr>
+      <tr><td class="sev-high">8</td><td>H1+H2 cron secret fail-open</td><td>15 min</td><td>cron auth bypass</td></tr>
+      <tr><td class="sev-high">9</td><td>F2 <code>force-dynamic</code> bike+experience → ISR=60</td><td>10 min</td><td>cost + speed</td></tr>
+      <tr><td class="sev-high">10</td><td>F12 <code>/wiring-proof</code> robots disallow + delete</td><td>5 min</td><td>SEO leak</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Sprint 2 (prossime 2 settimane — strutturali)</h3>
+  <table>
+    <thead><tr><th>Fix</th><th>Effort</th></tr></thead>
+    <tbody>
+      <tr><td>B2 webhook dedup atomico (INSERT ON CONFLICT first)</td><td>1h</td></tr>
+      <tr><td>B3+B6 auto-charge race + payment_failed attempt_number</td><td>3h</td></tr>
+      <tr><td>B4 Customer Portal scope (1:1 customer per tenant+guest)</td><td>4h</td></tr>
+      <tr><td>B5+B23+M9+M10 separare secrets (MAGIC_LINK, VOUCHER_JWT, INTEGRATIONS_KEY)</td><td>1h</td></tr>
+      <tr><td>B7 refund flow chiamare Stripe + authz check</td><td>3h</td></tr>
+      <tr><td>B9 spostare accrueCommission a webhook capture</td><td>2h</td></tr>
+      <tr><td>B13 fee calc cents puri (rimuovere float roundtrip)</td><td>30 min</td></tr>
+      <tr><td>R7 WITH CHECK su tutte UPDATE policy (script generator)</td><td>4h</td></tr>
+      <tr><td>R6 ENABLE RLS fx_rates + embed_request_logs</td><td>15 min</td></tr>
+      <tr><td>F4 next/image in ListingGallery (LCP)</td><td>1h</td></tr>
+      <tr><td>F10 global-error.tsx + error.tsx per public groups</td><td>1h</td></tr>
+      <tr><td>H6 sanitize seo.custom_head_tags (DOMPurify allowlist meta/link)</td><td>1h</td></tr>
+      <tr><td>H7 CSP nonce (rimuovere unsafe-inline)</td><td>3h</td></tr>
+      <tr><td>H8 rate limiter su Vercel KV/Upstash</td><td>2h</td></tr>
+      <tr><td>R4 riscrivere migration 00125_notifications_suite con DDL completa</td><td>2h</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Sprint 3 (mese — funzionali + tech debt)</h3>
+  <table>
+    <thead><tr><th>Fix</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Wirare Rate Plans nei checkout</strong> (deposit_pct, charge_balance, SetupIntent flow)</td></tr>
+      <tr><td>Refund flow per restaurant + bike + experience</td></tr>
+      <tr><td>Cron auto-capture/void deposit restaurant</td></tr>
+      <tr><td>Bundle multi-tenant Connect split (oggi rotto)</td></tr>
+      <tr><td>F6 dashboard RSC migration (28 page client → RSC + island)</td></tr>
+      <tr><td>F7+F8 sonner toast + AlertDialog (kill alert/confirm nativi)</td></tr>
+      <tr><td>F9 lazy-load 3 hospitality template</td></tr>
+      <tr><td>F21 i18n setup next-intl</td></tr>
+      <tr><td>R13 audit service_role usage (560 callsite, ridurre dove possibile)</td></tr>
+      <tr><td>F13 E2E webhook + payment success + register flow</td></tr>
+      <tr><td>Tax fiscale: ritenuta acconto 20% IRPEF + regime forfettario calc</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</main>
+
+<footer>
+  Generato 2026-04-26 · TouraCore monorepo audit · 4 subagent paralleli (security/billing/RLS/frontend)<br>
+  File index: <code>docs/audit-2026-04-26/index.html</code> · Apri da VS Code per click su file:line
+</footer>
+
+</body>
+</html>

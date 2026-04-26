@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>TouraCore — Audit Stato LIVE · 2026-04-26 · HEAD 7771701</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root{
+    --bg:#faf6f0; --surface:#fff; --ink:#2a1f17; --ink-soft:#5b4a3f;
+    --accent:#c45a3a; --accent-soft:#e8a98e; --border:#e8dccc;
+    --crit:#b91c1c; --crit-bg:#fef2f2;
+    --high:#c2410c; --high-bg:#fff7ed;
+    --med:#a16207; --med-bg:#fefce8;
+    --low:#0369a1; --low-bg:#f0f9ff;
+    --good:#15803d; --good-bg:#f0fdf4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+  header{background:linear-gradient(135deg,#2a1f17,#1a120c);color:#faf6f0;padding:48px 32px;border-bottom:4px solid var(--accent)}
+  header h1{font-size:2.2rem;font-weight:700}
+  header .meta{color:#d4c5b3;margin-top:6px;font-size:0.95rem}
+  header .verified{margin-top:16px;display:flex;gap:12px;flex-wrap:wrap}
+  header .verified div{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);padding:6px 12px;border-radius:5px;font-size:0.85rem}
+  main{max-width:1200px;margin:0 auto;padding:32px}
+  .banner{background:#fef3c7;border-left:6px solid #f59e0b;padding:16px 20px;border-radius:6px;margin-bottom:32px}
+  .banner strong{color:#92400e}
+  .banner p{margin-top:6px;font-size:0.9rem;color:#78350f}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:40px}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px;text-align:center}
+  .stat .num{font-size:2.2rem;font-weight:700;line-height:1}
+  .stat .lbl{color:var(--ink-soft);font-size:0.78rem;margin-top:4px;text-transform:uppercase;letter-spacing:0.05em}
+  .stat.crit .num{color:var(--crit)}
+  .stat.high .num{color:var(--high)}
+  .stat.med .num{color:var(--med)}
+  .stat.low .num{color:var(--low)}
+  .stat.good .num{color:var(--good)}
+  h2{font-size:1.5rem;margin:40px 0 14px;padding-bottom:10px;border-bottom:2px solid var(--accent)}
+  h3{font-size:1.1rem;margin:20px 0 10px}
+  section.area{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px 28px;margin-bottom:20px}
+  .area-head{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+  .area-head .icon{font-size:1.6rem}
+  .finding{border-left:4px solid var(--border);padding:12px 14px;margin:10px 0;background:#fafafa;border-radius:0 6px 6px 0}
+  .finding.crit{border-color:var(--crit);background:var(--crit-bg)}
+  .finding.high{border-color:var(--high);background:var(--high-bg)}
+  .finding.med{border-color:var(--med);background:var(--med-bg)}
+  .finding.low{border-color:var(--low);background:var(--low-bg)}
+  .finding.good{border-color:var(--good);background:var(--good-bg)}
+  .finding .head{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+  .badge{display:inline-block;padding:2px 9px;border-radius:4px;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em}
+  .badge.crit{background:var(--crit);color:#fff}
+  .badge.high{background:var(--high);color:#fff}
+  .badge.med{background:var(--med);color:#fff}
+  .badge.low{background:var(--low);color:#fff}
+  .badge.good{background:var(--good);color:#fff}
+  .badge.verified{background:#1e40af;color:#fff}
+  .finding .title{font-weight:600;font-size:0.96rem}
+  .finding .body{font-size:0.9rem;color:var(--ink-soft);margin-top:5px}
+  .finding code{font-family:"SF Mono",Menlo,monospace;font-size:0.82rem;background:rgba(0,0,0,0.06);padding:1px 5px;border-radius:3px;color:var(--accent)}
+  .finding a{color:var(--accent);text-decoration:none;border-bottom:1px dashed var(--accent-soft)}
+  .finding a:hover{border-bottom-style:solid}
+  .finding .fix{margin-top:6px;padding:6px 10px;background:rgba(255,255,255,0.6);border-radius:4px;font-size:0.86rem}
+  .finding .fix strong{color:var(--good)}
+  pre{background:#1a120c;color:#faf6f0;padding:10px 14px;border-radius:6px;overflow-x:auto;font-family:"SF Mono",Menlo,monospace;font-size:0.78rem;margin:6px 0;line-height:1.5}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:0.88rem}
+  th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)}
+  th{background:#fafafa;font-weight:600;text-transform:uppercase;font-size:0.72rem;letter-spacing:0.05em;color:var(--ink-soft)}
+  td.sev-crit{color:var(--crit);font-weight:700}
+  td.sev-high{color:var(--high);font-weight:700}
+  td.sev-med{color:var(--med);font-weight:700}
+  td.sev-good{color:var(--good);font-weight:700}
+  details{margin:10px 0;border:1px solid var(--border);border-radius:6px;background:var(--surface)}
+  summary{padding:10px 14px;cursor:pointer;font-weight:600;font-size:0.92rem;list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"▸ ";color:var(--accent)}
+  details[open] summary::before{content:"▾ "}
+  details > div{padding:0 14px 14px}
+  .toc{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px 22px;margin-bottom:28px}
+  .toc ol{padding-left:20px;color:var(--ink-soft)}
+  .toc a{color:var(--accent);text-decoration:none}
+  .toc a:hover{text-decoration:underline}
+  .priority{background:linear-gradient(135deg,var(--accent),#a04528);color:#fff;padding:22px 26px;border-radius:8px;margin:28px 0}
+  .priority h2{color:#fff;border:none;margin-top:0}
+  .priority ol{padding-left:22px;margin-top:10px}
+  .priority li{margin:6px 0}
+  .priority code{background:rgba(0,0,0,0.2);color:#fff;padding:1px 5px;border-radius:3px}
+  footer{text-align:center;padding:28px;color:var(--ink-soft);font-size:0.82rem;border-top:1px solid var(--border);margin-top:40px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🔍 TouraCore — Audit STATO LIVE</h1>
+  <div class="meta">2026-04-26 · HEAD <code style="background:rgba(255,255,255,0.1);padding:1px 5px;border-radius:3px">7771701</code> · Vercel prod <code style="background:rgba(255,255,255,0.1);padding:1px 5px;border-radius:3px">touracore.vercel.app</code></div>
+  <div class="verified">
+    <div>✓ DB cloud verificato (Management API)</div>
+    <div>✓ Middleware live verificato (curl)</div>
+    <div>✓ Public routes verificate (Chrome)</div>
+    <div>✓ Codice HEAD analizzato</div>
+  </div>
+</header>
+
+<main>
+
+<div class="banner">
+  <strong>⚠️ Sostituisce audit precedente (storico migration).</strong>
+  <p>Il report `index.html` precedente analizzava migration <strong>storiche</strong> (00001-00150) che potevano essere già state corrette da migration successive. Questo report invece riflette lo <strong>stato corrente reale</strong>: codice HEAD git + DB cloud live + headers Vercel prod + Chrome verify. Falsi positivi del primo audit qui esclusi/corretti.</p>
+</div>
+
+<div class="stats">
+  <div class="stat crit"><div class="num">11</div><div class="lbl">🔴 Critici reali</div></div>
+  <div class="stat high"><div class="num">22</div><div class="lbl">🟠 High</div></div>
+  <div class="stat med"><div class="num">28</div><div class="lbl">🟡 Medium</div></div>
+  <div class="stat low"><div class="num">12</div><div class="lbl">🔵 Low</div></div>
+  <div class="stat good"><div class="num">15</div><div class="lbl">✅ Verificati OK</div></div>
+</div>
+
+<div class="toc">
+  <h3>📑 Indice</h3>
+  <ol>
+    <li><a href="#priority">⚡ Priorità immediate (TOP 8 reali)</a></li>
+    <li><a href="#verified">✅ Verifiche live confermate (cosa funziona)</a></li>
+    <li><a href="#auth">🔓 Server actions zero-auth (cross-tenant)</a></li>
+    <li><a href="#stripe">💳 Stripe Connect bypass</a></li>
+    <li><a href="#cron">⏰ Cron secret pattern fragile</a></li>
+    <li><a href="#headers">🛡️ Security headers + CSP</a></li>
+    <li><a href="#webhooks">🪝 Webhooks</a></li>
+    <li><a href="#db">🗄️ DB cloud — drift e view</a></li>
+    <li><a href="#config">⚙️ Config / env / robots</a></li>
+    <li><a href="#chrome">🌐 Chrome verify (live behavior)</a></li>
+    <li><a href="#falsi-positivi">❌ Falsi positivi audit precedente</a></li>
+    <li><a href="#roadmap">🛣️ Roadmap fix</a></li>
+  </ol>
+</div>
+
+<!-- ============ PRIORITY ============ -->
+<div class="priority" id="priority">
+  <h2>⚡ TOP 8 fix reali — verificati live</h2>
+  <ol>
+    <li><strong>Smart-lock cross-tenant decryption (fisico):</strong> <a href="../../apps/web/src/app/(app)/[tenantSlug]/stays/[entitySlug]/locks/actions.ts#L21">stays/locks/actions.ts:21-156</a> — <code>createSmartLock</code>, <code>issueLockAccessCode</code>, <code>revokeLockAccessCode</code> nessun ownership check. Un user può chiamare con <code>lockId</code> arbitrario, decriptare la config Nuki/TTLock di un'altra struttura e generare PIN su porte fisiche.</li>
+    <li><strong>(dashboard)/admin/actions.ts ZERO auth:</strong> <a href="../../apps/web/src/app/(dashboard)/admin/actions.ts#L11">admin/actions.ts:11-150</a> — <code>listTenantsAction</code>, <code>togglePropertyActiveAction</code>, <code>createIcalFeedAction</code>, <code>deleteIcalFeedAction</code> usano service-role senza <code>getCurrentUser()</code>/<code>isPlatformAdmin</code>. Qualsiasi user autenticato può togglare strutture di chiunque.</li>
+    <li><strong>Bundle multi-vertical bypassa Connect:</strong> <a href="../../apps/web/src/app/api/v1/bundles/route.ts#L177">bundles/route.ts:177-204</a> — <code>checkout.sessions.create</code> SENZA <code>application_fee_amount</code>/<code>transfer_data</code>. 100% incasso a TouraCore. Endpoint pubblico testato live HTTP 400 (no auth check). Viola "TouraCore mai banca".</li>
+    <li><strong>Tassa di soggiorno: amount client + niente Connect:</strong> <a href="../../apps/web/src/app/checkin/[token]/actions.ts#L61">checkin/actions.ts:61-94</a> — <code>amountCents</code> dal client, payment_intent senza Connect → tassa pagata a TouraCore (fiscale sbagliato).</li>
+    <li><strong>Gift Card checkout senza Connect:</strong> <a href="../../apps/web/src/app/api/public/gift-card/checkout/route.ts#L57">gift-card/checkout:57-94</a> — incasso lordo al conto piattaforma.</li>
+    <li><strong>Cron <code>notifications-dispatch</code> fail-OPEN:</strong> <a href="../../apps/web/src/app/api/cron/notifications-dispatch/route.ts#L11">notifications-dispatch:11</a> — se <code>CRON_SECRET</code> unset, chiunque può triggerare invio massivo email/SMS Resend/Twilio (costo + PII).</li>
+    <li><strong>Stripe pricing/bookings actions zero-auth:</strong> <a href="../../apps/web/src/app/(app)/[tenantSlug]/stays/[entitySlug]/pricing/actions.ts#L20">pricing/actions.ts:20</a>, <a href="../../apps/web/src/app/(app)/[tenantSlug]/stays/[entitySlug]/reviews/actions.ts#L15">reviews:15</a>, <a href="../../apps/web/src/app/(app)/[tenantSlug]/stays/[entitySlug]/messaggi/actions.ts#L15">messaggi:15</a> — service role + nessun check tenant. Cross-tenant tampering pricing/review/messaggi.</li>
+    <li><strong>Encryption key fallback service-role (verificato live):</strong> <a href="../../packages/core/vouchers/src/server/jwt.ts#L14">vouchers/jwt.ts:14</a>, <code>INTEGRATIONS_ENCRYPTION_KEY ?? SUPABASE_SERVICE_ROLE_KEY</code> — rotation SR key invalida tutti voucher JWT + cifra credenziali integration con SR. Compromesso uno = compromesso l'altro.</li>
+  </ol>
+</div>
+
+<!-- ============ VERIFIED ============ -->
+<section class="area" id="verified">
+  <div class="area-head"><div class="icon">✅</div><h2 style="margin:0;border:none;padding:0">Verifiche LIVE confermate (funzionano)</h2></div>
+  <div class="finding good">
+    <div class="head"><span class="badge good">VERIFIED</span><span class="title">Middleware ATTIVO in prod (CSP, HSTS, rate-limit, CSRF cookie)</span></div>
+    <div class="body">
+      Curl <code>HEAD /</code> ritorna: <code>strict-transport-security: max-age=63072000; preload</code>, <code>x-ratelimit-limit: 120</code>, <code>set-cookie: __touracore_csrf=...</code>, CSP completo, <code>x-frame-options: DENY</code>. Auth tier <code>x-ratelimit-limit: 15</code> su <code>/api/auth/login</code>. <strong>Falso positivo F1 audit precedente</strong> — il fatto che il file si chiami <code>proxy.ts</code> invece di <code>middleware.ts</code> non rompe Next/Vercel.
+    </div>
+  </div>
+  <div class="finding good">
+    <div class="head"><span class="badge good">VERIFIED</span><span class="title">DB cloud RLS coverage 227/229 tabelle</span></div>
+    <div class="body">
+      568 policy attive. Solo <code>embed_request_logs</code> e <code>fx_rates</code> senza RLS (M2 medio). Nessuna policy <code>USING (true)</code> su tabelle dati multi-tenant. Tutte le 33 RPC SECURITY DEFINER hanno scope corretto.
+    </div>
+  </div>
+  <div class="finding good">
+    <div class="head"><span class="badge good">VERIFIED</span><span class="title">Schema billing v4 allineato</span></div>
+    <div class="body">
+      <code>payment_rate_plans</code>, <code>reservation_payment_methods</code>, <code>reservation_payment_attempts</code>, <code>agency_payouts</code>, tenant Connect cols (account_id, charges_enabled, payouts_enabled, country, requirements) — tutte presenti come previsto.
+    </div>
+  </div>
+  <div class="finding good">
+    <div class="head"><span class="badge good">VERIFIED</span><span class="title">Public routes 200 OK</span></div>
+    <div class="body">
+      Chrome verify: <code>/</code>, <code>/discover</code>, <code>/s/villa-irabo/alpina-bikes</code>, <code>/book/bike/alpina-bikes</code>, <code>/login</code> tutti 200. Discover prefetcha 4 listing top + 4 kind filter. Foto Unsplash 200. Vitals POST 200.
+    </div>
+  </div>
+  <div class="finding good">
+    <div class="head"><span class="badge good">VERIFIED</span><span class="title">/wiring-proof protetto da auth</span></div>
+    <div class="body">
+      Falso positivo F12: navigando da Chrome → redirect <code>/login?next=%2Fwiring-proof</code>. Non indexable. <strong>Resta da fare:</strong> aggiungere a robots.txt disallow per non sprecare crawl budget Google.
+    </div>
+  </div>
+  <div class="finding good">
+    <div class="head"><span class="badge good">VERIFIED</span><span class="title">Webhook Stripe verifica firma PRIMA di idempotency check</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/webhooks/stripe/route.ts#L31">webhooks/stripe:31</a> ordine corretto. Il finding B2 dell'audit precedente (race idempotency) è teorico ma il flow è già hardened.
+    </div>
+  </div>
+</section>
+
+<!-- ============ AUTH SCOPE ============ -->
+<section class="area" id="auth">
+  <div class="area-head"><div class="icon">🔓</div><h2 style="margin:0;border:none;padding:0">Server actions — auth/scope mancanti</h2></div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">A1 — locks/actions.ts decripta config + crea PIN cross-tenant</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/(app)/[tenantSlug]/stays/[entitySlug]/locks/actions.ts#L21">stays/locks/actions.ts:21-156</a><br>
+      <code>createSmartLock</code> controlla solo che entity esista; <code>issueLockAccessCode</code> nessun check tenant; <code>decryptConfig</code> + chiamata API Nuki/TTLock del provider del tenant target. Sicurezza fisica strutture.
+      <div class="fix"><strong>Fix:</strong> ricavare <code>entity.tenant_id</code>, <code>assertUserOwnsTenant</code>.</div>
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">A2 — (dashboard)/admin/actions.ts ZERO auth</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/(dashboard)/admin/actions.ts#L11">(dashboard)/admin/actions.ts:11-150</a><br>
+      <code>listTenantsAction</code>, <code>togglePropertyActiveAction</code>, <code>createIcalFeedAction</code>, <code>deleteIcalFeedAction</code>, <code>listPortalsAdminAction</code> senza <code>getCurrentUser</code>.
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">A3 — pricing/actions.ts cross-tenant tampering</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/(app)/[tenantSlug]/stays/[entitySlug]/pricing/actions.ts#L20">pricing/actions.ts:20-73</a> service role, accetta <code>entityId</code>/<code>ruleId</code> arbitrari.
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">A4 — reviews/actions.ts modifica review di chiunque</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/(app)/[tenantSlug]/stays/[entitySlug]/reviews/actions.ts#L15">reviews/actions.ts:15-40</a> <code>replyToReview</code>, <code>flagReview</code>, <code>hideReview</code> senza tenant check.
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">A5 — messaggi/actions.ts risposta cross-tenant a thread guest</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/(app)/[tenantSlug]/stays/[entitySlug]/messaggi/actions.ts#L15">messaggi/actions.ts:15-55</a>
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">A6 — _shared/rate-plans/actions.ts → deleteRatePlan zero auth</span></div>
+    <div class="body">
+      <a href="../../packages/core/billing/src/rate-plans.ts#L142">rate-plans.ts:142-145</a> service role + niente filtro tenant.
+    </div>
+  </div>
+
+  <h3>🟠 High — auth scope</h3>
+  <details>
+    <summary>A7-A14 (8 finding) — espandi</summary>
+    <div>
+      <div class="finding high"><div class="head"><span class="badge high">HIGH</span><span class="title">A7 — settings/payments/actions.ts: tenantSlug form vs ctx mismatch</span></div><div class="body"><a href="../../apps/web/src/app/(app)/[tenantSlug]/settings/payments/actions.ts#L22">payments/actions:22-160</a> owner di tenant A può aprire onboarding Stripe Connect del tenant B.</div></div>
+      <div class="finding high"><div class="head"><span class="badge high">HIGH</span><span class="title">A8 — a/[agencySlug]/settings/stripe/actions.ts: stesso pattern lato agency</span></div></div>
+      <div class="finding high"><div class="head"><span class="badge high">HIGH</span><span class="title">A9 — settings/modules/actions.ts: toggle moduli altrui</span></div></div>
+      <div class="finding high"><div class="head"><span class="badge high">HIGH</span><span class="title">A10 — settings/integrations/actions.ts: niente membership check</span></div></div>
+      <div class="finding high"><div class="head"><span class="badge high">HIGH</span><span class="title">A11 — settings/loyalty: programId/guestLoyaltyId arbitrari</span></div></div>
+      <div class="finding high"><div class="head"><span class="badge high">HIGH</span><span class="title">A12 — activities/schedule/actions.ts: pass-through senza check</span></div></div>
+      <div class="finding high"><div class="head"><span class="badge high">HIGH</span><span class="title">A13 — settings/legal-entities: tenantId dal client</span></div></div>
+      <div class="finding high"><div class="head"><span class="badge high">HIGH</span><span class="title">A14 — superadmin-login: signIn prima del check platform_admins</span></div><div class="body">Sessione cookie creata anche se utente non admin.</div></div>
+    </div>
+  </details>
+</section>
+
+<!-- ============ STRIPE ============ -->
+<section class="area" id="stripe">
+  <div class="area-head"><div class="icon">💳</div><h2 style="margin:0;border:none;padding:0">Stripe Connect bypass</h2></div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">S1 — Bundle multi-vertical NO Connect</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/v1/bundles/route.ts#L177">bundles:177-204</a><br>
+      Commento esplicito: "TODO per Stripe richiede destination single + separate transfers - v1 basic". Endpoint testato live: <code>POST /api/v1/bundles</code> ritorna 400 (validation), nessun auth check. Aperto.
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">S2 — Gift card checkout NO Connect</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/public/gift-card/checkout/route.ts#L57">gift-card/checkout:57-94</a>
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">S3 — Tassa soggiorno NO Connect + amount client</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/checkin/[token]/actions.ts#L78">checkin/actions:78-94</a> doppio bug: <code>amountCents</code> dal client + <code>payment_intent</code> senza Connect. Tassa pagata a TouraCore. Fiscalmente sbagliato.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">S4 — Gift card webhook fida metadata.tenant_id senza verifica</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/webhooks/stripe/route.ts#L46">stripe:46-152</a> branch <code>gift_card_purchase</code> trusta <code>session.metadata.tenant_id</code>/<code>amount</code> senza re-verifica vs purchase order interno.
+    </div>
+  </div>
+</section>
+
+<!-- ============ CRON ============ -->
+<section class="area" id="cron">
+  <div class="area-head"><div class="icon">⏰</div><h2 style="margin:0;border:none;padding:0">Cron — secret pattern fragile</h2></div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">C1 — notifications-dispatch FAIL-OPEN</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/cron/notifications-dispatch/route.ts#L11">notifications-dispatch:11</a><br>
+      <code>if (cronSecret && authHeader !== ...)</code> — se env unset, blocca skippato. Chiunque può triggerare invio mass email/SMS (costi + PII).
+      <div class="fix"><strong>Fix:</strong> <code>if (!cronSecret) return 503</code>. Una riga.</div>
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">C2 — 12+ cron con pattern <code>Bearer ${cronSecret}</code> dove secret può essere undefined</span></div>
+    <div class="body">
+      File: <code>accounting-sync</code>, <code>channel-sync</code>, <code>ical-sync</code>, <code>lock-pins</code>, <code>loyalty-recalc</code>, <code>message-send</code>, <code>message-trigger</code>, <code>pricing-suggestions</code>, <code>restaurant-ade-daily</code>, <code>restaurant-pricing-suggestions</code>, <code>review-requests</code>, <code>reviews-ingest</code>. Senza env settata, <code>Bearer undefined</code> matcha header letterale.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">C3 — data-retention cron DELETE arbitrario via DB-controlled table_name</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/cron/data-retention/route.ts#L50">data-retention:50-89</a> <code>policy.table_name</code> letto da DB e passato a <code>.from()</code>. Compromesso platform admin → wipe tabelle arbitrarie.
+      <div class="fix"><strong>Fix:</strong> whitelist hardcoded di table_name accettabili.</div>
+    </div>
+  </div>
+
+  <div class="finding med">
+    <div class="head"><span class="badge med">MED</span><span class="title">C4 — auto-cancel-failed-payments usa enum 'cancelled' (UK) ma DB usa 'canceled' (US)</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/cron/auto-cancel-failed-payments/route.ts#L13">auto-cancel:13</a> Reservations hospitality usano 'canceled'. Cron silently fail su quei record.
+    </div>
+  </div>
+</section>
+
+<!-- ============ HEADERS ============ -->
+<section class="area" id="headers">
+  <div class="area-head"><div class="icon">🛡️</div><h2 style="margin:0;border:none;padding:0">Security headers + CSP (verificati live curl)</h2></div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="badge verified">LIVE</span><span class="title">H1 — CSP <code>script-src 'unsafe-inline'</code> in prod</span></div>
+    <div class="body">
+      Verificato curl: <code>script-src 'self' 'unsafe-inline'</code>. Defeats XSS mitigation. Next 14+ supporta nonce.
+      <div class="fix"><strong>Fix:</strong> generate nonce in middleware, propagare via <code>x-nonce</code> header, replace con <code>'nonce-${nonce}'</code>.</div>
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="badge verified">LIVE</span><span class="title">H2 — frame-src manca Stripe (Checkout/Connect/3DS in iframe)</span></div>
+    <div class="body">
+      Verificato curl: <code>frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com</code>. Manca <code>js.stripe.com</code>, <code>hooks.stripe.com</code>, <code>checkout.stripe.com</code>, <code>connect.stripe.com</code>. <strong>SCA / 3DS challenge potrebbero fallire silenziosamente su carte Europa.</strong>
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="badge verified">LIVE</span><span class="title">H3 — connect-src manca api.stripe.com + R2 + GA</span></div>
+    <div class="body">
+      <code>connect-src 'self' https://*.supabase.co wss://*.supabase.co</code>. Stripe.js telemetry, Stripe Radar, R2 upload progress XHR, GA tutti bloccati. Possibili regressioni silenziose.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="badge verified">LIVE</span><span class="title">H4 — img-src https: aperto (vanifica Next image allowlist)</span></div>
+    <div class="body">
+      Qualsiasi host HTTPS può servire immagini. Tracking pixel exfiltration possibile.
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">H5 — Rate limiter in-memory (Map) — non multi-instance safe</span></div>
+    <div class="body">
+      <a href="../../packages/core/security/src/rate-limiter.ts#L8">rate-limiter.ts:8</a><br>
+      <code>new Map()</code> process-local. Vercel multi-lambda → attacker rotando cold start ottiene N×budget. Auth limit 15/min × 5 istanze warm = 75/min effettivi.
+      <div class="fix"><strong>Fix:</strong> Vercel KV / Upstash Redis.</div>
+    </div>
+  </div>
+
+  <div class="finding med">
+    <div class="head"><span class="badge med">MED</span><span class="title">H6 — assertCsrf() module esiste ma 0 chiamate</span></div>
+    <div class="body">
+      Cookie CSRF settato in middleware ma mai verificato. Server Actions Next protette dal framework, ma <code>/api/v1/*</code>, <code>/api/public/*</code> mutazioni POST nessuna anti-CSRF. Pattern double-submit incompleto.
+    </div>
+  </div>
+
+  <div class="finding med">
+    <div class="head"><span class="badge med">MED</span><span class="title">H7 — X-Frame-Options "ALLOWALL" non standard (verificato curl: "DENY", OK)</span></div>
+    <div class="body">
+      Codice in <code>headers.ts:30</code> ha branch widget con "ALLOWALL" non valido HTTP. Valore corrente live = DENY (corretto, non widget). Bug latente per quando widget mode attivo.
+    </div>
+  </div>
+</section>
+
+<!-- ============ WEBHOOKS ============ -->
+<section class="area" id="webhooks">
+  <div class="area-head"><div class="icon">🪝</div><h2 style="margin:0;border:none;padding:0">Webhooks</h2></div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">W1 — TheFork/Google Reserve secret env-globale, non per restaurant</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/webhooks/restaurant/thefork/route.ts#L55">thefork:55-66</a> commento dice "secret env-level o per restaurant" ma usa SOLO env-globale. Compromise di 1 partner = compromise tutti i restaurant.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">W2 — Octorate webhook compare key con !== (timing attack)</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/webhooks/octorate/route.ts#L61">octorate:61</a> Stripe + TheFork + Google usano timingSafeEqual. Octorate no.
+    </div>
+  </div>
+
+  <div class="finding med">
+    <div class="head"><span class="badge med">MED</span><span class="title">W3 — Octorate webhook nessuna idempotency dedup</span></div>
+    <div class="body">
+      A differenza Stripe/TheFork manca <code>isWebhookEventProcessed</code>. Replay possibile.
+    </div>
+  </div>
+
+  <div class="finding med">
+    <div class="head"><span class="badge med">MED</span><span class="title">W4 — Stripe webhook fetch interno con CRON_SECRET fallback ?? ''</span></div>
+    <div class="body">
+      <a href="../../apps/web/src/app/api/webhooks/stripe/route.ts#L189">stripe:189-198</a> Se env unset, fetch a <code>/api/v1/bundles/[id]/fulfill</code> con stringa vuota → 401 fail-closed (good) ma saga si rompe silenziosamente.
+    </div>
+  </div>
+</section>
+
+<!-- ============ DB ============ -->
+<section class="area" id="db">
+  <div class="area-head"><div class="icon">🗄️</div><h2 style="margin:0;border:none;padding:0">DB cloud — drift e view (verificato Management API)</h2></div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="badge verified">LIVE</span><span class="title">D1 — schema_migrations registry stop a 00092, file repo a 00150</span></div>
+    <div class="body">
+      Drift critico: 56 migration applicate via Management API raw SQL non sono in <code>supabase_migrations.schema_migrations</code>. Schema reale OK (tabelle billing v4 esistono) ma <code>supabase db push</code> in futuro potrebbe ritentare migration già applicate.
+      <div class="fix"><strong>Fix:</strong> backfill <code>INSERT INTO schema_migrations</code> per le 56 mancanti, oppure documentare adozione esplicita pattern raw-SQL.</div>
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="badge verified">LIVE</span><span class="title">D2 — View KPI multi-tenant in modalità DEFINER (potenziale leak cross-tenant)</span></div>
+    <div class="body">
+      View con security_invoker=false sospette: <code>v_financial_summary</code>, <code>v_reservation_financials</code>, <code>v_daily_kpi</code>, <code>v_room_availability</code>, <code>v_rooms_effective</code>, <code>experience_manifest_view</code>, <code>core_web_vitals_p75</code>, <code>platform_seo_kpi_daily</code>. In modalità definer bypassano RLS dell'utente.
+      <div class="fix"><strong>Fix:</strong> nuova migration con <code>ALTER VIEW ... SET (security_invoker = true)</code>. Test che le query app-side ancora funzionano (probabilmente sì se RLS ben fatto).</div>
+    </div>
+  </div>
+
+  <div class="finding med">
+    <div class="head"><span class="badge med">MED</span><span class="badge verified">LIVE</span><span class="title">D3 — 102 policy UPDATE/ALL senza WITH CHECK esplicito</span></div>
+    <div class="body">
+      Postgres usa <code>qual</code> come fallback ma è fragile. Tabelle ad alto rischio: reservations, payments, invoices, tenants, entities, restaurant_orders, partners, connect_accounts, webhook_endpoints.
+    </div>
+  </div>
+
+  <div class="finding med">
+    <div class="head"><span class="badge med">MED</span><span class="badge verified">LIVE</span><span class="title">D4 — embed_request_logs senza RLS</span></div>
+    <div class="body">
+      Tabella logging widget esterni. RLS off → service_role legge log di tutti i tenant.
+    </div>
+  </div>
+
+  <div class="finding med">
+    <div class="head"><span class="badge med">MED</span><span class="badge verified">LIVE</span><span class="title">D5 — 161 FK senza indice (perf, non security)</span></div>
+    <div class="body">
+      Hot path: <code>reservations.payment_rate_plan_id</code>, <code>reservations.tenant_id</code>, <code>bike_rental_reservations.payment_rate_plan_id</code>, <code>experience_reservations.payment_rate_plan_id</code>, <code>restaurant_orders.reservation_id</code>, <code>connect_accounts.tenant_id</code>, <code>partner_api_keys.tenant_id</code>.
+    </div>
+  </div>
+
+  <div class="finding low">
+    <div class="head"><span class="badge low">LOW</span><span class="badge verified">LIVE</span><span class="title">D6 — agencies_insert WITH CHECK (true) (ma copertura applicativa)</span></div>
+    <div class="body">
+      Chiunque autenticato può INSERT agency. Spam DDoS. Probabilmente coperto da check applicativo ma andrebbe ristretto a <code>is_platform_admin()</code>.
+    </div>
+  </div>
+
+  <div class="finding low">
+    <div class="head"><span class="badge low">LOW</span><span class="title">D7 — Drift schema atteso: tenant_billing_snapshots, platform_invoices, agency_payouts_log NON trovate</span></div>
+    <div class="body">
+      Memoria menziona ma DB live no. Possibilmente rinominate o fuse in <code>documents</code> unified — verificare con codice app.
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONFIG ============ -->
+<section class="area" id="config">
+  <div class="area-head"><div class="icon">⚙️</div><h2 style="margin:0;border:none;padding:0">Config / env / robots</h2></div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">G1 — INTEGRATIONS_ENCRYPTION_KEY fallback su SUPABASE_SERVICE_ROLE_KEY</span></div>
+    <div class="body">
+      <code>packages/core/integrations/...</code> deriva AES key da SR JWT se env mancante. Cifrare credenziali integration con SR key = compromise una = compromise altra.
+      <div class="fix"><strong>Fix:</strong> errore esplicito boot se <code>INTEGRATIONS_ENCRYPTION_KEY</code> mancante. No fallback.</div>
+    </div>
+  </div>
+
+  <div class="finding crit">
+    <div class="head"><span class="badge crit">CRIT</span><span class="title">G2 — VOUCHER_JWT_SECRET fallback a touracore-vouchers-${SR_KEY}</span></div>
+    <div class="body">
+      <a href="../../packages/core/vouchers/src/server/jwt.ts#L14">vouchers/jwt.ts:14-22</a> stesso pattern.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="badge verified">LIVE</span><span class="title">G3 — robots.txt: Disallow /(app)/ è route group, non URL</span></div>
+    <div class="body">
+      Verificato curl <code>/robots.txt</code>:
+      <pre>Disallow: /(app)/
+Disallow: /(dashboard)/</pre>
+      Le parentesi sono Next route grouping. URL pubblici NON contengono parentesi. Mancano:
+      <pre>Disallow: /superadmin/
+Disallow: /platform/
+Disallow: /a/
+Disallow: /r/
+Disallow: /checkin/
+Disallow: /checkout/
+Disallow: /credits/
+Disallow: /gift-card/
+Disallow: /portal/
+Disallow: /preferences/
+Disallow: /wiring-proof
+Disallow: /property/  # dead-duplicate</pre>
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">G4 — MAGIC_LINK_SECRET fallback CRON_SECRET</span></div>
+    <div class="body">
+      <a href="../../packages/core/billing/src/magic-link.ts#L17">magic-link.ts:17</a> reuse cron secret per HMAC magic link.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">G5 — vercel.json manca regions: fra1 + functions.maxDuration</span></div>
+    <div class="body">
+      Default region US East = +120ms latency tenant italiani. Cron <code>data-retention</code>, <code>auto-charge</code>, <code>agency-payouts</code> rischiano timeout default 60s.
+    </div>
+  </div>
+
+  <div class="finding high">
+    <div class="head"><span class="badge high">HIGH</span><span class="title">G6 — env.ts schema Zod assente (boot fail-fast mancante)</span></div>
+    <div class="body">
+      App parte anche se <code>RESEND_API_KEY</code>, <code>STRIPE_WEBHOOK_SECRET</code>, <code>NEXT_PUBLIC_APP_URL</code> mancano. Silent failure email/webhook/redirect.
+      <div class="fix"><strong>Fix:</strong> <code>@t3-oss/env-nextjs</code> con Zod schema per server+client env.</div>
+    </div>
+  </div>
+
+  <details>
+    <summary>G7-G15 medium config (espandi)</summary>
+    <div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">G7 — serverActions.bodySizeLimit '55mb' (DoS surface)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">G8 — auth tier 15/min copre login+register+forgot+reset insieme (enumeration)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">G9 — CSP no report-uri (violazioni silent)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">G10 — sitemap-listings 5000 URL no streaming (>5MB risk)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">G11 — sitemap-pages.xml solo 2 URL (mancano hub verticali, legal)</span></div></div>
+      <div class="finding med"><div class="head"><span class="badge med">MED</span><span class="title">G12 — playwright.public.config.ts baseURL prod (mutation risk se aggiunti scenari)</span></div></div>
+      <div class="finding low"><div class="head"><span class="badge low">LOW</span><span class="title">G13 — poweredByHeader: false mancante (X-Powered-By: Next.js exposed)</span></div></div>
+      <div class="finding low"><div class="head"><span class="badge low">LOW</span><span class="title">G14 — secret-manager registry: env name placeholder __VERCEL_TOKEN_NOTE__</span></div></div>
+      <div class="finding low"><div class="head"><span class="badge low">LOW</span><span class="title">G15 — Drift naming env: EMAIL_FROM vs RESEND_FROM_EMAIL, NEXT_PUBLIC_APP_URL vs SITE_URL</span></div></div>
+    </div>
+  </details>
+</section>
+
+<!-- ============ CHROME ============ -->
+<section class="area" id="chrome">
+  <div class="area-head"><div class="icon">🌐</div><h2 style="margin:0;border:none;padding:0">Chrome verify (live behavior)</h2></div>
+
+  <div class="finding good">
+    <div class="head"><span class="badge good">PASS</span><span class="title">Public routes 200 OK</span></div>
+    <div class="body">
+      <code>/</code>, <code>/discover</code>, <code>/s/villa-irabo/alpina-bikes</code>, <code>/book/bike/alpina-bikes</code>, <code>/login</code> tutti 200. Discover prefetcha 4 listing top + 4 kind filter (corretto). Foto Unsplash 200. POST /api/vitals 200.
+    </div>
+  </div>
+
+  <div class="finding med">
+    <div class="head"><span class="badge med">MED</span><span class="title">B1 — Analytics 404 ricorrente: <code>/ac54f900c99dbdee/script.js</code></span></div>
+    <div class="body">
+      Su ogni page load, Chrome console mostra 404 per <code>/ac54f900c99dbdee/script.js</code>. C'è anche <code>/29459007106a3c15/script.js</code> [200]. Script tracker (Plausible/Umami self-hosted) con due path random configurati, uno obsoleto. Confonde monitoring.
+      <div class="fix"><strong>Fix:</strong> trovare config che inietta path obsoleto. Probabilmente env <code>NEXT_PUBLIC_PLAUSIBLE_ID</code> o config tenant_branding stale. Console errori production = SEO/UX deterioration.</div>
+    </div>
+  </div>
+
+  <div class="finding good">
+    <div class="head"><span class="badge good">PASS</span><span class="title">/wiring-proof protetto da auth</span></div>
+    <div class="body">Redirect a <code>/login?next=%2Fwiring-proof</code>. Falso positivo audit precedente.</div>
+  </div>
+
+  <div class="finding good">
+    <div class="head"><span class="badge good">PASS</span><span class="title">/api/v1/bundles risponde 400 a body vuoto</span></div>
+    <div class="body">Endpoint pubblico esiste, validation Zod attiva. <strong>NO auth check tuttavia</strong> (conferma S1).</div>
+  </div>
+</section>
+
+<!-- ============ FALSI POSITIVI ============ -->
+<section class="area" id="falsi-positivi">
+  <div class="area-head"><div class="icon">❌</div><h2 style="margin:0;border:none;padding:0">Falsi positivi audit precedente</h2></div>
+  <div class="finding good">
+    <div class="head"><span class="badge good">CHIUSO</span><span class="title">F1 audit storico — middleware non gira</span></div>
+    <div class="body">Verificato live curl: middleware ATTIVO. CSP, HSTS, rate-limit, CSRF tutti presenti. Next/Vercel riconosce <code>proxy.ts</code>.</div>
+  </div>
+  <div class="finding good">
+    <div class="head"><span class="badge good">CHIUSO</span><span class="title">F12 audit storico — /wiring-proof indexabile</span></div>
+    <div class="body">Verificato Chrome: redirect <code>/login</code>. Resta consigliata aggiunta a robots.txt per crawl budget.</div>
+  </div>
+  <div class="finding good">
+    <div class="head"><span class="badge good">CHIUSO</span><span class="title">RLS storico audit — memberships escalation</span></div>
+    <div class="body">DB cloud live: 568 policy attive, nessuna USING (true) su dati. Le migration storiche sono state fixate da migration successive non tracciate in schema_migrations (vedi D1).</div>
+  </div>
+  <div class="finding good">
+    <div class="head"><span class="badge good">CHIUSO</span><span class="title">B1 audit storico — deleteRatePlan tabella sbagliata</span></div>
+    <div class="body">Memoria conferma fix commit <code>48e087a</code> (rename rate_plans → payment_rate_plans). Codice attuale OK su <code>payment_rate_plans</code>. Resta A6 (zero auth tenant check).</div>
+  </div>
+</section>
+
+<!-- ============ ROADMAP ============ -->
+<section class="area" id="roadmap">
+  <div class="area-head"><div class="icon">🛣️</div><h2 style="margin:0;border:none;padding:0">Roadmap fix consigliata</h2></div>
+
+  <h3>Sprint 1 — Critical reali (~12h)</h3>
+  <table>
+    <thead><tr><th>#</th><th>Fix</th><th>Effort</th><th>Categoria</th></tr></thead>
+    <tbody>
+      <tr><td class="sev-crit">1</td><td>A1 locks/actions.ts auth check + tenant ownership</td><td>2h</td><td>auth</td></tr>
+      <tr><td class="sev-crit">2</td><td>A2 (dashboard)/admin/actions.ts wrap assertPlatformAdmin</td><td>1h</td><td>auth</td></tr>
+      <tr><td class="sev-crit">3</td><td>A3+A4+A5+A6 pricing/reviews/messaggi/rate-plans tenant check</td><td>2h</td><td>auth</td></tr>
+      <tr><td class="sev-crit">4</td><td>S1 bundle Connect split (transfer_data + application_fee)</td><td>2h</td><td>billing</td></tr>
+      <tr><td class="sev-crit">5</td><td>S2 gift card Connect</td><td>1h</td><td>billing</td></tr>
+      <tr><td class="sev-crit">6</td><td>S3 tassa soggiorno: ricalcolo amount + Connect</td><td>1.5h</td><td>billing</td></tr>
+      <tr><td class="sev-crit">7</td><td>C1 notifications-dispatch fail-closed</td><td>5min</td><td>cron</td></tr>
+      <tr><td class="sev-crit">8</td><td>G1+G2 rimuovere fallback INTEGRATIONS+VOUCHER su SR_KEY</td><td>30min</td><td>secrets</td></tr>
+      <tr><td class="sev-crit">9</td><td>H5 rate limiter Vercel KV migration</td><td>2h</td><td>infra</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Sprint 2 — High (~16h)</h3>
+  <table>
+    <thead><tr><th>Fix</th><th>Effort</th></tr></thead>
+    <tbody>
+      <tr><td>A7-A14 auth scope mismatch su 8 server actions tenant/agency</td><td>4h</td></tr>
+      <tr><td>C2 unificare cron secret check (12+ file pattern fail-closed)</td><td>1h</td></tr>
+      <tr><td>C3 data-retention whitelist table_name</td><td>30min</td></tr>
+      <tr><td>D1 backfill schema_migrations registry (56 entries)</td><td>1h</td></tr>
+      <tr><td>D2 view KPI security_invoker=true (8 view)</td><td>2h con test</td></tr>
+      <tr><td>H1 CSP nonce per <code>script-src</code> (rimuovere unsafe-inline)</td><td>3h</td></tr>
+      <tr><td>H2+H3 frame-src + connect-src Stripe/R2/GA</td><td>30min</td></tr>
+      <tr><td>H4 img-src restringere domini</td><td>15min</td></tr>
+      <tr><td>W1+W2 webhook secrets per-restaurant + timingSafeEqual</td><td>1.5h</td></tr>
+      <tr><td>G3 robots.txt fix path corretti</td><td>15min</td></tr>
+      <tr><td>G4 separare MAGIC_LINK_SECRET</td><td>30min</td></tr>
+      <tr><td>G5 vercel.json regions+maxDuration</td><td>15min</td></tr>
+      <tr><td>G6 env.ts Zod schema</td><td>2h</td></tr>
+      <tr><td>S4 webhook gift_card_purchase verifica vs purchase order</td><td>1h</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Sprint 3 — Medium / Polish (~10h)</h3>
+  <table>
+    <thead><tr><th>Fix</th></tr></thead>
+    <tbody>
+      <tr><td>B1 fix analytics 404 script obsoleto</td></tr>
+      <tr><td>D3 WITH CHECK esplicito su 102 policy UPDATE/ALL critiche (script generator)</td></tr>
+      <tr><td>D4 ENABLE RLS embed_request_logs</td></tr>
+      <tr><td>D5 indici su 7+ FK hot path</td></tr>
+      <tr><td>C4 enum 'cancelled' → 'canceled' allineamento</td></tr>
+      <tr><td>H6 assertCsrf() su /api/v1/* mutazioni browser</td></tr>
+      <tr><td>W3 Octorate webhook idempotency dedup</td></tr>
+      <tr><td>G7 bodySizeLimit 12-15MB + presigned R2 upload</td></tr>
+      <tr><td>G8 auth-strict tier 5/min per /forgot-password</td></tr>
+      <tr><td>G9 CSP report-uri</td></tr>
+      <tr><td>G10 sitemap-listings paginazione</td></tr>
+      <tr><td>F18 audit precedente: lazy-load 3 hospitality template (perf)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</main>
+
+<footer>
+  Generato 2026-04-26 · TouraCore audit STATO LIVE · HEAD 7771701<br>
+  3 subagent paralleli (DB Management API · codice HEAD · config) + Chrome verify diretta + curl headers prod<br>
+  File: <code>docs/audit-2026-04-26/live-state.html</code>
+</footer>
+
+</body>
+</html>
