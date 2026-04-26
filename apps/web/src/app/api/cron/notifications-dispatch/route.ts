@@ -9,8 +9,11 @@ function unauthorized() {
 
 export async function POST(req: Request) {
   const cronSecret = process.env.CRON_SECRET
+  if (!cronSecret) {
+    return NextResponse.json({ ok: false, error: 'cron_secret_not_configured' }, { status: 503 })
+  }
   const authHeader = req.headers.get('authorization') ?? ''
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (authHeader !== `Bearer ${cronSecret}`) {
     return unauthorized()
   }
 
