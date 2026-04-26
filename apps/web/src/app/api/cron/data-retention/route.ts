@@ -41,6 +41,28 @@ async function handler(req: Request) {
   const supabase = await createServiceRoleClient()
   const stats: PurgeStat[] = []
 
+  // Hardcoded whitelist: nessuna policy può cancellare tabelle fuori da questo set,
+  // anche se row in data_retention_policy fosse stata manomessa.
+  const ALLOWED_TABLES = new Set([
+    'analytics_events',
+    'core_web_vitals',
+    'audit_logs',
+    'agency_audit_logs',
+    'webhook_events',
+    'embed_request_logs',
+    'cookie_consent_records',
+    'reservation_bundles',
+    'bundle_audit_log',
+    'notifications_log',
+    'notifications_queue',
+    'rate_limit_log',
+    '404_log',
+    'platform_404_log',
+    'channel_logs',
+    'bike_chan_logs',
+  ])
+  const ALLOWED_COLUMNS = new Set(['created_at', 'occurred_at', 'logged_at', 'received_at'])
+
   // 1. Retention purge per policy
   const { data: policies } = await supabase
     .from('data_retention_policy')
@@ -57,8 +79,26 @@ async function handler(req: Request) {
       continue
     }
 
+    if (!ALLOWED_TABLES.has(policy.table_name)) {
+      stats.push({
+        table: policy.table_name,
+        action: 'skip',
+        reason: 'table_not_in_whitelist',
+      })
+      continue
+    }
+
     const cutoff = new Date(Date.now() - policy.ttl_days * 86400_000).toISOString()
     const col = policy.hard_delete_column || 'created_at'
+
+    if (!ALLOWED_COLUMNS.has(col)) {
+      stats.push({
+        table: policy.table_name,
+        action: 'skip',
+        reason: `column_${col}_not_in_whitelist`,
+      })
+      continue
+    }
 
     if (dryRun) {
       const { count } = await supabase
