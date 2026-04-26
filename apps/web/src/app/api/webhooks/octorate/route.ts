@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { timingSafeEqual } from 'node:crypto'
 import { createServiceRoleClient } from '@touracore/db/server'
 
 interface OctorateReservation {
@@ -55,10 +56,13 @@ export async function POST(request: NextRequest) {
 
   // Fail closed: webhook_api_key MUST be configured per channel_connection
   const storedKey = (connection.settings as Record<string, unknown>)?.webhook_api_key
-  if (!storedKey) {
+  if (!storedKey || typeof storedKey !== 'string') {
     return NextResponse.json({ error: 'Webhook API key not configured for this property' }, { status: 401 })
   }
-  if (storedKey !== apiKey) {
+  // Timing-safe compare per evitare side-channel attack
+  const a = Buffer.from(storedKey, 'utf8')
+  const b = Buffer.from(apiKey, 'utf8')
+  if (a.length !== b.length || !timingSafeEqual(a, b)) {
     return NextResponse.json({ error: 'Invalid API key' }, { status: 401 })
   }
 
