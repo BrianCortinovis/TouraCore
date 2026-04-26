@@ -41,3 +41,6 @@ testsprite_tests/
 .secrets-rotations.log
 .secrets-backup/
 apps/web/.env.local.bak.*
+
+# NotebookLM exports (binari pesanti, escluso da git)
+docs/NotebookLM/
