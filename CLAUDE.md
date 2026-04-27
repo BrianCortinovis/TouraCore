@@ -21,7 +21,12 @@ Stato: **M001-M106 completate** (mix GSD/ChatGPT/Claude, disordine tracking pre-
 - Error boundaries: `error.tsx` su `(app)/`, `book/`, `discover/`, `(auth)/`. Loading: `(app)/loading.tsx`, `book/loading.tsx`.
 - Metadata + noindex: layout su `book/`, `embed/`, `widget/`, `checkin/`.
 
-**P2 noti ancora aperti** (tracciati in `docs/reports/code-review-2026-04-27.html`):
+**Documentazione**:
+- 📚 Hub navigabile: `docs/reports/INDEX.html`
+- 📊 Stato attuale (start here): `docs/reports/STATUS.html`
+- 🛡️ Code review più recente: `docs/reports/code-review-2026-04-27/code-review-2026-04-27.html`
+
+**P2 noti ancora aperti** (tracciati nel report):
 - 93 `as unknown as` su Supabase joins (fix one-shot via `supabase gen types typescript`)
 - 0 test su 25/26 package core (solo `@touracore/compliance`)
 - CSP `script-src 'unsafe-inline'` (migrare a nonce strategy)

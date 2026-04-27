@@ -35,16 +35,17 @@
 ### Numeri chiave
 
 - **106 milestone completate** (M001-M106)
-- **140+ commit** sul ramo `main`
+- **145+ commit** sul ramo `main`
 - **152 migration** database Supabase applicate (progetto cloud `dysnrgnqzliodqrsohoz`)
 - **27 pacchetti core** riusabili (`packages/core/`)
 - **4 verticali attivi** + 1 in preparazione
-- **E2E Playwright**: 31/31 PASS · typecheck 17/17 · test:unit 14/14
-- **Code review full codebase 2026-04-27**: 6/6 P0 + 6/7 P1 chiusi e LIVE su prod (commit `b160d0c`)
+- **E2E Playwright**: 31/31 PASS · typecheck 18/18 · **test:unit 166/166** (era 14)
+- **Code review full codebase 2026-04-27**: 6/6 P0 + 7/7 P1 chiusi e LIVE su prod
+- **Snapshot stato attuale**: [docs/reports/STATUS.html](reports/STATUS.html) · [docs/reports/INDEX.html](reports/INDEX.html)
 
 ### Hardening sicurezza/qualità attivo (post code-review 2026-04-27)
 
-Vedi report completo: `docs/reports/code-review-2026-04-27.html`.
+Vedi report completo: [docs/reports/code-review-2026-04-27/code-review-2026-04-27.html](reports/code-review-2026-04-27/code-review-2026-04-27.html).
 
 | Area | Stato |
 |---|---|
@@ -61,9 +62,12 @@ Vedi report completo: `docs/reports/code-review-2026-04-27.html`.
 | Metadata noindex /book /embed /widget /checkin | ✅ LIVE |
 | Bike VAT da @touracore/fiscal | ✅ LIVE |
 | Cron loyalty-recalc + billing-snapshots N+1 | ⏸ deferred (non blocker) |
-| 0 test 25/26 package core | ⏳ debito noto |
-| 93 `as unknown as` Supabase joins | ⏳ debito noto |
+| Test coverage 6 package P0 (security/fiscal/pricing/vouchers/partners/billing) | ✅ 166 test PASS |
+| Cleanup file dead + script obsoleti + Octorate HMAC opt-in + Field htmlFor | ✅ DONE |
+| Doc riorganizzata (`docs/reports/INDEX.html` + `STATUS.html`) | ✅ DONE |
+| 93 `as unknown as` Supabase joins | ⏳ debito noto (gen types) |
 | CSP `'unsafe-inline'` script | ⏳ debito noto |
+| Pricing engine cross-vertical re-price bundle | ⏸ deferred (cap difensivi attivi) |
 | ~~Dark mode~~ | 🚫 scelta prodotto (solo light, non è debito) |
 
 ### Ambiente

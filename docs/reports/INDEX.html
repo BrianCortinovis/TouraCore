@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TouraCore — Indice report</title>
+  <style>
+    :root { --bg:#f7f8fb; --panel:#fff; --ink:#15202b; --muted:#5d6b7a; --line:#dce3ec; --ok:#047857; --medium:#1d4ed8; --high:#b45309; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    main { max-width: 980px; margin: 0 auto; padding: 32px 20px 56px; }
+    header { border-bottom: 1px solid var(--line); padding-bottom: 22px; margin-bottom: 28px; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    h2 { margin: 28px 0 12px; font-size: 18px; }
+    section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; margin-bottom: 16px; }
+    .meta { color: var(--muted); font-size: 13px; }
+    a { color: var(--medium); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    ul.report-list { list-style: none; padding: 0; margin: 8px 0 0; }
+    ul.report-list li { padding: 10px 0; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 16px; align-items: baseline; }
+    ul.report-list li:first-child { border-top: none; }
+    .title { font-weight: 600; }
+    .desc { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #ecfdf5; color: var(--ok); margin-left: 6px; }
+    .badge.ist { background: #f1f5f9; color: var(--muted); }
+    .badge.warn { background: #fffbeb; color: var(--high); }
+    code { background: #eef2f7; border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; font: 12px ui-monospace, SFMono-Regular, monospace; }
+  </style>
+</head>
+<body>
+<main>
+
+  <header>
+    <h1>📚 TouraCore — Indice Report</h1>
+    <div class="meta">
+      Hub navigabile di tutti i report di stato, audit, code review e fixing del progetto.<br>
+      Branch corrente: <code>main</code> · ultimo aggiornamento 2026-04-27.
+    </div>
+  </header>
+
+  <section>
+    <h2>🔥 Stato attuale (start here)</h2>
+    <ul class="report-list">
+      <li>
+        <div>
+          <div class="title"><a href="STATUS.html">STATUS.html</a> <span class="badge">LIVE</span></div>
+          <div class="desc">Snapshot stato attuale: KPI, hardening attivo (P0+P1 chiusi), test coverage 166/166, deferred P2, setup esterni pendenti.</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="title"><a href="../DEPLOY-STATE.md">DEPLOY-STATE.md</a> <span class="badge">LIVE</span></div>
+          <div class="desc">Cloud configurati (Vercel + Supabase + R2 + Stripe + Resend) + setup esterni pendenti (Upstash). Smoke test riproducibili.</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="title"><a href="../PROGETTO-STORIA.md">PROGETTO-STORIA.md</a></div>
+          <div class="desc">Storia completa progetto da M001 a oggi. Numeri chiave, stato, convenzioni, glossario non-dev.</div>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>🛡️ Code review più recente</h2>
+    <ul class="report-list">
+      <li>
+        <div>
+          <div class="title"><a href="code-review-2026-04-27/code-review-2026-04-27.html">code-review-2026-04-27.html</a> <span class="badge">CHIUSA</span></div>
+          <div class="desc">Code review full codebase con 4 agent paralleli (security/performance/correctness/frontend) + verifica LIVE browser. 6/6 P0 + 7/7 P1 chiusi. Report HTML completo.</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="title"><a href="code-review-2026-04-27/code-review-2026-04-27.md">code-review-2026-04-27.md</a></div>
+          <div class="desc">Versione markdown del report. Stesso contenuto.</div>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>🔍 Audits</h2>
+    <p style="font-size: 13px; color: var(--muted); margin: 0 0 4px;">Audit security e fixing storici.</p>
+    <ul class="report-list">
+      <li>
+        <div>
+          <div class="title"><a href="audits/audit-2026-04-26/index.html">audit-2026-04-26/index.html</a> <span class="badge ist">26/04</span></div>
+          <div class="desc">Audit completo + live-state pre code-review.</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="title"><a href="audits/fixing-2026-04-26/RESULT.html">fixing-2026-04-26/RESULT.html</a> <span class="badge ist">26/04</span></div>
+          <div class="desc">Sessione fixing post-deploy: 24/30 done, 6 skipped documented. SUMMARY + LOG + PLAN + steps S001+S010 nei subfolder.</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="title"><a href="audits/AUDIT-2026-04-25.md">AUDIT-2026-04-25.md</a> <span class="badge ist">25/04</span></div>
+          <div class="desc">Audit lint 236→0 + cache tag-based + ISR + dynamic recharts + 9 commit suite.</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="title"><a href="audits/security-tenant-isolation-audit-gpt.html">security-tenant-isolation-audit-gpt.html</a> <span class="badge ist">26/04</span></div>
+          <div class="desc">Audit GPT su isolamento tenant cross-package.</div>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>📜 Old reviews / sessioni storiche</h2>
+    <ul class="report-list">
+      <li>
+        <div>
+          <div class="title"><a href="old-reviews/SESSION-2026-04-26.md">SESSION-2026-04-26.md</a></div>
+          <div class="desc">Log sessione 26 aprile.</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="title"><a href="old-reviews/e2e-test-results-2026-04-22.md">e2e-test-results-2026-04-22.md</a></div>
+          <div class="desc">Risultati E2E Playwright completi 22 aprile.</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="title"><a href="old-reviews/knip-review-2026-04-21.md">knip-review-2026-04-21.md</a></div>
+          <div class="desc">Review knip dead code 21 aprile (parzialmente applicata).</div>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>📂 Altri assets</h2>
+    <ul class="report-list">
+      <li>
+        <div>
+          <div class="title"><a href="percorso-repo/">percorso-repo/</a></div>
+          <div class="desc">Screenshot percorsi struttura repo.</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="title"><a href="../billing/billing-system.html">billing/billing-system.html</a></div>
+          <div class="desc">Documentazione sistema billing v4 (cartella separata <code>docs/billing/</code>).</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="title"><a href="../billing/presentation/index.html">billing/presentation/index.html</a></div>
+          <div class="desc">Presentazione 11 slide animata billing v4 (con voice-over OpenAI TTS).</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="title"><a href="../mockups/listing-mockups/index.html">mockups/listing-mockups/index.html</a></div>
+          <div class="desc">5 mockup listing pubblici (accommodation, activity, bike, restaurant, wellness).</div>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>📝 Documentazione progetto</h2>
+    <ul class="report-list">
+      <li><div><div class="title"><a href="../architecture.md">architecture.md</a></div><div class="desc">Architettura monorepo</div></div></li>
+      <li><div><div class="title"><a href="../conventions.md">conventions.md</a></div><div class="desc">Convenzioni naming, commit, scope</div></div></li>
+      <li><div><div class="title"><a href="../runbook.md">runbook.md</a></div><div class="desc">Runbook ops + incidents</div></div></li>
+      <li><div><div class="title"><a href="../testing.md">testing.md</a></div><div class="desc">Strategia test + comandi</div></div></li>
+      <li><div><div class="title"><a href="../agent-workflow.md">agent-workflow.md</a></div><div class="desc">Workflow agenti (Claude, Codex, Antigravity)</div></div></li>
+      <li><div><div class="title"><a href="../backlog/features-pending-wiring.md">backlog/features-pending-wiring.md</a></div><div class="desc">Feature pending wire</div></div></li>
+      <li><div><div class="title"><a href="../decisions/README.md">decisions/README.md</a></div><div class="desc">ADR (Architecture Decision Records)</div></div></li>
+      <li><div><div class="title"><a href="../reference/spec.md">reference/spec.md</a></div><div class="desc">Reference spec tecnica</div></div></li>
+    </ul>
+  </section>
+
+</main>
+</body>
+</html>

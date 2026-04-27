@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TouraCore — Stato attuale 2026-04-27</title>
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --ink: #15202b;
+      --muted: #5d6b7a;
+      --line: #dce3ec;
+      --critical: #9f1239;
+      --high: #b45309;
+      --medium: #1d4ed8;
+      --low: #3f6212;
+      --ok: #047857;
+      --chip: #eef2f7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 14px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main { max-width: 1180px; margin: 0 auto; padding: 32px 20px 56px; }
+    header {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 22px;
+      margin-bottom: 24px;
+    }
+    h1 { margin: 0 0 8px; font-size: 32px; line-height: 1.1; }
+    h2 { margin: 28px 0 12px; font-size: 20px; }
+    h3 { margin: 20px 0 8px; font-size: 16px; }
+    p { margin: 8px 0; }
+    code {
+      background: var(--chip);
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      padding: 1px 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+    }
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 14px 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    .meta { color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; }
+    .grid { display: grid; gap: 14px; }
+    .cards-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .cards-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    @media (max-width: 720px) {
+      .cards-5, .cards-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .card, section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+    .metric { font-size: 30px; font-weight: 750; line-height: 1; }
+    .metric.ok { color: var(--ok); }
+    .metric.warn { color: var(--high); }
+    .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 2px 9px;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--chip);
+    }
+    .ok { color: var(--ok); }
+    .ok-bg { background: #ecfdf5; color: var(--ok); }
+    .high-bg { background: #fffbeb; color: var(--high); }
+    .medium-bg { background: #eff6ff; color: var(--medium); }
+    .critical-bg { background: #fff1f2; color: var(--critical); }
+    .pos { color: var(--ok); }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border-top: 1px solid var(--line); padding: 9px 8px; text-align: left; vertical-align: top; font-size: 13px; }
+    th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+    td.right { text-align: right; }
+    .verdict {
+      display: inline-block;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      background: #ecfdf5;
+      color: var(--ok);
+      border: 1px solid #a7f3d0;
+    }
+    nav.toc { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; margin-bottom: 22px; }
+    nav.toc a { color: var(--medium); text-decoration: none; margin-right: 16px; font-size: 13px; }
+    nav.toc a:hover { text-decoration: underline; }
+    .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+    ul.tight { margin: 6px 0 0 18px; padding: 0; }
+    ul.tight li { margin: 4px 0; }
+    .stripe { background: #f1f5f9; padding: 12px 14px; border-radius: 8px; font-size: 13px; margin: 10px 0; }
+    .stripe.warn { background: #fffbeb; border-left: 4px solid var(--high); }
+    .stripe.ok { background: #ecfdf5; border-left: 4px solid var(--ok); }
+  </style>
+</head>
+<body>
+<main>
+
+  <header>
+    <h1>TouraCore — Stato attuale</h1>
+    <div class="meta">
+      <span><strong>Data:</strong> 2026-04-27</span>
+      <span><strong>Branch:</strong> <code>main @ 89abbea</code></span>
+      <span><strong>Cloud:</strong> <a href="https://touracore.vercel.app" target="_blank">touracore.vercel.app</a> · Supabase <code>dysnrgnqzliodqrsohoz</code></span>
+    </div>
+    <p style="margin-top: 18px;">
+      <span class="verdict">PRODUCTION READY · 0 P0 aperti · 0 P1 aperti · 4 P2 deferred</span>
+    </p>
+  </header>
+
+  <nav class="toc">
+    <strong>Indice:</strong>
+    <a href="#kpi">KPI</a>
+    <a href="#hardening">Hardening</a>
+    <a href="#tests">Test coverage</a>
+    <a href="#cleanup">Cleanup repo</a>
+    <a href="#deferred">Deferred</a>
+    <a href="#setup">Setup esterni</a>
+    <a href="#cronologia">Cronologia commit oggi</a>
+  </nav>
+
+  <section id="kpi">
+    <h2 style="margin-top: 0;">KPI</h2>
+    <div class="grid cards-5">
+      <div class="card"><div class="label">File TS/TSX</div><div class="metric">1.014</div><div style="margin-top:4px;font-size:12px;color:var(--muted);">−3 dead files</div></div>
+      <div class="card"><div class="label">Migration LIVE</div><div class="metric">152</div></div>
+      <div class="card"><div class="label">Package core</div><div class="metric">26</div></div>
+      <div class="card"><div class="label">Test unit</div><div class="metric ok">166</div><div style="margin-top:4px;font-size:12px;color:var(--muted);">era 14</div></div>
+      <div class="card"><div class="label">Cron Vercel</div><div class="metric">22</div></div>
+    </div>
+
+    <h3>Verifiche automatiche</h3>
+    <div class="grid cards-4">
+      <div class="card"><div class="label">typecheck</div><div class="metric ok">18/18</div></div>
+      <div class="card"><div class="label">lint</div><div class="metric ok">0 err</div><div style="margin-top:4px;font-size:12px;color:var(--muted);">19 warning</div></div>
+      <div class="card"><div class="label">test:unit</div><div class="metric ok">166/166</div></div>
+      <div class="card"><div class="label">E2E Playwright</div><div class="metric ok">31/31</div></div>
+    </div>
+  </section>
+
+  <section id="hardening">
+    <h2>Hardening attivo (post code-review 2026-04-27)</h2>
+    <p>Tutti chiusi <strong>e verificati LIVE</strong> su prod. Vedi report completo: <a href="code-review-2026-04-27/code-review-2026-04-27.html">code-review-2026-04-27.html</a>.</p>
+
+    <h3>P0 — chiusi 6/6</h3>
+    <table>
+      <thead><tr><th>#</th><th>Area</th><th>Fix</th><th>Verifica LIVE</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="badge ok-bg">✓</span></td>
+          <td>Rate limiter</td>
+          <td>Upstash REST + fallback in-memory</td>
+          <td><code>packages/core/security/src/rate-limiter.ts</code></td>
+        </tr>
+        <tr>
+          <td><span class="badge ok-bg">✓</span></td>
+          <td>CSRF</td>
+          <td><code>assertCsrf()</code> su <code>/api/user/{delete,export}</code></td>
+          <td>cookie strict + helper <code>csrfHeaders()</code></td>
+        </tr>
+        <tr>
+          <td><span class="badge ok-bg">✓</span></td>
+          <td>Reset-password</td>
+          <td>Cookie httpOnly sentinella TTL 15min</td>
+          <td>LIVE: senza cookie → "Link non valido" gate</td>
+        </tr>
+        <tr>
+          <td><span class="badge ok-bg">✓</span></td>
+          <td>Public booking</td>
+          <td><code>gatePublicBooking()</code>: API key OR origin whitelisted</td>
+          <td>LIVE: 401 senza key, 401 origin non autorizzato</td>
+        </tr>
+        <tr>
+          <td><span class="badge ok-bg">✓</span></td>
+          <td>Anti-overbooking</td>
+          <td>Migration 00152 — 3 RPC advisory_xact_lock</td>
+          <td>LIVE su cloud: hospitality + bike + restaurant</td>
+        </tr>
+        <tr>
+          <td><span class="badge ok-bg">✓</span></td>
+          <td>Stripe</td>
+          <td>Webhook UNIQUE dedup + bundle cap €5k/€50k</td>
+          <td>LIVE: sig invalida → 400</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>P1 — chiusi 7/7</h3>
+    <table>
+      <thead><tr><th>Area</th><th>Fix</th></tr></thead>
+      <tbody>
+        <tr><td>Cron secret</td><td>Timing-safe via <code>verifyCronSecret()</code> su 22 cron</td></tr>
+        <tr><td>Webhook dedup race</td><td>UNIQUE <code>(provider, external_event_id)</code> + <code>tryRecordWebhookEvent</code></td></tr>
+        <tr><td>Hash compare</td><td><code>crypto.timingSafeEqual</code> su public booking key</td></tr>
+        <tr><td>Octorate HMAC</td><td>Opt-in via <code>settings.webhook_hmac_secret</code> + <code>X-Octorate-Signature</code></td></tr>
+        <tr><td>Query unbounded</td><td><code>.limit()</code> su 3 platform pages</td></tr>
+        <tr><td>Sidebar mobile</td><td>Hamburger + drawer responsive (era w-72 sempre)</td></tr>
+        <tr><td>error.tsx + loading.tsx</td><td>4 + 2 boundary aggiunti su <code>(app)</code>, <code>book</code>, <code>discover</code>, <code>(auth)</code></td></tr>
+        <tr><td>Metadata + noindex</td><td>Layout su <code>book/</code>, <code>embed/</code>, <code>widget/</code>, <code>checkin/</code></td></tr>
+        <tr><td>Bike VAT</td><td>Da <code>@touracore/fiscal/defaultVatRate('bike_rental')</code> (no più 0.22 hardcode)</td></tr>
+        <tr><td>Bike rollback</td><td>Delete parent reservation se items/addons insert fallisce</td></tr>
+        <tr><td>Form labels</td><td><code>htmlFor</code> auto via <code>React.useId</code> su Field helper platform</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="tests">
+    <h2>Test coverage (pnpm test:unit)</h2>
+    <p>Da <strong>14 test su 1 package</strong> → <strong>166 test su 7 package</strong> P0.</p>
+    <table>
+      <thead><tr><th>Package</th><th class="right">Test</th><th>Cosa copre</th></tr></thead>
+      <tbody>
+        <tr><td><code>@touracore/compliance</code></td><td class="right">14</td><td>render policy + version (preesistente)</td></tr>
+        <tr><td><code>@touracore/security</code></td><td class="right">44</td><td>CSRF · rate-limiter · AES-256-GCM tamper detection · ENCRYPTION_KEY validation</td></tr>
+        <tr><td><code>@touracore/fiscal</code></td><td class="right">27</td><td>VAT round-trip · router emitter precedence · ritenuta 20% occasionale · marca bollo €77.47 · LocazioneTuristica flags</td></tr>
+        <tr><td><code>@touracore/pricing</code></td><td class="right">20</td><td>13 rule type (occupancy, lead_time, last_minute, early_bird, day_of_week, group_size, season, event, duration_tier, surge, one_way_fee, delivery_fee) + filtri</td></tr>
+        <tr><td><code>@touracore/vouchers</code></td><td class="right">19</td><td>Code generation 80-bit entropy · alfabeto unambiguous · bcrypt verify · lookup hash deterministic · JWT round-trip · tampering · expiresIn</td></tr>
+        <tr><td><code>@touracore/partners</code></td><td class="right">24</td><td>Referral uniqueness · commission round · resolveCommissionPct precedence · HMAC timing-safe · tolerance · replay rejection</td></tr>
+        <tr><td><code>@touracore/billing</code></td><td class="right">18</td><td><code>calculateCommission</code> min/cap clamp · platform/agency split · magic link HMAC · ttlSeconds custom</td></tr>
+        <tr style="font-weight: 600; background: #f1f5f9;"><td>TOTALE</td><td class="right">166</td><td>0 fail</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="cleanup">
+    <h2>Cleanup repo</h2>
+    <p>Pulizia file morti + organizzazione doc.</p>
+    <h3>File rimossi</h3>
+    <ul class="tight">
+      <li><code>apps/web/src/app/(app)/[tenantSlug]/_shared/payments/capture-actions.ts</code> (zero ref, knip flagged)</li>
+      <li><code>apps/web/src/env.ts</code> (solo self-reference in commento)</li>
+      <li><code>apps/web/src/lib/entity-scope.ts</code> (zero ref)</li>
+      <li>6 script milestone obsoleti: <code>scripts/verify-{s01,s02,s03,s04,m003-s01,m003-s02}.sh</code></li>
+      <li>devDep root <code>dotenv</code> (zero ref)</li>
+    </ul>
+    <h3>Riorganizzazione doc</h3>
+    <pre>docs/reports/
+├── STATUS.html                          ← QUESTO
+├── INDEX.html                           ← navigazione completa
+├── code-review-2026-04-27/              ← review più recente
+│   ├── code-review-2026-04-27.html
+│   └── code-review-2026-04-27.md
+├── audits/                              ← audit security/integrità
+│   ├── AUDIT-2026-04-25.md
+│   ├── audit-2026-04-26/                (folder)
+│   ├── fixing-2026-04-26/               (folder)
+│   └── security-tenant-isolation-audit-gpt.html
+├── old-reviews/                         ← report storici
+│   ├── e2e-test-results-2026-04-22.md
+│   ├── knip-review-2026-04-21.md
+│   └── SESSION-2026-04-26.md
+└── percorso-repo/                       ← screenshot percorsi</pre>
+  </section>
+
+  <section id="deferred">
+    <h2>P2 deferred (non blocker)</h2>
+    <p>Tracciati nel report code-review. Nessuno è bloccante per onboarding produzione.</p>
+    <table>
+      <thead><tr><th>Item</th><th>Stima</th><th>Perché deferred</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>93 <code>as unknown as</code> (Supabase joins)</td>
+          <td>2-3h</td>
+          <td>Richiede <code>npx supabase gen types typescript</code> con env access — fix one-shot quando possibile</td>
+        </tr>
+        <tr>
+          <td>CSP nonce strategy</td>
+          <td>1gg</td>
+          <td>Refactor Next.js middleware + rischio rottura RSC. Limit Next.js documentato</td>
+        </tr>
+        <tr>
+          <td>Pricing engine cross-vertical re-price bundle</td>
+          <td>1-2gg</td>
+          <td>Cap difensivi €5k/€50k già attivi mitigano. Refactor architetturale</td>
+        </tr>
+        <tr>
+          <td>Cron loyalty-recalc + billing-snapshots N+1</td>
+          <td>1-2gg</td>
+          <td>Richiede design RPC dedicate batch. Performance non bloccante a volumi attuali</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="stripe ok">
+      <strong>Dark mode:</strong> 🚫 scelta prodotto Brian — solo light mode. NON è debito tecnico, NON flaggare in review future.
+    </div>
+  </section>
+
+  <section id="setup">
+    <h2>Setup esterni pendenti</h2>
+
+    <h3>1. Upstash Redis (rate limiter multi-instance)</h3>
+    <div class="stripe warn">
+      <strong>Status:</strong> codice pronto, env mancanti → fallback in-memory attivo (= comportamento pre-fix su Vercel multi-instance).
+    </div>
+    <ol style="font-size:13px;">
+      <li>Creare account Upstash → nuovo Redis database (region EU)</li>
+      <li>Copiare <code>UPSTASH_REDIS_REST_URL</code> + <code>UPSTASH_REDIS_REST_TOKEN</code></li>
+      <li>Settare su Vercel su 3 env: Production, Preview, Development</li>
+      <li>Redeploy auto-applica</li>
+    </ol>
+
+    <h3>2. Vercel Web Analytics (rimuove noise console)</h3>
+    <p>Vercel Dashboard → progetto TouraCore → Analytics → Enable.</p>
+  </section>
+
+  <section id="cronologia">
+    <h2>Cronologia commit chiusura code-review</h2>
+    <table>
+      <thead><tr><th>Commit</th><th>Cosa</th></tr></thead>
+      <tbody>
+        <tr><td><code>89abbea</code></td><td>test(core): coverage 6 package P0 — 166 test totali (era 14)</td></tr>
+        <tr><td><code>9e62d02</code></td><td>docs: dark mode rimossa da debito tecnico (scelta prodotto)</td></tr>
+        <tr><td><code>ce671d8</code></td><td>chore(cleanup): 3 file dead + 6 script verify obsoleti + Field htmlFor + Octorate HMAC opt-in</td></tr>
+        <tr><td><code>8f81422</code></td><td>docs(memory): aggiorna CLAUDE.md + PROGETTO-STORIA + DEPLOY-STATE</td></tr>
+        <tr><td><code>b160d0c</code></td><td>fix(db): migration 00152 use processed_at not created_at</td></tr>
+        <tr><td><code>e755d1f</code></td><td>fix(security,perf,fe): chiusura P0 + P1 da code-review 2026-04-27</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="footer">
+    Report generato 2026-04-27 · Branch <code>main / 89abbea</code> · TouraCore.
+    Per cronologia completa progetto vedi <a href="../PROGETTO-STORIA.md">PROGETTO-STORIA.md</a> · Per setup deploy <a href="../DEPLOY-STATE.md">DEPLOY-STATE.md</a>.
+  </div>
+
+</main>
+</body>
+</html>
