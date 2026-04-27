@@ -6,7 +6,7 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
-    "test:unit": "pnpm -F @touracore/compliance test",
+    "test:unit": "pnpm -F @touracore/compliance -F @touracore/security -F @touracore/fiscal -F @touracore/pricing -F @touracore/vouchers -F @touracore/partners -F @touracore/billing test",
     "test:e2e": "pnpm --dir apps/web run test:e2e",
     "test:e2e:public": "pnpm --dir apps/web run test:e2e:public",
     "test:e2e:m080": "pnpm --dir apps/web run test:e2e:m080",

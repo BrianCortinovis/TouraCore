@@ -10,7 +10,8 @@
   },
   "scripts": {
     "build": "true",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
@@ -18,6 +19,7 @@
     "stripe": "^17.7.0"
   },
   "devDependencies": {
-    "@types/node": "^22"
+    "@types/node": "^22",
+    "vitest": "^2.1.5"
   }
 }

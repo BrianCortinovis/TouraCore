@@ -138,6 +138,29 @@ export function generateReferralCode(partnerSlug: string): string {
   return `${slug}-${suffix}`
 }
 
+/**
+ * Pure: calcola commission amount dato pct + booking amount.
+ * Round a 2 decimali (cents). Esposto separato per testabilità + reuse cron.
+ */
+export function computeCommissionAmount(bookingAmount: number, pct: number): number {
+  return Math.round((bookingAmount * Number(pct)) / 100 * 100) / 100
+}
+
+/**
+ * Pure: applica precedenza link override → per_vertical → default.
+ */
+export function resolveCommissionPct(input: {
+  linkOverride?: number | null
+  perVertical?: Partial<Record<string, number>>
+  vertical: string
+  defaultPct: number
+}): number {
+  if (input.linkOverride != null) return Number(input.linkOverride)
+  const v = input.perVertical?.[input.vertical]
+  if (v != null) return Number(v)
+  return Number(input.defaultPct)
+}
+
 export async function createPartnerLink(params: {
   partnerId: string
   tenantId: string
@@ -259,12 +282,14 @@ export async function attributeCommission(
   }
 
   // Commission % precedenza: link override > per_vertical > default
-  const pct =
-    link.commission_pct_override ??
-    partner.commission_per_vertical[input.vertical] ??
-    partner.commission_pct_default
+  const pct = resolveCommissionPct({
+    linkOverride: link.commission_pct_override,
+    perVertical: partner.commission_per_vertical,
+    vertical: input.vertical,
+    defaultPct: partner.commission_pct_default,
+  })
 
-  const commissionAmount = Math.round((input.bookingAmount * Number(pct)) / 100 * 100) / 100
+  const commissionAmount = computeCommissionAmount(input.bookingAmount, pct)
 
   const idemKey = input.idempotencyKey ?? `${input.reservationTable}:${input.reservationId}:${partner.id}`
 

@@ -11,9 +11,16 @@
     "./encryption": "./src/encryption.ts"
   },
   "scripts": {
-    "build": "true"
+    "build": "true",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "peerDependencies": {
     "next": ">=14"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.5"
   }
 }
