@@ -35,7 +35,7 @@ export async function checkAvailability(params: {
 
   const { data: rooms } = await supabase
     .from('rooms')
-    .select('id, room_type_id')
+    .select('id, room_type_id, base_price')
     .eq('entity_id', entityId)
     .eq('is_active', true)
     .in('status', ['available', 'cleaning'])
@@ -94,6 +94,15 @@ export async function checkAvailability(params: {
 
   for (const rt of roomTypes as RoomType[]) {
     const typeRooms = (rooms ?? []).filter((r) => r.room_type_id === rt.id)
+    // Fallback: se room_type non ha base_price ma le rooms sì, usa la media
+    if (!rt.base_price || Number(rt.base_price) === 0) {
+      const prices = typeRooms
+        .map((r) => Number((r as { base_price?: number | string | null }).base_price ?? 0))
+        .filter((p) => p > 0)
+      if (prices.length > 0) {
+        rt.base_price = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length)
+      }
+    }
     const freeRooms = typeRooms.filter(
       (r) => !blockedRoomIds.has(r.id) && !reservedRoomIds.has(r.id)
     )
@@ -105,7 +114,7 @@ export async function checkAvailability(params: {
     const available = Math.max(0, freeRooms.length - reservedByType)
 
     let ratePrice: RatePrice | null = null
-    if (publicPlanId && activeSeason) {
+    if (publicPlanId) {
       const { data: rp } = await supabase
         .from('rate_prices')
         .select('*')

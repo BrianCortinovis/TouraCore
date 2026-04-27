@@ -217,6 +217,26 @@ export async function createPropertyAction(input: PropertyFormData): Promise<Act
     })
   }
 
+  // Seed rate plan pubblico di default per consentire prenotazioni online subito.
+  // Il prezzo per notte sarà letto da rooms.base_price finché l'owner non
+  // configura una rate price specifica.
+  const { error: ratePlanError } = await supabase
+    .from('rate_plans')
+    .insert({
+      entity_id: property.id,
+      name: 'Tariffa Standard',
+      code: 'STD',
+      rate_type: 'standard',
+      meal_plan: 'room_only',
+      description: 'Tariffa flessibile auto-creata. Modificala da Tariffe.',
+      is_public: true,
+      is_active: true,
+      sort_order: 1,
+    })
+  if (ratePlanError) {
+    console.error('[createPropertyAction] seed rate_plan default failed (non-blocking):', ratePlanError.message)
+  }
+
   const auditCtx = await getAuditContext(tenantId, user.id)
   await logAudit({
     context: auditCtx,
