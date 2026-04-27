@@ -6,6 +6,32 @@ TouraCore e un monorepo multi-verticale per il turismo. La repo contiene una web
 
 Stato: **M001-M106 completate** (mix GSD/ChatGPT/Claude, disordine tracking pre-M107). Da M107 in poi tracking ordinato — vedi `docs/PROGETTO-STORIA.md` per storia completa e convenzioni.
 
+**Hardening attivo (post code-review 2026-04-27, commit `b160d0c` LIVE)**:
+- Rate limiter: Upstash REST (`packages/core/security/src/rate-limiter.ts`). Attiva auto se env `UPSTASH_REDIS_REST_URL`+`_TOKEN`. Senza → fallback in-memory.
+- CSRF: `assertCsrf()` / `verifyCsrf()` da `@touracore/security/csrf-server` su `/api/user/{delete,export}` mutating. Client: `csrfHeaders()` da `@touracore/security/csrf-client`.
+- Reset-password: cookie httpOnly `__touracore_pwd_recovery` (TTL 15min) settato da `auth/callback?type=recovery`. Page server component verifica cookie + render `ResetPasswordClient`.
+- Public booking: `gatePublicBooking()` in `apps/web/src/app/api/public/booking/_shared.ts`. Accept = API key valida OR origin in `PUBLIC_BOOKING_ALLOWED_ORIGINS` OR same-origin `NEXT_PUBLIC_APP_URL`. Hash compare `crypto.timingSafeEqual`.
+- Migration 00152 LIVE su cloud: 3 RPC anti-overbooking (`hospitality_room_check_availability`, `bike_rental_check_availability`, `restaurant_table_acquire_lock`) — pattern `pg_advisory_xact_lock` + recheck. Wirate in `book/[slug]/actions.ts`, `verticals/bike-rental/.../create-reservation.ts`, `dine/.../waitlist/actions.ts`.
+- Webhook stripe: atomic dedup via UNIQUE `(provider, external_event_id)` + `tryRecordWebhookEvent()` in `lib/webhook-dedup.ts`.
+- Bundle anti price-tampering: cap €5k/item + €50k/bundle in `api/v1/bundles/route.ts`.
+- Cron secret timing-safe: `verifyCronSecret()` in `apps/web/src/lib/cron-auth.ts` (22 cron migrati).
+- Bike VAT: `@touracore/fiscal/defaultVatRate('bike_rental')`, mai hardcode 0.22.
+- Bike create-reservation: rollback parent reservation se items/addons insert fallisce.
+- Sidebar: `SharedSidebar.tsx` responsive (hamburger mobile + drawer, hidden md:block desktop).
+- Error boundaries: `error.tsx` su `(app)/`, `book/`, `discover/`, `(auth)/`. Loading: `(app)/loading.tsx`, `book/loading.tsx`.
+- Metadata + noindex: layout su `book/`, `embed/`, `widget/`, `checkin/`.
+
+**P2 noti ancora aperti** (tracciati in `docs/reports/code-review-2026-04-27.html`):
+- 93 `as unknown as` su Supabase joins (fix one-shot via `supabase gen types typescript`)
+- 0 test su 25/26 package core (solo `@touracore/compliance`)
+- CSP `script-src 'unsafe-inline'` (migrare a nonce strategy)
+- Dark mode 0 occorrenze
+- Cron `loyalty-recalc` + `billing-snapshots` N+1 deferred
+
+**Setup esterni richiesti (manuale Brian)**:
+- Account Upstash → env Vercel `UPSTASH_REDIS_REST_URL` + `_TOKEN` su 3 env (sennò rate limit fallback in-memory).
+- Vercel Web Analytics: abilitare dal dashboard (rimuove 404 noise script.js).
+
 ## Mappa Rapida
 
 - `apps/web`: UI, route handlers, server actions, Playwright e flussi utente

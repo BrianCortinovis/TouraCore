@@ -30,16 +30,41 @@
 
 ---
 
-## 2. Stato al 24 aprile 2026
+## 2. Stato al 27 aprile 2026
 
 ### Numeri chiave
 
 - **106 milestone completate** (M001-M106)
-- **120+ commit** sul ramo `main`
-- **137 migration** database Supabase applicate (progetto cloud `dysnrgnqzliodqrsohoz`)
+- **140+ commit** sul ramo `main`
+- **152 migration** database Supabase applicate (progetto cloud `dysnrgnqzliodqrsohoz`)
 - **27 pacchetti core** riusabili (`packages/core/`)
 - **4 verticali attivi** + 1 in preparazione
-- **E2E Playwright**: 31/31 PASS su flusso completo (login, CMS, prenotazioni)
+- **E2E Playwright**: 31/31 PASS · typecheck 17/17 · test:unit 14/14
+- **Code review full codebase 2026-04-27**: 6/6 P0 + 6/7 P1 chiusi e LIVE su prod (commit `b160d0c`)
+
+### Hardening sicurezza/qualità attivo (post code-review 2026-04-27)
+
+Vedi report completo: `docs/reports/code-review-2026-04-27.html`.
+
+| Area | Stato |
+|---|---|
+| Rate limiter Upstash REST + fallback memory | ✅ LIVE |
+| CSRF mutating routes `/api/user/*` | ✅ LIVE |
+| Reset-password gate via cookie sentinella | ✅ LIVE verificato |
+| Public booking gate (key/origin) | ✅ LIVE verificato (401 senza key) |
+| Anti-overbooking RPC × 3 verticali (migration 00152) | ✅ LIVE su cloud |
+| Webhook stripe atomic dedup (UNIQUE) | ✅ LIVE |
+| Bundle anti price-tampering (cap €5k/€50k) | ✅ LIVE |
+| Cron secret timing-safe (22 cron) | ✅ LIVE |
+| Sidebar mobile responsive | ✅ LIVE |
+| error.tsx + loading.tsx mancanti | ✅ LIVE |
+| Metadata noindex /book /embed /widget /checkin | ✅ LIVE |
+| Bike VAT da @touracore/fiscal | ✅ LIVE |
+| Cron loyalty-recalc + billing-snapshots N+1 | ⏸ deferred (non blocker) |
+| 0 test 25/26 package core | ⏳ debito noto |
+| 93 `as unknown as` Supabase joins | ⏳ debito noto |
+| CSP `'unsafe-inline'` script | ⏳ debito noto |
+| Dark mode | ⏳ non implementato |
 
 ### Ambiente
 
