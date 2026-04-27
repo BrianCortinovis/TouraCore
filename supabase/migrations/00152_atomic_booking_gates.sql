@@ -155,7 +155,7 @@ COMMENT ON FUNCTION restaurant_table_acquire_lock IS 'P0 #5 race gate: advisory-
 -- ================================================================
 -- Drop duplicates if any (defensive, prima di constraint)
 WITH dups AS (
-  SELECT id, ROW_NUMBER() OVER (PARTITION BY provider, external_event_id ORDER BY created_at) AS rn
+  SELECT id, ROW_NUMBER() OVER (PARTITION BY provider, external_event_id ORDER BY processed_at NULLS LAST) AS rn
   FROM public.webhook_events
 )
 DELETE FROM public.webhook_events WHERE id IN (SELECT id FROM dups WHERE rn > 1);
