@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { verifyCronSecret } from "@/lib/cron-auth"
 import { createServiceRoleClient } from '@touracore/db/server'
 import { getStripe, buildConnectChargeParamsSafe } from '@touracore/billing/server'
 
@@ -55,8 +56,7 @@ const VERTICAL_CONFIG: Record<Vertical, {
 async function handler(req: Request) {
   const secret = process.env.CRON_SECRET
   if (!secret) return NextResponse.json({ error: 'cron_not_configured' }, { status: 503 })
-  const auth = req.headers.get('authorization')
-  if (auth !== `Bearer ${secret}`) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  if (!verifyCronSecret(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 })
 
   const supabase = await createServiceRoleClient()
   const stripe = (() => { try { return getStripe() } catch { return null } })()

@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server'
 import { createServiceRoleClient } from '@touracore/db/server'
 import { getStripe, buildConnectChargeParamsSafe } from '@touracore/billing/server'
-import { jsonWithCors } from '../_shared'
+import { gatePublicBooking, jsonWithCors } from '../_shared'
 
 export async function OPTIONS(req: NextRequest) {
   return jsonWithCors({}, { status: 204, origin: req.headers.get('origin') })
@@ -15,6 +15,12 @@ export async function OPTIONS(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   const origin = req.headers.get('origin')
+
+  const gate = await gatePublicBooking(req)
+  if (!gate.ok) {
+    return jsonWithCors({ error: gate.error }, { status: gate.status, origin })
+  }
+
   let body: { reservationId?: string; includeTouristTax?: boolean; returnUrl?: string; cancelUrl?: string }
   try { body = await req.json() } catch { return jsonWithCors({ error: 'Invalid JSON' }, { status: 400, origin }) }
 

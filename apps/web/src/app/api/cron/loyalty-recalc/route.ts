@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { verifyCronSecret } from "@/lib/cron-auth"
 import { createServiceRoleClient } from '@touracore/db/server'
 
 export const dynamic = 'force-dynamic'
@@ -8,7 +9,7 @@ function authorize(req: NextRequest): boolean {
   const cronSecret = process.env.CRON_SECRET
   if (!cronSecret) return false
   if (req.headers.get('x-vercel-cron')) return true
-  return req.headers.get('authorization') === `Bearer ${cronSecret}`
+  return verifyCronSecret(req)
 }
 
 /**

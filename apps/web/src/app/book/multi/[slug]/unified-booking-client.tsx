@@ -297,13 +297,15 @@ function HospitalityTab({ entities, onAdd }: { entities: EntityRef[]; onAdd: (i:
 
   const handleAdd = () => {
     if (!selected || nights === 0) return
-    const unitPriceCents = 12000  // TODO: fetch real rate via /api pricing
+    // Prezzo placeholder finché /api/pricing non espone tariffa reale per (entityId, range, guests).
+    // Il backend `/api/v1/bundles` enforce cap €5k/item + verifica entity ownership tenant.
+    const unitPriceCents = 12000
     onAdd({
       itemType: 'hospitality',
       entityId: selected.id,
       entityName: selected.name,
-      description: `${nights} ${nights === 1 ? 'notte' : 'notti'} · ${guests} ospiti`,
-      config: { checkIn, checkOut, guests, nights },
+      description: `${nights} ${nights === 1 ? 'notte' : 'notti'} · ${guests} ospiti (preventivo)`,
+      config: { checkIn, checkOut, guests, nights, priceProvisional: true },
       quantity: nights,
       unitPriceCents,
       vatRate: 10,
@@ -398,7 +400,8 @@ function ExperienceTab({ entities, onAdd }: { entities: EntityRef[]; onAdd: (i: 
 
   const handleAdd = () => {
     if (!selected || !date) return
-    const unitPriceCents = 4500  // TODO: fetch real price
+    // Prezzo placeholder; backend cap €5k/item.
+    const unitPriceCents = 4500
     onAdd({
       itemType: 'experience',
       entityId: selected.id,

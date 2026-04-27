@@ -2,6 +2,7 @@ import { randomInt } from 'node:crypto'
 import { createServiceRoleClient, createServerSupabaseClient } from '@touracore/db'
 import { redeemCredit } from '@touracore/vouchers/server'
 import { attributeCommission } from '@touracore/partners/server'
+import { defaultVatRate } from '@touracore/fiscal'
 import { computeQuote, type QuoteRequest } from './quote'
 import { findNextAvailableBike } from './availability'
 import type { BikeRentalReservationRow } from '../types/database'
@@ -59,6 +60,29 @@ export async function createReservation(
     if (!br) return { success: false, error: 'bike_rental not found' }
 
     const tenantId = (br as { tenant_id: string }).tenant_id
+
+    // P0 #5: gate atomico anti-overbooking per ogni tipo bici richiesto.
+    // Recheck sotto advisory lock prima dell'insert.
+    for (const item of input.items) {
+      const { data: gateRows, error: gateErr } = await supabase.rpc(
+        'bike_rental_check_availability',
+        {
+          p_bike_rental_id: input.bikeRentalId,
+          p_bike_type: item.bikeTypeKey,
+          p_rental_start: input.rentalStart,
+          p_rental_end: input.rentalEnd,
+          p_quantity: item.quantity,
+        },
+      )
+      if (gateErr) {
+        return { success: false, error: `availability check failed: ${gateErr.message}` }
+      }
+      const row = Array.isArray(gateRows) ? gateRows[0] : gateRows
+      if (!row || !(row as { has_capacity: boolean }).has_capacity) {
+        return { success: false, error: `bici "${item.bikeTypeKey}" non disponibili per la finestra richiesta` }
+      }
+    }
+
     // CSPRNG: reference code visible al cliente, no collisioni accidentali
     const referenceCode = `BK-${new Date().getFullYear()}-${String(randomInt(100000, 1000000))}`
 
@@ -134,7 +158,14 @@ export async function createReservation(
       }
     }
     if (itemInserts.length > 0) {
-      await supabase.from('bike_rental_reservation_items').insert(itemInserts)
+      const { error: itemsErr } = await supabase
+        .from('bike_rental_reservation_items')
+        .insert(itemInserts)
+      if (itemsErr) {
+        // Rollback parent reservation per evitare riga orfana senza items.
+        await supabase.from('bike_rental_reservations').delete().eq('id', reservationId)
+        return { success: false, error: `items insert failed: ${itemsErr.message}` }
+      }
     }
 
     // Addons
@@ -148,7 +179,14 @@ export async function createReservation(
       line_total: a.lineTotal,
     }))
     if (addonInserts.length > 0) {
-      await supabase.from('bike_rental_reservation_addons').insert(addonInserts)
+      const { error: addonsErr } = await supabase
+        .from('bike_rental_reservation_addons')
+        .insert(addonInserts)
+      if (addonsErr) {
+        await supabase.from('bike_rental_reservation_items').delete().eq('reservation_id', reservationId)
+        await supabase.from('bike_rental_reservations').delete().eq('id', reservationId)
+        return { success: false, error: `addons insert failed: ${addonsErr.message}` }
+      }
     }
 
     // Voucher / gift card / promo — atomic redeem con idempotency_key = reservationId
@@ -172,9 +210,10 @@ export async function createReservation(
       )
       if (redeemResult.success && redeemResult.amount_applied) {
         finalDiscount = quote.discount + redeemResult.amount_applied
-        // Ricalcolo tax + total con discount aggiornato
+        // Ricalcolo tax + total con discount aggiornato (VAT centralizzato in @touracore/fiscal)
         const taxable = baseAmount - finalDiscount
-        const taxAmount = Math.round(taxable * 0.22 * 100) / 100
+        const vatRate = defaultVatRate('bike_rental')
+        const taxAmount = Math.round(taxable * (vatRate / 100) * 100) / 100
         finalTotal = Math.round((taxable + taxAmount) * 100) / 100
         await supabase
           .from('bike_rental_reservations')

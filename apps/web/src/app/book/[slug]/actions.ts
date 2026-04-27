@@ -372,6 +372,25 @@ export async function createPublicBookingAction(input: {
     return { success: false, error: 'La tipologia selezionata non è più disponibile per le date scelte.' }
   }
 
+  // P0 #5: gate atomico anti-overbooking. Recheck sotto advisory lock subito
+  // prima dell'insert, per prevenire race con altre prenotazioni concorrenti
+  // sullo stesso scope (entity, room_type, finestra date).
+  const { data: gateRows, error: gateErr } = await supabase
+    .rpc('hospitality_room_check_availability', {
+      p_entity_id: input.entityId,
+      p_room_type_id: input.roomTypeId,
+      p_check_in: input.checkIn,
+      p_check_out: input.checkOut,
+    })
+  if (gateErr) {
+    console.error('[createPublicBooking] availability gate error', gateErr)
+    return { success: false, error: 'Errore verifica disponibilità.' }
+  }
+  const gateRow = Array.isArray(gateRows) ? gateRows[0] : gateRows
+  if (!gateRow || (gateRow as { available_rooms: number }).available_rooms < 1) {
+    return { success: false, error: 'La tipologia selezionata non è più disponibile (concorrenza).' }
+  }
+
   const nights = Math.max(
     1,
     Math.ceil(

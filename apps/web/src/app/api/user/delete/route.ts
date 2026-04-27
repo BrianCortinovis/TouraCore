@@ -1,12 +1,16 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerSupabaseClient } from '@touracore/db/server'
 import { getCurrentUser } from '@touracore/auth'
+import { verifyCsrf } from '@touracore/security/csrf-server'
 
 export const runtime = 'nodejs'
 
 const SOFT_DELETE_GRACE_DAYS = 30
 
 export async function POST(req: NextRequest) {
+  if (!(await verifyCsrf())) {
+    return NextResponse.json({ error: 'csrf_invalid' }, { status: 403 })
+  }
   const user = await getCurrentUser()
   if (!user) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
@@ -65,6 +69,9 @@ export async function POST(req: NextRequest) {
 
 // Cancel pending deletion
 export async function DELETE() {
+  if (!(await verifyCsrf())) {
+    return NextResponse.json({ error: 'csrf_invalid' }, { status: 403 })
+  }
   const user = await getCurrentUser()
   if (!user) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@touracore/db/server'
 import { getCurrentUser } from '@touracore/auth'
+import { verifyCsrf } from '@touracore/security/csrf-server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -23,6 +24,9 @@ const USER_DATA_SOURCES: Array<{
 ]
 
 export async function POST() {
+  if (!(await verifyCsrf())) {
+    return NextResponse.json({ error: 'csrf_invalid' }, { status: 403 })
+  }
   const user = await getCurrentUser()
   if (!user) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })

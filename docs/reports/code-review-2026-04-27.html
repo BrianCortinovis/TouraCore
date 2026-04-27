@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TouraCore — Code Review completa 2026-04-27</title>
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --ink: #15202b;
+      --muted: #5d6b7a;
+      --line: #dce3ec;
+      --critical: #9f1239;
+      --high: #b45309;
+      --medium: #1d4ed8;
+      --low: #3f6212;
+      --ok: #047857;
+      --chip: #eef2f7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 14px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main { max-width: 1180px; margin: 0 auto; padding: 32px 20px 56px; }
+    header {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 22px;
+      margin-bottom: 24px;
+    }
+    h1 { margin: 0 0 8px; font-size: 30px; line-height: 1.15; }
+    h2 { margin: 28px 0 12px; font-size: 20px; }
+    h3 { margin: 20px 0 8px; font-size: 16px; }
+    p { margin: 8px 0; }
+    code {
+      background: var(--chip);
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      padding: 1px 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+    }
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 14px 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    .meta { color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; }
+    .grid { display: grid; gap: 14px; }
+    .cards { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .cards-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card, section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .metric { font-size: 28px; font-weight: 750; line-height: 1; }
+    .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--chip);
+    }
+    .critical { color: var(--critical); background: #fff1f2; }
+    .high { color: var(--high); background: #fffbeb; }
+    .medium { color: var(--medium); background: #eff6ff; }
+    .low { color: var(--low); background: #f7fee7; }
+    .ok { color: var(--ok); background: #ecfdf5; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border-top: 1px solid var(--line); padding: 9px 8px; text-align: left; vertical-align: top; font-size: 13px; }
+    th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    .finding { border-left: 4px solid var(--line); padding-left: 14px; margin: 14px 0; }
+    .finding.critical-border { border-left-color: var(--critical); }
+    .finding.high-border { border-left-color: var(--high); }
+    .finding.medium-border { border-left-color: var(--medium); }
+    .finding.low-border { border-left-color: var(--low); }
+    .finding.ok-border { border-left-color: var(--ok); }
+    .verdict {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .verdict.changes { background: #fff1f2; color: var(--critical); border: 1px solid #fecaca; }
+    nav.toc { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 18px; margin-bottom: 22px; }
+    nav.toc a { color: var(--medium); text-decoration: none; margin-right: 14px; font-size: 13px; }
+    nav.toc a:hover { text-decoration: underline; }
+    .file-path { color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; }
+    .pos { color: var(--ok); }
+    ul.tight { margin: 6px 0 0 18px; }
+    ul.tight li { margin: 3px 0; }
+    .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+  </style>
+</head>
+<body>
+<main>
+
+  <header>
+    <h1>Code Review TouraCore — Full Codebase</h1>
+    <div class="meta">
+      <span><strong>Data:</strong> 2026-04-27</span>
+      <span><strong>Branch:</strong> <code>main @ ac3e36b</code></span>
+      <span><strong>Scope:</strong> 1017 file TS/TSX · 26 package core · 4 verticali · ~30 route group</span>
+      <span><strong>Metodo:</strong> 4 agent paralleli (security/performance/correctness/frontend) + verifica LIVE browser <code>touracore.vercel.app</code></span>
+    </div>
+    <p style="margin-top: 18px;">
+      <span class="verdict changes">Verdict: Request Changes</span>
+      &nbsp; Postura globale buona, 6 issue P0 da chiudere prima dell'onboarding di tenant produzione non-demo.
+    </p>
+  </header>
+
+  <nav class="toc">
+    <strong>Indice:</strong>
+    <a href="#summary">Sintesi</a>
+    <a href="#p0">P0 Blocker</a>
+    <a href="#p1">P1 High</a>
+    <a href="#p2">P2 Medium</a>
+    <a href="#positives">Cosa va bene</a>
+    <a href="#browser">Verifica LIVE</a>
+    <a href="#roi">Top ROI</a>
+    <a href="#files">File chiave</a>
+  </nav>
+
+  <section id="summary">
+    <h2 style="margin-top: 0;">Sintesi per dominio</h2>
+    <div class="grid cards">
+      <div class="card">
+        <div class="label">Security</div>
+        <div class="metric">3<span style="font-size: 14px; color: var(--muted);"> / 5 / 4</span></div>
+        <div style="margin-top: 6px; font-size: 12px; color: var(--muted);">P0 / P1 / P2</div>
+      </div>
+      <div class="card">
+        <div class="label">Performance</div>
+        <div class="metric">4<span style="font-size: 14px; color: var(--muted);"> / 9 / 8</span></div>
+        <div style="margin-top: 6px; font-size: 12px; color: var(--muted);">P0 / P1 / P2</div>
+      </div>
+      <div class="card">
+        <div class="label">Correctness</div>
+        <div class="metric">6<span style="font-size: 14px; color: var(--muted);"> / 8 / 12</span></div>
+        <div style="margin-top: 6px; font-size: 12px; color: var(--muted);">P0 / P1 / P2</div>
+      </div>
+      <div class="card">
+        <div class="label">Frontend / UX</div>
+        <div class="metric">3<span style="font-size: 14px; color: var(--muted);"> / 3 / 9</span></div>
+        <div style="margin-top: 6px; font-size: 12px; color: var(--muted);">P0 / P1 / P2</div>
+      </div>
+      <div class="card">
+        <div class="label">Browser LIVE</div>
+        <div class="metric">0<span style="font-size: 14px; color: var(--muted);"> / 1 / 1</span></div>
+        <div style="margin-top: 6px; font-size: 12px; color: var(--muted);">P0 / P1 / P2</div>
+      </div>
+    </div>
+
+    <h3>Numeri chiave</h3>
+    <div class="grid cards-4">
+      <div class="card"><div class="label">File scansionati</div><div class="metric">1.017</div></div>
+      <div class="card"><div class="label">Secrets hardcoded</div><div class="metric pos">0</div></div>
+      <div class="card"><div class="label"><code>as unknown as</code></div><div class="metric">93</div></div>
+      <div class="card"><div class="label">Test su 26 package core</div><div class="metric">1</div></div>
+    </div>
+  </section>
+
+  <section id="p0">
+    <h2>P0 — Blocker (chiudere subito)</h2>
+    <p>Sei issue che bloccano l'onboarding di tenant produzione non-demo.</p>
+
+    <table>
+      <thead>
+        <tr><th>#</th><th>Dominio</th><th>File</th><th>Issue</th><th>Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge critical">1</span></td>
+          <td>Security</td>
+          <td><code>packages/core/security/src/rate-limiter.ts:8</code></td>
+          <td>Rate limiter <code>Map</code> in-memory: su Vercel multi-instance la protezione brute-force su <code>/login</code> e <code>/api/auth/login</code> è bypass-by-design.</td>
+          <td>Migrare a Upstash Redis / Vercel KV (<code>@upstash/ratelimit</code> sliding window).</td>
+        </tr>
+        <tr>
+          <td><span class="badge critical">2</span></td>
+          <td>Security</td>
+          <td>tutti <code>/api/*</code> POST cookie-auth</td>
+          <td>CSRF cookie generato ma <code>assertCsrf()</code> mai chiamato. <code>/api/user/delete</code>, <code>/api/user/export</code>, <code>/api/cookie-consent</code> sono CSRF-vulnerabili.</td>
+          <td>Aggiungere <code>await assertCsrf()</code> in tutti i POST/DELETE/PUT cookie-auth.</td>
+        </tr>
+        <tr>
+          <td><span class="badge critical">3</span></td>
+          <td>Security</td>
+          <td><code>apps/web/src/app/(auth)/reset-password/page.tsx:41-50</code></td>
+          <td>Gating debole: un utente loggato (sessione qualsiasi) può cambiare password senza link recovery.</td>
+          <td>Verificare <code>session.user.amr.includes('recovery')</code> o JWT claim <code>aud=recovery</code>.</td>
+        </tr>
+        <tr>
+          <td><span class="badge critical">4</span></td>
+          <td>Security</td>
+          <td><code>apps/web/src/app/api/public/booking/{create,checkout}/route.ts</code></td>
+          <td>Endpoint pubblici keyless: chiunque conosca un UUID può creare booking o triggerare Stripe checkout. Spam/enumeration.</td>
+          <td><code>validatePublicKey(extractKey(req), origin)</code> + cookie origin-bound.</td>
+        </tr>
+        <tr>
+          <td><span class="badge critical">5</span></td>
+          <td>Correctness</td>
+          <td>
+            <code>apps/web/src/app/book/[slug]/actions.ts:361,620</code><br>
+            <code>verticals/bike-rental/.../create-reservation.ts:43</code><br>
+            <code>dine/[entitySlug]/waitlist/actions.ts:107</code>
+          </td>
+          <td><strong>Overbooking</strong>: hospitality + bike + restaurant fanno check-then-insert non atomico. Solo experience ha RPC atomica (<code>experience_timeslot_try_book</code>).</td>
+          <td>RPC SQL con <code>SELECT FOR UPDATE</code> o <code>EXCLUDE USING gist (tstzrange)</code> per ciascun verticale.</td>
+        </tr>
+        <tr>
+          <td><span class="badge critical">6</span></td>
+          <td>Correctness</td>
+          <td>
+            <code>apps/web/src/app/(auth)/onboarding/actions.ts:337</code><br>
+            <code>apps/web/src/app/api/webhooks/stripe/route.ts:187</code><br>
+            <code>book/multi/.../unified-booking-client.tsx:300,401</code><br>
+            <code>api/v1/bundles/route.ts:178</code>
+          </td>
+          <td>Quattro TODO in payment path: Stripe SetupIntent onboarding non collegato, webhook non idempotente, prezzi hardcoded multi-booking, bundle price tampering.</td>
+          <td>Wire Stripe + idempotency key <code>event.id</code> + recompute price server-side.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="p1">
+    <h2>P1 — High (prima del prossimo deploy importante)</h2>
+
+    <div class="finding high-border">
+      <h3>Security</h3>
+      <ul class="tight">
+        <li><code>api/public/booking/_shared.ts:42</code> — hash compare non timing-safe → <code>crypto.timingSafeEqual</code></li>
+        <li><code>lib/webhook-dedup.ts:13</code> — race check-then-insert → UNIQUE <code>(provider, external_event_id)</code> + <code>ON CONFLICT DO NOTHING</code></li>
+        <li>Cron secret compare non timing-safe (tutti <code>apps/web/src/app/api/cron/**</code>)</li>
+        <li>Webhook Octorate: solo API key statica, no HMAC body — replay possibile</li>
+        <li>AI endpoint (<code>api/v1/ai/suggest-reply</code>, <code>analyze-review</code>) senza tenant scope né per-tenant rate limit → cost amplification</li>
+      </ul>
+    </div>
+
+    <div class="finding high-border">
+      <h3>Performance</h3>
+      <ul class="tight">
+        <li><code>cron/loyalty-recalc/route.ts</code> — N+1 nidificato O(programs × reservations × 4) → batch via JOIN + <code>ON CONFLICT (guest_loyalty_id, source_type, source_id)</code></li>
+        <li><code>cron/billing-snapshots</code> — 100 tenant × 7 moduli = 2100 round-trip → GROUP BY entities counts</li>
+        <li><code>cron/lock-pins</code> — refetch metadata duplicato + N+1</li>
+        <li><code>cron/auto-charge-bookings</code> — 4 query sequenziali per riga → pre-join entities/restaurants</li>
+        <li><code>platform/messaging/logs/page.tsx:9,15</code> — select unbounded → <code>.limit(100)</code> (rischio crash)</li>
+        <li><code>platform/clients/[tenantId]/page.tsx:55</code> — aggregazione totale in JS invece di <code>select sum()</code> → spostare a Postgres</li>
+        <li><strong>Index mancanti</strong>: <code>guest_loyalty(program_id, points_balance)</code>, <code>loyalty_transactions UNIQUE (guest_loyalty_id, source_type, source_id)</code>, <code>notifications_queue(status, scheduled_at, priority DESC)</code>, <code>entities(tenant_id, kind, is_active)</code></li>
+        <li><code>sitemap-listings.xml/route.ts</code> — hard-cap 5000 senza sharding → sitemap index sharded</li>
+        <li><strong>Cron sequenziali</strong>: solo <code>reviews-ingest</code> usa <code>Promise.all</code>. Altri 7 cron multi-tenant sequenziali → <code>Promise.allSettled</code> con concurrency cap</li>
+      </ul>
+    </div>
+
+    <div class="finding high-border">
+      <h3>Correctness</h3>
+      <ul class="tight">
+        <li><strong>Race</strong>: <code>dine/.../waitlist/actions.ts:107</code> — walk-in concorrenti possono ricevere stesso table_id → <code>pg_advisory_xact_lock(restaurant_id)</code> o RPC</li>
+        <li><strong>Money/Precision</strong>: bike usa euro decimale + <code>Math.round(*100)/100</code>, hospitality usa <code>total_amount: number</code>, experience+fiscal usano cents int → convergere su cents int</li>
+        <li><strong>VAT hardcoded</strong>: <code>verticals/bike-rental/.../create-reservation.ts:177</code> <code>* 0.22</code> → <code>@touracore/fiscal/vat</code></li>
+        <li><strong>Date/DST</strong>: <code>Math.ceil((checkOut - checkIn)/86400000)</code> in <code>book/[slug]/actions.ts:282,378</code> → <code>differenceInCalendarDays</code></li>
+        <li><strong>Errore silenzioso</strong>: bike <code>create-reservation:136-152,205-208</code> ignora insert errors → reservation orfana. Idem upsell e 5 file con <code>try{logAudit}catch{}</code></li>
+        <li><strong><code>as unknown as</code> × 93</strong>: pattern dominante per Supabase joins → <code>supabase gen types typescript</code></li>
+        <li><strong>Sandbox in prod path</strong>: <code>dine/.../fiscal/actions.ts:105</code> produce successo finto se non in sandbox env → throw esplicito</li>
+        <li><strong>Test coverage</strong>: 0 test su 25/26 package core. P0 = <code>billing</code>, <code>fiscal</code>, <code>pricing</code>, <code>vouchers</code>, <code>partners</code>, <code>security</code></li>
+      </ul>
+    </div>
+
+    <div class="finding high-border">
+      <h3>Frontend</h3>
+      <ul class="tight">
+        <li><strong>Sidebar non responsive mobile</strong>: <code>components/SharedSidebar.tsx:48</code> w-72 sempre, no hamburger → CMS rotto su smartphone</li>
+        <li><strong>7 pagine <code>/book/*</code> senza <code>generateMetadata</code></strong> → title duplicati su SERP, no OG share preview</li>
+        <li><strong>Solo 1 <code>error.tsx</code></strong> in tutto app router (<code>(dashboard)/</code>) → throw fuori da quel group cade su fallback generico</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="p2">
+    <h2>P2 — Medium (cleanup pianificato)</h2>
+
+    <div class="finding medium-border">
+      <h3>Security</h3>
+      <ul class="tight">
+        <li>CSP <code>script-src 'unsafe-inline'</code> (limit Next.js RSC) → migrare a nonce strategy</li>
+        <li>Trust <code>x-forwarded-for</code> senza whitelist proxy → IP spoofable per rate-limit bypass</li>
+        <li>API key sha256 lookup: garantire entropy ≥128 bit alla generation (<code>randomBytes(24)</code>)</li>
+        <li><code>cookie-consent</code> POST anonimo senza rate-limit dedicato</li>
+      </ul>
+    </div>
+
+    <div class="finding medium-border">
+      <h3>Performance</h3>
+      <ul class="tight">
+        <li><code>superadmin/page.tsx:80</code> — 25 query parallele senza cache → <code>unstable_cache</code> TTL 60s</li>
+        <li><code>platform/agencies</code>, <code>platform/seo/listings</code>, <code>platform/reviews</code> select senza limit</li>
+        <li><code>competitive-actions.ts</code> — 16 query <code>select('*')</code> senza limit</li>
+        <li><code>r/[agencySlug]/page.tsx</code> — no <code>revalidate</code> → ISR mancante landing pubblica</li>
+        <li><code>u/[username]/page.tsx</code> — no cache wrapper su <code>getProfileListings</code></li>
+        <li>Recharts: verificare bundle output <code>du -sh .next/static/chunks</code></li>
+        <li>Hero photos <code>images.unsplash.com?w=2000</code> su <code>/discover</code> → cache locale R2</li>
+        <li><code>notifications/pipeline.ts:406</code> dispatch sequenziale → <code>Promise.allSettled</code> con <code>p-limit(5)</code></li>
+      </ul>
+    </div>
+
+    <div class="finding medium-border">
+      <h3>Correctness / Maintainability</h3>
+      <ul class="tight">
+        <li><code>as any</code> × 7 + <code>: any</code> × 145 (concentrato in <code>verticals/hospitality/.../templates/*</code> 46 occ) → <code>interface BookingStepProps</code></li>
+        <li><code>formatCurrency / formatMoney / formatEUR / fmtCurrency</code> × 6+ file → centralizzare <code>packages/core/ui/src/format.ts</code></li>
+        <li><code>formatDate</code> × 3 file</li>
+        <li><code>computeQuote</code> duplicato bike vs experiences con signature diverse → <code>computeBikeQuote</code> / <code>computeExperienceQuote</code></li>
+        <li>File &gt;900 righe: <code>stays/.../settings-form.tsx:1022</code>, <code>structure-operations-section.tsx:1485</code> → spezzare</li>
+        <li><strong>knip</strong>: 3 file dead, 2 dep unused (<code>@touracore/config</code>, <code>@touracore/security</code> in apps/web — sospetto), 2 devDep, 61 export unused, 57 type unused</li>
+        <li><strong>i18n</strong>: ~10 string italiano hardcoded in <code>packages/core/{integrations,ui,hospitality-config,billing}</code> (riusabili) → spostare in verticals o locale dict</li>
+        <li>Adapter Bokun stub (<code>verticals/bike-rental/src/channels/adapters/bokun.ts:51</code>) appare come provider reale nel registry → marcare come stub</li>
+      </ul>
+    </div>
+
+    <div class="finding medium-border">
+      <h3>Frontend</h3>
+      <ul class="tight">
+        <li>~30 input/select/textarea con <code>&lt;label&gt;</code> non associato (htmlFor mancante) in <code>platform/{billing,seo,messaging}/*</code></li>
+        <li>Bottoni icon-only senza <code>aria-label</code> (modal close, action icons)</li>
+        <li><code>&lt;select&gt;</code> filtro reviews senza label visibile</li>
+        <li>5+ tabelle senza <code>overflow-x-auto</code> → break mobile</li>
+        <li><strong>Dark mode 0 occorrenze</strong> → solo light, dashboard CMS abbagliante in serale</li>
+        <li><code>loading="lazy"</code> su immagine above-fold <code>/u/[username]:158</code></li>
+        <li>2 <code>&lt;img&gt;</code> raw (branding form + agency referral) → <code>next/image</code></li>
+        <li><code>confirm()</code> nativo in <code>redirects-manager.tsx:43</code> → modal styled</li>
+        <li>Solo 3 <code>loading.tsx</code> in tutta l'app</li>
+        <li>Mancano <code>noindex</code> espliciti su <code>/checkin/[token]</code>, <code>/embed/*</code>, <code>/widget/*</code></li>
+        <li><code>/discover?kind=...</code> senza <code>generateMetadata</code> dinamico per filtro</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="positives">
+    <h2>Cosa è già OK</h2>
+
+    <div class="finding ok-border">
+      <h3 class="ok"><span class="badge ok">SECURITY</span></h3>
+      <ul class="tight">
+        <li>HSTS preload + X-Frame DENY + X-Content-Type nosniff + CSP completa + CSRF cookie strict (verificato LIVE headers)</li>
+        <li>Encryption AES-256-GCM fail-closed in prod (<code>packages/db/src/crypto.ts</code>, <code>apps/web/src/lib/integration-crypto.ts</code>) con key separation SR</li>
+        <li>Webhook Stripe: HMAC + dedup + anti-tampering tenant_id vs customer</li>
+        <li>Partner API: bcrypt + HMAC + IP allowlist</li>
+        <li>0 secrets hardcoded committati. <code>.env*</code> in <code>.gitignore</code></li>
+        <li>0 SQL injection: tutti <code>rpc()</code> parametrizzati</li>
+        <li>0 Math.random security-sensitive (commit <code>18b189c</code> confermato applicato)</li>
+        <li>Open redirect mitigato via <code>sanitizeNextPath</code> consistente</li>
+        <li>176 file usano SR client, quasi tutti dietro guard (<code>assertUserOwnsX</code>, <code>getVisibilityContext</code>, cron secret)</li>
+        <li>Tenant isolation API v1 OK su tutte route <code>/api/v1/*</code></li>
+      </ul>
+    </div>
+
+    <div class="finding ok-border">
+      <h3 class="ok"><span class="badge ok">PERFORMANCE</span></h3>
+      <ul class="tight">
+        <li>Cache tag-based <code>lib/listings-cache.ts</code> (commit <code>0355d16</code>): <code>react.cache</code> intra-render + <code>unstable_cache</code> persist</li>
+        <li><code>dynamic()</code> per recharts + konva — bundle iniziale alleggerito</li>
+        <li>ISR <code>revalidate</code> impostato su pagine pubbliche (3600s discover, 60s book, 3600-86400s sitemap)</li>
+        <li>Indici <code>reservations</code> ricchi (migration 00044)</li>
+        <li><code>next/image</code> utilizzato in <code>/discover</code> + 10 file gallery</li>
+        <li>CSPRNG per lock-pins (<code>randomInt</code>)</li>
+      </ul>
+    </div>
+
+    <div class="finding ok-border">
+      <h3 class="ok"><span class="badge ok">CORRECTNESS</span></h3>
+      <ul class="tight">
+        <li>0 <code>@ts-expect-error</code> / <code>@ts-ignore</code> nel sorgente</li>
+        <li>Solo 11 TODO/FIXME reali (di cui 4 critici già listati P0)</li>
+        <li>Adapter pattern + RPC atomica <code>experience_timeslot_try_book</code> come blueprint da replicare</li>
+        <li><code>getCurrentAuthUser</code> / <code>getCurrentUser</code> aliasati (vecchio API mantenuto)</li>
+      </ul>
+    </div>
+
+    <div class="finding ok-border">
+      <h3 class="ok"><span class="badge ok">FRONTEND / LIVE</span></h3>
+      <ul class="tight">
+        <li><code>&lt;SkipToContent /&gt;</code> in root layout (<code>app/layout.tsx:8</code>)</li>
+        <li><code>s/[tenantSlug]/[entitySlug]/page.tsx:40-72</code> metadata best-in-class (twitter+og+seo_title override)</li>
+        <li>JSON-LD breadcrumb su discover, BicycleStore su listing bike</li>
+        <li>Homepage / discover / listing / book/* tutti LIVE 200 OK</li>
+        <li>4 entity reali pubblicate (tour-lago-garda, alpina-bikes, trattoria-del-borgo, casa-del-sole)</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="browser">
+    <h2>Verifica LIVE su <code>touracore.vercel.app</code></h2>
+    <p>Test eseguiti via chrome-devtools-mcp + curl.</p>
+
+    <table>
+      <thead>
+        <tr><th>Endpoint</th><th>Status</th><th>Note</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>/</code></td><td><span class="badge ok">200</span></td><td>Skip-link a11y presente, nav OK</td></tr>
+        <tr><td><code>/discover</code></td><td><span class="badge ok">200</span></td><td>4 entity prefetch, breadcrumb JSON-LD</td></tr>
+        <tr><td><code>/s/villa-irabo/alpina-bikes</code></td><td><span class="badge ok">200</span></td><td>Gallery + 6 tipi bici + 2 depositi + FAQ + cross-listing</td></tr>
+        <tr><td><code>/book/bike/alpina-bikes</code></td><td><span class="badge ok">200</span></td><td>Booking widget servito</td></tr>
+        <tr><td><code>/sitemap_index.xml</code></td><td><span class="badge ok">200</span></td><td>Cache 86400s, content-type corretto</td></tr>
+        <tr><td><code>/robots.txt</code></td><td><span class="badge ok">200</span></td><td>Path corretti (fix d103c58)</td></tr>
+        <tr><td><code>/login</code></td><td><span class="badge ok">200</span></td><td>Cookie <code>__touracore_csrf</code> Secure + SameSite=strict</td></tr>
+        <tr><td>404 page</td><td><span class="badge medium">307</span></td><td>Anti-pattern SEO: dovrebbe essere 404 puro</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Security headers (response homepage)</h3>
+    <pre>strict-transport-security: max-age=63072000; includeSubDomains; preload
+x-frame-options: DENY
+x-content-type-options: nosniff
+referrer-policy: strict-origin-when-cross-origin
+content-security-policy: default-src 'self';
+  script-src 'self' 'unsafe-inline';
+  style-src 'self' 'unsafe-inline';
+  img-src 'self' data: blob: https://*.supabase.co https://*.r2.cloudflarestorage.com
+          https://*.r2.dev https://images.unsplash.com https://i.ytimg.com;
+  font-src 'self' data:;
+  connect-src 'self' https://*.supabase.co wss://*.supabase.co
+              https://api.stripe.com https://r.stripe.com
+              https://www.google-analytics.com https://*.google-analytics.com
+              https://www.googletagmanager.com
+              https://vitals.vercel-insights.com https://va.vercel-scripts.com;
+  frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com
+            https://player.vimeo.com https://js.stripe.com
+            https://hooks.stripe.com https://checkout.stripe.com
+            https://connect.stripe.com;
+  frame-ancestors 'none';
+  base-uri 'self';
+  form-action 'self';
+  upgrade-insecure-requests</pre>
+
+    <h3>Console noise</h3>
+    <ul class="tight">
+      <li><span class="badge medium">P2</span> Vercel Web Analytics script <code>/ac54f900c99dbdee/script.js</code> 404 — feature non abilitata sul progetto Vercel</li>
+    </ul>
+  </section>
+
+  <section id="roi">
+    <h2>Top 10 fix con miglior ROI</h2>
+    <table>
+      <thead>
+        <tr><th>#</th><th>Fix</th><th>Categoria</th><th>Impact</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>Rate limiter Redis-backed</td><td>Sec P0</td><td>Sblocca brute-force protection reale su tutto il login flow</td></tr>
+        <tr><td>2</td><td>CSRF su <code>/api/*</code> mutating</td><td>Sec P0</td><td>Chiusura intera attack class</td></tr>
+        <tr><td>3</td><td>Reset-password gating <code>amr=recovery</code></td><td>Sec P0</td><td>Stop bypass account-recovery</td></tr>
+        <tr><td>4</td><td>Public booking key validation</td><td>Sec P0</td><td>Stop spam/enumeration</td></tr>
+        <tr><td>5</td><td>RPC atomica overbooking (hospitality + bike + restaurant)</td><td>Corr P0</td><td>Replicare pattern <code>experience_timeslot_try_book</code></td></tr>
+        <tr><td>6</td><td>Wire Stripe SetupIntent onboarding + webhook idempotency</td><td>Corr P0</td><td>Sblocca onboarding produzione</td></tr>
+        <tr><td>7</td><td>Cron loyalty-recalc + billing-snapshots refactor</td><td>Perf P1</td><td>Da 2100 query a ~10</td></tr>
+        <tr><td>8</td><td><code>.limit(100)</code> su <code>platform/messaging/logs</code></td><td>Perf P1</td><td>Protezione crash 1-line</td></tr>
+        <tr><td>9</td><td>Sidebar mobile responsive</td><td>FE P1</td><td>CMS usabile su smartphone</td></tr>
+        <tr><td>10</td><td>Test su <code>@touracore/{billing,fiscal,pricing,vouchers,partners,security}</code></td><td>Corr P1</td><td>Money/security senza coverage</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="files">
+    <h2>File chiave da rivedere</h2>
+    <pre>packages/core/security/src/rate-limiter.ts                                    # P0 sec #1
+packages/core/security/src/csrf.ts                                            # P0 sec #2
+apps/web/src/app/(auth)/reset-password/page.tsx                               # P0 sec #3
+apps/web/src/app/api/public/booking/{create,checkout}/route.ts                # P0 sec #4
+apps/web/src/app/book/[slug]/actions.ts                                       # P0 corr #5 (hospitality)
+verticals/bike-rental/src/queries/create-reservation.ts                       # P0 corr #5 (bike)
+apps/web/src/app/(app)/[tenantSlug]/dine/[entitySlug]/waitlist/actions.ts     # P0 corr #5 (restaurant)
+apps/web/src/app/(auth)/onboarding/actions.ts:337                             # P0 corr #6 (Stripe TODO)
+apps/web/src/app/api/webhooks/stripe/route.ts:187                             # P0 corr #6 (idempotency)
+apps/web/src/app/api/v1/bundles/route.ts:178                                  # P0 corr #6 (price tampering)
+apps/web/src/app/api/cron/loyalty-recalc/route.ts                             # P1 perf
+apps/web/src/app/api/cron/billing-snapshots/route.ts                          # P1 perf
+apps/web/src/components/SharedSidebar.tsx                                     # P1 fe
+apps/web/src/app/book/[slug]/page.tsx (+ 6 fratelli)                          # P1 fe metadata</pre>
+  </section>
+
+  <div class="footer">
+    Report generato 2026-04-27 · Codebase TouraCore @ <code>main / ac3e36b</code> · Skill ufficiale Claude Code <code>code-review</code> + 4 agent paralleli + verifica LIVE chrome-devtools-mcp.
+  </div>
+
+</main>
+</body>
+</html>

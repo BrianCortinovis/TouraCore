@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { dispatchPending } from '@touracore/notifications'
+import { verifyCronSecret } from '@/lib/cron-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,12 +9,10 @@ function unauthorized() {
 }
 
 export async function POST(req: Request) {
-  const cronSecret = process.env.CRON_SECRET
-  if (!cronSecret) {
+  if (!process.env.CRON_SECRET) {
     return NextResponse.json({ ok: false, error: 'cron_secret_not_configured' }, { status: 503 })
   }
-  const authHeader = req.headers.get('authorization') ?? ''
-  if (authHeader !== `Bearer ${cronSecret}`) {
+  if (!verifyCronSecret(req)) {
     return unauthorized()
   }
 

@@ -13,6 +13,7 @@ export {
   getCsrfHeaderName,
   validateCsrfFromRequest,
 } from './csrf'
+export { assertCsrf, verifyCsrf } from './csrf-server'
 export type {
   RateLimitTier,
   RateLimitConfig,

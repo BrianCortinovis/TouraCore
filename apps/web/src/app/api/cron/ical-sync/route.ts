@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { verifyCronSecret } from "@/lib/cron-auth"
 import { createServiceRoleClient } from '@touracore/db/server'
 import type { VEvent } from 'node-ical'
 
@@ -19,8 +20,7 @@ function authorize(request: NextRequest): boolean {
   const cronSecret = process.env.CRON_SECRET
   if (!cronSecret) return false
   if (request.headers.get('x-vercel-cron')) return true
-  const header = request.headers.get('authorization')
-  return header === `Bearer ${cronSecret}`
+  return verifyCronSecret(request)
 }
 
 function toDateOnly(d: Date): string {

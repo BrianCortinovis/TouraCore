@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { verifyCronSecret } from "@/lib/cron-auth"
 import { createServiceRoleClient } from '@touracore/db/server'
 import { getStripe } from '@touracore/billing'
 
@@ -69,8 +70,7 @@ function computePlatformFee(
 async function handler(req: Request) {
   const secret = process.env.CRON_SECRET
   if (!secret) return NextResponse.json({ error: 'cron_not_configured' }, { status: 503 })
-  const auth = req.headers.get('authorization')
-  if (auth !== `Bearer ${secret}`) {
+  if (!verifyCronSecret(req)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
 

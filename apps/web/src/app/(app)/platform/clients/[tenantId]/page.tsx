@@ -50,12 +50,15 @@ export default async function PlatformClientDetailPage({ params }: Props) {
   let revenueMonth = 0
   let bookingsMonth = 0
   if (entityIds.length > 0) {
+    // Cap difensivo: pagina admin, una struttura raramente >10k reservations/mese.
+    // Follow-up: spostare somma server-side via vista materializzata o RPC.
     const { data: resv } = await supabase
       .from('reservations')
       .select('total_amount')
       .in('entity_id', entityIds)
       .gte('created_at', monthStart)
       .neq('status', 'cancelled')
+      .limit(10_000)
     for (const r of resv ?? []) {
       revenueMonth += Number(r.total_amount ?? 0)
       bookingsMonth++

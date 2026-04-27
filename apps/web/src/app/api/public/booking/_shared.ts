@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from 'node:crypto'
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServiceRoleClient } from '@touracore/db/server'
 
@@ -39,7 +39,8 @@ export async function validatePublicKey(
   if (!row) return { ok: false, error: 'Key not found' }
 
   const hash = createHash('sha256').update(secret).digest('hex')
-  if (hash !== row.key_hash) return { ok: false, error: 'Invalid API key' }
+  // Timing-safe compare (P1 sec): evita side-channel sulla key.
+  if (!safeHexEqual(hash, row.key_hash)) return { ok: false, error: 'Invalid API key' }
 
   if (row.expires_at && new Date(row.expires_at) < new Date()) {
     return { ok: false, error: 'API key expired' }
@@ -102,6 +103,58 @@ export function extractKey(req: NextRequest): string | null {
   const auth = req.headers.get('authorization')
   if (auth?.startsWith('Bearer ')) return auth.slice(7)
   return req.nextUrl.searchParams.get('key')
+}
+
+/**
+ * Gate per endpoint pubblici keyless (P0 #4).
+ * Accept se:
+ *  1. API key valida (preferito) — torna ok+key context
+ *  2. Origin in whitelist `PUBLIC_BOOKING_ALLOWED_ORIGINS` (CSV) — back-compat
+ *  3. Origin combacia con `NEXT_PUBLIC_APP_URL` (richiesta same-origin dal sito tenant)
+ * Reject altrimenti — blocca spam/enumeration cross-origin.
+ */
+export async function gatePublicBooking(
+  req: NextRequest
+): Promise<{ ok: true; validation?: PublicApiKeyValidation } | { ok: false; status: number; error: string }> {
+  const key = extractKey(req)
+  const origin = req.headers.get('origin')
+
+  if (key) {
+    const validation = await validatePublicKey(key, origin)
+    if (!validation.ok) {
+      return { ok: false, status: 401, error: validation.error ?? 'Invalid API key' }
+    }
+    return { ok: true, validation }
+  }
+
+  // No key — accetta solo da origin whitelisted o stesso host applicazione.
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  const appOrigin = appUrl ? safeOrigin(appUrl) : null
+  const allowed = (process.env.PUBLIC_BOOKING_ALLOWED_ORIGINS ?? '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean)
+
+  if (!origin) {
+    return { ok: false, status: 401, error: 'API key or trusted Origin required' }
+  }
+  if (origin === appOrigin || allowed.includes(origin)) {
+    return { ok: true }
+  }
+  return { ok: false, status: 401, error: 'Origin not authorized — provide pbk_ API key' }
+}
+
+function safeOrigin(url: string): string | null {
+  try { return new URL(url).origin } catch { return null }
+}
+
+function safeHexEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  try {
+    return timingSafeEqual(Buffer.from(a, 'hex'), Buffer.from(b, 'hex'))
+  } catch {
+    return false
+  }
 }
 
 /**

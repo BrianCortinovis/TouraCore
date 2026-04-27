@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { verifyCronSecret } from "@/lib/cron-auth"
 import { createServiceRoleClient } from '@touracore/db/server'
 
 export const dynamic = 'force-dynamic'
@@ -32,8 +33,7 @@ export async function POST(req: Request) {
 async function handler(req: Request) {
   const secret = process.env.CRON_SECRET
   if (!secret) return NextResponse.json({ error: 'cron_not_configured' }, { status: 503 })
-  const auth = req.headers.get('authorization')
-  if (auth !== `Bearer ${secret}`) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  if (!verifyCronSecret(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 })
 
   const url = new URL(req.url)
   const dryRun = url.searchParams.get('dry_run') === '1'

@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TouraCore - Audit sicurezza e tenant isolation GPT</title>
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --ink: #15202b;
+      --muted: #5d6b7a;
+      --line: #dce3ec;
+      --critical: #9f1239;
+      --high: #b45309;
+      --medium: #1d4ed8;
+      --low: #3f6212;
+      --ok: #047857;
+      --chip: #eef2f7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 14px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main { max-width: 1180px; margin: 0 auto; padding: 32px 20px 56px; }
+    header {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 22px;
+      margin-bottom: 24px;
+    }
+    h1 { margin: 0 0 8px; font-size: 30px; line-height: 1.15; }
+    h2 { margin: 28px 0 12px; font-size: 20px; }
+    h3 { margin: 20px 0 8px; font-size: 16px; }
+    p { margin: 8px 0; }
+    code {
+      background: var(--chip);
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      padding: 1px 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+    }
+    .meta { color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; }
+    .grid { display: grid; gap: 14px; }
+    .cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card, section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .metric { font-size: 26px; font-weight: 750; line-height: 1; }
+    .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--chip);
+    }
+    .critical { color: var(--critical); background: #fff1f2; }
+    .high { color: var(--high); background: #fffbeb; }
+    .medium { color: var(--medium); background: #eff6ff; }
+    .low { color: var(--low); background: #f7fee7; }
+    .ok { color: var(--ok); background: #ecfdf5; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border-top: 1px solid var(--line); padding: 9px 8px; text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    ul { margin: 8px 0 0 20px; padding: 0; }
+    li { margin: 6px 0; }
+    .finding { border-left: 4px solid var(--line); }
+    .finding.critical-border { border-left-color: var(--critical); }
+    .finding.high-border { border-left-color: var(--high); }
+    .finding.medium-border { border-left-color: var(--medium); }
+    .finding.low-border { border-left-color: var(--low); }
+    .evidence { color: var(--muted); font-size: 13px; }
+    .two { grid-template-columns: 1.2fr .8fr; }
+    @media (max-width: 860px) {
+      .cards, .two { grid-template-columns: 1fr; }
+      main { padding: 20px 12px 40px; }
+      table { font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Audit sicurezza e tenant isolation GPT</h1>
+    <div class="meta">
+      <span>Codebase: TouraCore</span>
+      <span>Data audit: 2026-04-26</span>
+      <span>Scope: Next.js app, packages core, Supabase migrations, API pubbliche, cron, tenant/RLS</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>Executive Summary</h2>
+    <p>La postura generale e buona per una piattaforma multi-tenant: RLS e presente in modo esteso, le query applicative principali filtrano per tenant/entity, le route critiche usano guard espliciti, i webhook Stripe sono firmati e deduplicati, e le view KPI multi-tenant sono state corrette a <code>security_invoker=true</code>.</p>
+    <p>Il rischio residuo non e nel modello tenant di base, ma nelle eccezioni operative: route cron pubbliche che in alcuni casi fidano un header spoofabile, API key con scope salvati ma non applicati negli endpoint v1, key pubbliche accettate in query string, e rate limit in-memory non adatto a produzione serverless/multi-instance.</p>
+  </section>
+
+  <div class="grid cards" style="margin-top:14px">
+    <div class="card"><div class="metric">0</div><div class="label">Critical confermati</div></div>
+    <div class="card"><div class="metric">2</div><div class="label">High</div></div>
+    <div class="card"><div class="metric">4</div><div class="label">Medium</div></div>
+    <div class="card"><div class="metric">0</div><div class="label">Vuln dipendenze note</div></div>
+  </div>
+
+  <section>
+    <h2>Verifiche Eseguite</h2>
+    <table>
+      <thead><tr><th>Check</th><th>Risultato</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td><code>pnpm -F @touracore/web lint</code></td><td><span class="badge ok">Pass</span></td><td>0 errori, 19 warning non security-blocking.</td></tr>
+        <tr><td><code>pnpm -F @touracore/web typecheck</code></td><td><span class="badge ok">Pass</span></td><td>Nessun errore TypeScript.</td></tr>
+        <tr><td><code>pnpm audit --prod</code></td><td><span class="badge ok">Pass</span></td><td>Nessuna vulnerabilita nota rilevata dal registry npm.</td></tr>
+        <tr><td>Review RLS e migrazioni Supabase</td><td><span class="badge ok">Buona copertura</span></td><td>RLS abilitata su molte tabelle tenant/entity; view operative piu rischiose con <code>security_invoker=true</code>.</td></tr>
+        <tr><td>Review route pubbliche/API/cron</td><td><span class="badge high">Azioni richieste</span></td><td>Vedi finding SEC-001, SEC-002, SEC-003.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Findings Prioritari</h2>
+
+    <article class="card finding high-border">
+      <h3><span class="badge high">High</span> SEC-001 - Alcune cron route accettano <code>x-vercel-cron</code> come bypass del segreto</h3>
+      <p>Alcune route cron sono escluse dall'autenticazione middleware e accettano la presenza dell'header <code>x-vercel-cron</code> come autorizzazione completa. Se un request esterno puo inviare quell'header fino all'app, il <code>CRON_SECRET</code> viene bypassato e operazioni con service role possono essere avviate.</p>
+      <p class="evidence">Evidenze: <code>packages/core/auth/src/middleware.ts:66</code> marca <code>/api/cron/</code> pubbliche; <code>apps/web/src/app/api/cron/accounting-sync/route.ts:10</code> e <code>apps/web/src/app/api/cron/pricing-suggestions/route.ts:11</code> fanno return true solo per header presente.</p>
+      <p><strong>Impatto tenant isolation:</strong> alto impatto operativo cross-tenant, perche molte cron iterano tutti i tenant/entity con service role.</p>
+      <p><strong>Remediation:</strong> richiedere sempre <code>Authorization: Bearer CRON_SECRET</code> o una firma HMAC; usare <code>x-vercel-cron</code> solo come segnale diagnostico, non come auth. Centralizzare un helper <code>assertCronAuthorized(req)</code> e sostituire tutte le implementazioni locali.</p>
+    </article>
+
+    <article class="card finding high-border">
+      <h3><span class="badge high">High</span> SEC-002 - Scope delle API key v1 non applicati dagli endpoint</h3>
+      <p><code>authenticateApiKey</code> legge e ritorna <code>scopes</code>, ma gli endpoint v1 controllano solo la validita della key e il tenant. Una key attiva del tenant puo leggere reservations, room types o proprieta anche se non dovrebbe avere quello scope.</p>
+      <p class="evidence">Evidenze: <code>packages/core/api/src/auth.ts:31</code> seleziona <code>scopes</code> e <code>packages/core/api/src/auth.ts:45-49</code> li ritorna; <code>apps/web/src/app/api/v1/reservations/route.ts:6-7</code> autentica senza verificare scope prima della query su <code>reservations</code>.</p>
+      <p><strong>Impatto tenant isolation:</strong> tenant isolation e mantenuta via <code>ctx.tenantId</code>, ma l'isolamento per capability/partner/API consumer e debole.</p>
+      <p><strong>Remediation:</strong> introdurre <code>authenticateApiKey(req, requiredScope)</code> o <code>assertScope(ctx, 'reservations:read')</code>; aggiungere test negativi per key senza scope su ogni endpoint.</p>
+    </article>
+
+    <article class="card finding medium-border">
+      <h3><span class="badge medium">Medium</span> SEC-003 - Public booking key accettata in query string</h3>
+      <p><code>extractKey</code> accetta la chiave anche da <code>?key=...</code>. Le query string tendono a finire in log, analytics, history browser e referrer. Per chiavi che autorizzano booking/checkout, questo aumenta il rischio di leakage.</p>
+      <p class="evidence">Evidenza: <code>apps/web/src/app/api/public/booking/_shared.ts:99-104</code>.</p>
+      <p><strong>Remediation:</strong> mantenere solo <code>X-Booking-Key</code> o <code>Authorization</code>; se serve retrocompatibilita, deprecare la query key con logging e rotazione automatica delle key usate in URL.</p>
+    </article>
+
+    <article class="card finding medium-border">
+      <h3><span class="badge medium">Medium</span> SEC-004 - Rate limit in-memory non sufficiente in produzione distribuita</h3>
+      <p>Il rate limiter usa una <code>Map</code> in memoria del singolo processo. In serverless o multi-instance il limite si resetta per istanza e non protegge bene endpoint costosi o brute force distribuiti.</p>
+      <p class="evidence">Evidenze: <code>packages/core/security/src/rate-limiter.ts:8</code>, <code>packages/core/security/src/rate-limiter.ts:25-40</code>.</p>
+      <p><strong>Remediation:</strong> usare store centralizzato (Upstash Redis, Vercel KV/Firewall, Supabase table con TTL) e includere protezioni specifiche per auth, AI, public booking e partner API.</p>
+    </article>
+
+    <article class="card finding medium-border">
+      <h3><span class="badge medium">Medium</span> SEC-005 - Endpoint AI autenticato ma non tenant-scoped ne quota-scoped</h3>
+      <p><code>suggest-reply</code> richiede solo un utente autenticato e poi consuma Anthropic con input arbitrario. Non verifica che <code>propertyName</code> appartenga a un tenant/entity accessibile e non applica quota per tenant/utente.</p>
+      <p class="evidence">Evidenze: <code>apps/web/src/app/api/v1/ai/suggest-reply/route.ts:71-82</code>.</p>
+      <p><strong>Impatto tenant isolation:</strong> non ho visto data leak diretto perche il contenuto e user-supplied, ma l'endpoint puo diventare abuso costo/brand e aggirare limiti per tenant.</p>
+      <p><strong>Remediation:</strong> richiedere <code>entityId</code> o <code>reviewId</code>, verificare via RLS/guard, contabilizzare usage per tenant e applicare quota/rate limit persistente.</p>
+    </article>
+
+    <article class="card finding medium-border">
+      <h3><span class="badge medium">Medium</span> SEC-006 - CSP consente <code>unsafe-inline</code> in produzione</h3>
+      <p>La CSP include <code>script-src 'unsafe-inline'</code> anche fuori dev. Questo riduce l'efficacia della CSP come barriera anti-XSS, specialmente con superfici che renderizzano HTML/sanitized tags.</p>
+      <p class="evidence">Evidenza: <code>packages/core/security/src/headers.ts:14</code>.</p>
+      <p><strong>Remediation:</strong> migrare a nonce/hash per script inline dove possibile, mantenendo fallback controllato solo per route che lo richiedono davvero.</p>
+    </article>
+
+    <article class="card finding low-border">
+      <h3><span class="badge low">Low</span> SEC-007 - Confronto hash public key non constant-time</h3>
+      <p>Il commento promette confronto timing-safe, ma il codice usa <code>hash !== row.key_hash</code>. Il rischio pratico e basso per hash SHA-256 hex fissi e accesso remoto rumoroso, ma e una discrepanza facile da correggere.</p>
+      <p class="evidence">Evidenze: <code>apps/web/src/app/api/public/booking/_shared.ts:16</code> e <code>apps/web/src/app/api/public/booking/_shared.ts:41-42</code>.</p>
+      <p><strong>Remediation:</strong> usare <code>crypto.timingSafeEqual</code> su buffer di uguale lunghezza.</p>
+    </article>
+  </section>
+
+  <section>
+    <h2>Tenant Isolation Assessment</h2>
+    <table>
+      <thead><tr><th>Area</th><th>Valutazione</th><th>Dettaglio</th></tr></thead>
+      <tbody>
+        <tr><td>RLS Supabase</td><td><span class="badge ok">Solida</span></td><td>Pattern consistente su <code>tenant_id = ANY(get_user_tenant_ids())</code> e <code>entity_id = ANY(get_user_entity_ids())</code>; service role esplicito per operazioni server.</td></tr>
+        <tr><td>View multi-tenant</td><td><span class="badge ok">Buona</span></td><td>Migration <code>00151_view_kpi_security_invoker.sql</code> corregge le view KPI/financial con <code>security_invoker=true</code>.</td></tr>
+        <tr><td>Public view anon</td><td><span class="badge ok">Intenzionale</span></td><td>Le view <code>public_*</code> sono <code>security_invoker=false</code> ma filtrano su <code>public_listings.is_public=true</code> e proiettano colonne public-facing.</td></tr>
+        <tr><td>Service role in app</td><td><span class="badge medium">Da governare</span></td><td>Uso ampio e pragmatico; richiede guard applicativi sempre presenti. I guard <code>restaurant-guard</code> e <code>documents-guard</code> sono buoni esempi.</td></tr>
+        <tr><td>API key tenant scope</td><td><span class="badge high">Gap capability</span></td><td>Tenant filtrato correttamente, ma scope non applicati in v1.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="grid two">
+    <section>
+      <h2>Cosa Va Bene</h2>
+      <ul>
+        <li>Stripe webhook usa firma ufficiale e dedup evento prima della mutazione.</li>
+        <li>Env validation richiede secret forti in produzione.</li>
+        <li>CSRF token ha confronto constant-time lato helper.</li>
+        <li>Route dashboard principali passano da middleware auth e bootstrap Supabase con RLS.</li>
+        <li>Le server action restaurant campionate verificano ownership prima di usare service role.</li>
+        <li>Il repository contiene gia test e2e per scope cross-entity e audit flows.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Piano 30/60/90</h2>
+      <h3>0-7 giorni</h3>
+      <ul>
+        <li>Rimuovere bypass <code>x-vercel-cron</code> o proteggerlo con secret.</li>
+        <li>Applicare scope API key su tutti gli endpoint <code>/api/v1/*</code>.</li>
+        <li>Disabilitare key in query string per nuove public booking key.</li>
+      </ul>
+      <h3>30 giorni</h3>
+      <ul>
+        <li>Rate limit persistente per auth, AI, booking e partner API.</li>
+        <li>Quota AI per tenant/utente e audit usage.</li>
+        <li>Test automatici negativi cross-tenant e no-scope API.</li>
+      </ul>
+      <h3>60-90 giorni</h3>
+      <ul>
+        <li>Riduzione service role con RPC dedicate o client RLS dove possibile.</li>
+        <li>CSP con nonce/hash e inventario delle route che richiedono inline script.</li>
+        <li>Controllo periodico migrazioni per nuove tabelle senza RLS o view senza invoker.</li>
+      </ul>
+    </section>
+  </div>
+
+  <section>
+    <h2>Conclusione</h2>
+    <p>Verdetto: <strong>buona base multi-tenant, non ancora hardening completo per produzione ad alto rischio</strong>. La tenant isolation dati e progettata correttamente nel database e spesso ribadita nell'app, ma le superfici operative pubbliche devono essere strette prima di considerare il sistema robusto contro abuso esterno e privilege expansion per API consumer.</p>
+  </section>
+</main>
+</body>
+</html>

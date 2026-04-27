@@ -34,3 +34,31 @@ export async function recordWebhookEvent(
     status: 'processed',
   })
 }
+
+/**
+ * Atomic dedup-and-record (P1 fix race check-then-insert).
+ * Sfrutta UNIQUE (provider, external_event_id) creato in migration 00152.
+ * Restituisce true se l'evento è NUOVO (caller deve processarlo), false se già visto.
+ */
+export async function tryRecordWebhookEvent(
+  provider: string,
+  externalEventId: string,
+  eventType?: string,
+  payloadHash?: string,
+): Promise<{ isNew: boolean }> {
+  const admin = await createServiceRoleClient()
+  const { error } = await admin.from('webhook_events').insert({
+    provider,
+    external_event_id: externalEventId,
+    event_type: eventType ?? null,
+    payload_hash: payloadHash ?? null,
+    status: 'processing',
+  })
+  if (!error) return { isNew: true }
+  // Postgres unique_violation = 23505. Supabase espone code in error.code.
+  const code = (error as { code?: string }).code
+  if (code === '23505') return { isNew: false }
+  // Errore non duplicato: fail-open per evitare di perdere webhook reali.
+  console.error('[webhook-dedup] insert error', error)
+  return { isNew: true }
+}

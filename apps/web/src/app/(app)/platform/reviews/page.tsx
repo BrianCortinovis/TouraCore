@@ -20,8 +20,8 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
 
   const [{ data: reviews }, statsRes, sourcesRes] = await Promise.all([
     query,
-    supabase.from('reviews').select('rating, source, is_flagged, sentiment', { count: 'exact' }),
-    supabase.from('reviews').select('source'),
+    supabase.from('reviews').select('rating, source, is_flagged, sentiment', { count: 'exact' }).limit(5000),
+    supabase.from('reviews').select('source').limit(5000),
   ])
 
   const allSources = [...new Set((sourcesRes.data ?? []).map((r) => r.source))].sort()

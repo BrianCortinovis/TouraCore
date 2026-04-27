@@ -1,43 +1,101 @@
 import { RATE_LIMIT_TIERS, type RateLimitConfig, type RateLimitResult, type RateLimitTier } from './types'
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Backend dual: Upstash Redis REST (prod multi-instance) + in-memory (dev/test).
+// In Vercel multi-instance la Map non è condivisa → senza Upstash il limit è inefficace.
+// Activation automatica se UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN presenti.
+// ─────────────────────────────────────────────────────────────────────────────
+
 interface RateLimitEntry {
   count: number
   resetAt: number
 }
 
-const store = new Map<string, RateLimitEntry>()
-
+const memStore = new Map<string, RateLimitEntry>()
 let lastCleanup = Date.now()
 const CLEANUP_INTERVAL_MS = 60_000
 
-function cleanup(): void {
+function cleanupMem(): void {
   const now = Date.now()
   if (now - lastCleanup < CLEANUP_INTERVAL_MS) return
   lastCleanup = now
-
-  for (const [key, entry] of store) {
-    if (entry.resetAt <= now) {
-      store.delete(key)
-    }
+  for (const [key, entry] of memStore) {
+    if (entry.resetAt <= now) memStore.delete(key)
   }
 }
 
-export function checkRateLimit(key: string, config: RateLimitConfig): RateLimitResult {
-  cleanup()
-
+function memCheck(key: string, config: RateLimitConfig): RateLimitResult {
+  cleanupMem()
   const now = Date.now()
-  const existing = store.get(key)
-
+  const existing = memStore.get(key)
   if (!existing || existing.resetAt <= now) {
-    store.set(key, { count: 1, resetAt: now + config.windowMs })
+    memStore.set(key, { count: 1, resetAt: now + config.windowMs })
     return { allowed: true, limit: config.maxRequests, remaining: config.maxRequests - 1, resetAt: now + config.windowMs }
   }
-
   existing.count++
   const remaining = Math.max(0, config.maxRequests - existing.count)
   const allowed = existing.count <= config.maxRequests
-
   return { allowed, limit: config.maxRequests, remaining, resetAt: existing.resetAt }
+}
+
+interface UpstashConfig { url: string; token: string }
+
+function getUpstash(): UpstashConfig | null {
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  if (!url || !token) return null
+  return { url, token }
+}
+
+/**
+ * Upstash atomic INCR + PEXPIRE pattern via pipeline.
+ * Single round-trip per check. Fail-open su errore di rete (non bloccare prod su outage Redis).
+ */
+async function upstashCheck(
+  upstash: UpstashConfig,
+  key: string,
+  config: RateLimitConfig,
+): Promise<RateLimitResult> {
+  const windowSec = Math.ceil(config.windowMs / 1000)
+  try {
+    const res = await fetch(`${upstash.url}/pipeline`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${upstash.token}`,
+      },
+      body: JSON.stringify([
+        ['INCR', key],
+        ['EXPIRE', key, String(windowSec), 'NX'],
+        ['PTTL', key],
+      ]),
+      // 1.5s timeout difensivo
+      signal: AbortSignal.timeout(1500),
+    })
+    if (!res.ok) throw new Error(`upstash status ${res.status}`)
+    const arr = (await res.json()) as Array<{ result: number }>
+    const count = Number(arr[0]?.result ?? 1)
+    const pttl = Number(arr[2]?.result ?? config.windowMs)
+    const resetAt = Date.now() + (pttl > 0 ? pttl : config.windowMs)
+    const remaining = Math.max(0, config.maxRequests - count)
+    return {
+      allowed: count <= config.maxRequests,
+      limit: config.maxRequests,
+      remaining,
+      resetAt,
+    }
+  } catch (e) {
+    // Fail-open: meglio passare un request che bloccare tutto su Redis down.
+    // Loggato per alert; mem fallback decoupled.
+    console.error('[rate-limiter] upstash failure, fallback memory', e instanceof Error ? e.message : e)
+    return memCheck(key, config)
+  }
+}
+
+export function checkRateLimit(key: string, config: RateLimitConfig): RateLimitResult | Promise<RateLimitResult> {
+  const upstash = getUpstash()
+  if (upstash) return upstashCheck(upstash, key, config)
+  return memCheck(key, config)
 }
 
 export function classifyRoute(pathname: string): RateLimitTier {
@@ -86,5 +144,5 @@ export function setRateLimitHeaders(headers: Headers, result: RateLimitResult): 
 }
 
 export function resetRateLimitStore(): void {
-  store.clear()
+  memStore.clear()
 }

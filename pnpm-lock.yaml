@@ -589,6 +589,9 @@ importers:
       '@touracore/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@touracore/fiscal':
+        specifier: workspace:*
+        version: link:../../packages/core/fiscal
       '@touracore/partners':
         specifier: workspace:*
         version: link:../../packages/core/partners

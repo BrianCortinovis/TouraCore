@@ -11,6 +11,7 @@
   "dependencies": {
     "@touracore/agency": "workspace:*",
     "@touracore/db": "workspace:*",
+    "@touracore/fiscal": "workspace:*",
     "@touracore/pricing": "workspace:*",
     "@touracore/vouchers": "workspace:*",
     "@touracore/partners": "workspace:*"

@@ -102,8 +102,29 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // P0 #6 anti price-tampering: sanity check totale + per item.
+  // Validation server-side completa via pricing engine = follow-up (richiede mapping
+  // per ogni itemType: hospitality/restaurant/experience/bike_rental/wellness).
+  // Per ora: rifiuta payload con cap ovviamente sospetti.
+  const MAX_ITEM_TOTAL_CENTS = 5_000_00 // €5.000 per singolo item
+  const MAX_BUNDLE_TOTAL_CENTS = 50_000_00 // €50.000 per bundle
+  for (const i of body.items) {
+    if (i.unitPriceCents * i.quantity > MAX_ITEM_TOTAL_CENTS) {
+      return NextResponse.json(
+        { error: `Item "${i.description}" supera tetto sicurezza (€5000). Contatta supporto.` },
+        { status: 400 },
+      )
+    }
+  }
+
   // Create bundle (pending)
   const totalCents = body.items.reduce((s, i) => s + i.unitPriceCents * i.quantity, 0)
+  if (totalCents > MAX_BUNDLE_TOTAL_CENTS) {
+    return NextResponse.json(
+      { error: 'Bundle totale supera tetto sicurezza (€50.000). Contatta supporto.' },
+      { status: 400 },
+    )
+  }
   const { data: bundle, error: bundleError } = await supabase
     .from('reservation_bundles')
     .insert({
@@ -175,7 +196,8 @@ export async function POST(request: NextRequest) {
 
       // Connect Direct Charge: tutti gli items dello stesso tenant (validato sopra),
       // quindi un solo destination account. application_fee = somma fee per item type.
-      // TODO: ricalcolare unit_amount server-side via pricing engine (oggi accetta dal client).
+      // NOTE: re-pricing server-side via pricing engine cross-vertical pianificato come
+      // hardening successivo. Per ora cap difensivi (€5k item / €50k bundle) sopra.
       const connectParams = await buildConnectChargeParamsSafe({
         tenantId: tenant.id,
         moduleCode: 'bundle',

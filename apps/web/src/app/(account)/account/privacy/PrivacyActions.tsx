@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@touracore/ui'
+import { csrfHeaders } from '@touracore/security/csrf-client'
 
 interface Props {
   userId: string
@@ -21,7 +22,7 @@ export function PrivacyActions({ userId, userEmail, hasPendingDeletion }: Props)
     setExporting(true)
     setError(null)
     try {
-      const res = await fetch('/api/user/export', { method: 'POST' })
+      const res = await fetch('/api/user/export', { method: 'POST', headers: csrfHeaders() })
       if (!res.ok) throw new Error(`Export failed: ${res.status}`)
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
@@ -46,7 +47,7 @@ export function PrivacyActions({ userId, userEmail, hasPendingDeletion }: Props)
     setDeleting(true)
     setError(null)
     try {
-      const res = await fetch('/api/user/delete', { method: 'POST' })
+      const res = await fetch('/api/user/delete', { method: 'POST', headers: csrfHeaders() })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'delete_failed')
       setMessage(json.message)
@@ -63,7 +64,7 @@ export function PrivacyActions({ userId, userEmail, hasPendingDeletion }: Props)
     setDeleting(true)
     setError(null)
     try {
-      const res = await fetch('/api/user/delete', { method: 'DELETE' })
+      const res = await fetch('/api/user/delete', { method: 'DELETE', headers: csrfHeaders() })
       if (!res.ok) throw new Error('cancel_failed')
       setMessage('Richiesta di cancellazione annullata.')
       setTimeout(() => location.reload(), 1500)

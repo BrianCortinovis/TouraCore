@@ -82,6 +82,13 @@ export async function seatWaitlistNow(input: z.infer<typeof SeatNowSchema>) {
   const slotDate = now.toISOString().slice(0, 10)
   const slotTime = now.toTimeString().slice(0, 5)
 
+  // P0 #5: advisory lock per (restaurant, slot ora) — serializza walk-in concorrenti.
+  // Senza, due autoAssignTables paralleli possono pescare lo stesso table_id.
+  await admin.rpc('restaurant_table_acquire_lock', {
+    p_restaurant_id: parsed.restaurantId,
+    p_slot_start: now.toISOString(),
+  })
+
   const { data: tables } = await admin
     .from('restaurant_tables')
     .select('id, seats_min, seats_max, active, joinable_with')

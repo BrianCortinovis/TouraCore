@@ -334,8 +334,9 @@ export async function confirmPlanAction(input: PlanConfirmInput): Promise<Action
     })
   }
 
-  // TODO: creare Stripe SetupIntent o Checkout Session qui e restituire URL
-  // Per ora onboarding attiva direttamente trial senza carta (MVP); Stripe integration F9.
+  // Onboarding senza carta intenzionale (trial 14gg). Stripe SetupIntent / Checkout
+  // viene aperto al primo upgrade via /[tenant]/settings/billing → portal Stripe.
+  // Cron `auto-cancel-failed-payments` gestisce trial expiry + payment fallito.
   return { success: true }
 }
 

@@ -8,7 +8,7 @@ import {
   addLedgerEntry,
 } from '@touracore/billing/server'
 import type Stripe from 'stripe'
-import { isWebhookEventProcessed, recordWebhookEvent } from '@/lib/webhook-dedup'
+import { tryRecordWebhookEvent } from '@/lib/webhook-dedup'
 
 export async function POST(request: NextRequest) {
   const body = await request.text()
@@ -27,8 +27,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: message }, { status: 400 })
   }
 
-  // Idempotency: dedup tramite stripe event.id
-  if (await isWebhookEventProcessed('stripe', event.id)) {
+  // Idempotency: insert atomico via UNIQUE constraint (provider, external_event_id).
+  // Race-safe: due webhook concorrenti con stesso event.id → solo uno passa.
+  const dedup = await tryRecordWebhookEvent('stripe', event.id, event.type)
+  if (!dedup.isNew) {
     return NextResponse.json({ received: true, idempotent: true })
   }
 
@@ -183,8 +185,10 @@ export async function POST(request: NextRequest) {
               event_data: { session_id: session.id, amount: session.amount_total },
             })
 
-            // Saga fulfillment (async trigger — in v1 direct call)
-            // TODO: enqueue to Inngest/edge function per reliability
+            // Saga fulfillment via in-process fetch. Reliability garantita da:
+            // (1) tryRecordWebhookEvent atomico → no doppio fulfill
+            // (2) last_saga_error persistito su reservation_bundles → cron retry possibile
+            // Migrazione a Inngest/queue tracciata come follow-up post-scale.
             try {
               const fulfillRes = await fetch(
                 `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/api/v1/bundles/${bundleId}/fulfill`,
@@ -529,8 +533,12 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Record event come processed (idempotency)
-  await recordWebhookEvent('stripe', event.id, event.type)
+  // Marca come 'processed' (insert atomico già fatto in tryRecordWebhookEvent).
+  await supabase
+    .from('webhook_events')
+    .update({ status: 'processed' })
+    .eq('provider', 'stripe')
+    .eq('external_event_id', event.id)
 
   return NextResponse.json({ received: true })
 }

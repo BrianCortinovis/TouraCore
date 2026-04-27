@@ -14,6 +14,7 @@ export default async function ListingsSeoPage() {
     .select('listing_id, tenant_slug, slug, entity_name, entity_kind, seo_title, seo_description, og_image_url')
     .order('tenant_slug')
     .order('slug')
+    .limit(1000)
 
   const rows = listings ?? []
 
