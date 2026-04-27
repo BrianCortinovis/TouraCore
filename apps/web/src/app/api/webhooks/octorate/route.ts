@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { timingSafeEqual } from 'node:crypto'
+import { createHmac, timingSafeEqual } from 'node:crypto'
 import { createServiceRoleClient } from '@touracore/db/server'
 
 interface OctorateReservation {
@@ -22,14 +22,17 @@ interface OctorateReservation {
 
 export async function POST(request: NextRequest) {
   const apiKey = request.headers.get('x-api-key')
+  const signature = request.headers.get('x-octorate-signature')
 
   if (!apiKey) {
     return NextResponse.json({ error: 'Missing API key' }, { status: 401 })
   }
 
+  // Read raw body once for both HMAC verify + JSON parse.
+  const rawBody = await request.text()
   let body: { event: string; data: OctorateReservation }
   try {
-    body = await request.json()
+    body = JSON.parse(rawBody)
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
@@ -64,6 +67,21 @@ export async function POST(request: NextRequest) {
   const b = Buffer.from(apiKey, 'utf8')
   if (a.length !== b.length || !timingSafeEqual(a, b)) {
     return NextResponse.json({ error: 'Invalid API key' }, { status: 401 })
+  }
+
+  // P2 #9: HMAC body verification opzionale (enforce se settings.webhook_hmac_secret presente).
+  // Header atteso: `X-Octorate-Signature: sha256=<hex>`. Replay protection demandata a uniqueness reservation_id.
+  const hmacSecret = (connection.settings as Record<string, unknown>)?.webhook_hmac_secret
+  if (typeof hmacSecret === 'string' && hmacSecret.length > 0) {
+    if (!signature) {
+      return NextResponse.json({ error: 'HMAC signature required' }, { status: 401 })
+    }
+    const expected = 'sha256=' + createHmac('sha256', hmacSecret).update(rawBody).digest('hex')
+    const sigA = Buffer.from(expected, 'utf8')
+    const sigB = Buffer.from(signature, 'utf8')
+    if (sigA.length !== sigB.length || !timingSafeEqual(sigA, sigB)) {
+      return NextResponse.json({ error: 'Invalid HMAC signature' }, { status: 401 })
+    }
   }
 
   try {

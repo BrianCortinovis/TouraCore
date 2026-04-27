@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import React, { useState, useTransition } from 'react'
 import { CheckCircle2, AlertCircle, Save } from 'lucide-react'
 import { saveSeoSettingsAction } from './actions'
 
@@ -121,11 +121,24 @@ function Section({ title, desc, children }: { title: string; desc: string; child
 }
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+  // Clona il primo child per iniettare un id univoco e collegarlo al label.
+  // P2 a11y: senza htmlFor il click su label non focusa l'input e SR non lo associa.
+  const id = React.useId()
+  let injectedChild: React.ReactNode = children
+  if (React.isValidElement(children)) {
+    const existingProps = (children.props ?? {}) as { id?: string }
+    if (!existingProps.id) {
+      injectedChild = React.cloneElement(children as React.ReactElement<{ id?: string }>, { id })
+    }
+  }
+  const targetId = React.isValidElement(children)
+    ? ((children.props as { id?: string })?.id ?? id)
+    : id
   return (
     <div>
-      {label && <label className="block text-sm font-medium text-gray-700">{label}</label>}
+      {label && <label htmlFor={targetId} className="block text-sm font-medium text-gray-700">{label}</label>}
       {hint && <p className="text-xs text-gray-500 mb-1">{hint}</p>}
-      {children}
+      {injectedChild}
     </div>
   )
 }
