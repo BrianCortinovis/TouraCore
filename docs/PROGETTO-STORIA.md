@@ -64,7 +64,7 @@ Vedi report completo: `docs/reports/code-review-2026-04-27.html`.
 | 0 test 25/26 package core | ⏳ debito noto |
 | 93 `as unknown as` Supabase joins | ⏳ debito noto |
 | CSP `'unsafe-inline'` script | ⏳ debito noto |
-| Dark mode | ⏳ non implementato |
+| ~~Dark mode~~ | 🚫 scelta prodotto (solo light, non è debito) |
 
 ### Ambiente
 

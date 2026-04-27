@@ -25,7 +25,7 @@ Stato: **M001-M106 completate** (mix GSD/ChatGPT/Claude, disordine tracking pre-
 - 93 `as unknown as` su Supabase joins (fix one-shot via `supabase gen types typescript`)
 - 0 test su 25/26 package core (solo `@touracore/compliance`)
 - CSP `script-src 'unsafe-inline'` (migrare a nonce strategy)
-- Dark mode 0 occorrenze
+- ~~Dark mode~~ → scelta prodotto: solo light mode (non è debito)
 - Cron `loyalty-recalc` + `billing-snapshots` N+1 deferred
 
 **Setup esterni richiesti (manuale Brian)**:
