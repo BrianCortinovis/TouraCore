@@ -247,6 +247,41 @@ export async function createReservation(
       }
     }
 
+    if (input.guest?.email) {
+      try {
+        const refCode = (reservation as { reference_code: string }).reference_code
+        const subject = `Noleggio bici confermato — ${refCode}`
+        const body = [
+          `Ciao ${input.guest.name ?? ''},`,
+          ``,
+          `il tuo noleggio è confermato.`,
+          ``,
+          `Codice: ${refCode}`,
+          `Ritiro: ${input.rentalStart}`,
+          `Restituzione: ${input.rentalEnd}`,
+          `Bici: ${input.items.map((i) => `${i.quantity}× ${i.bikeTypeKey}`).join(', ')}`,
+          `Totale: ${finalTotal.toFixed(2)} ${quote.currency ?? 'EUR'}`,
+          ``,
+          `Presentati al pickup con un documento valido. Buon noleggio!`,
+        ].join('\n')
+
+        await supabase.from('message_queue').insert({
+          entity_id: input.bikeRentalId,
+          reservation_id: null,
+          guest_id: null,
+          channel: 'email',
+          recipient: input.guest.email,
+          subject,
+          body,
+          scheduled_for: new Date().toISOString(),
+          status: 'pending',
+          attempts: 0,
+        })
+      } catch (mqErr) {
+        console.error('bike enqueue confirmation email failed', mqErr)
+      }
+    }
+
     return {
       success: true,
       reservationId,

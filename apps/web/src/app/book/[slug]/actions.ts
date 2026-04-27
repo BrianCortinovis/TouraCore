@@ -682,6 +682,40 @@ export async function createPublicBookingAction(input: {
     }
   }
 
+  try {
+    const subject = `Prenotazione confermata — ${reservation.reservation_code}`
+    const body = [
+      `Ciao ${input.guestName},`,
+      ``,
+      `la tua prenotazione è confermata.`,
+      ``,
+      `Codice: ${reservation.reservation_code}`,
+      `Check-in: ${reservation.check_in}`,
+      `Check-out: ${reservation.check_out}`,
+      `Ospiti: ${input.adults} adulti${input.children ? ` + ${input.children} bambini` : ''}`,
+      `Totale: ${Number(reservation.total_amount).toFixed(2)} ${entityCurrency}`,
+      ``,
+      input.specialRequests ? `Richieste speciali: ${input.specialRequests}` : '',
+      ``,
+      `Grazie per aver prenotato con noi!`,
+    ].filter(Boolean).join('\n')
+
+    await serviceClient.from('message_queue').insert({
+      entity_id: input.entityId,
+      reservation_id: reservation.id,
+      guest_id: guestId,
+      channel: 'email',
+      recipient: input.guestEmail,
+      subject,
+      body,
+      scheduled_for: new Date().toISOString(),
+      status: 'pending',
+      attempts: 0,
+    })
+  } catch (e) {
+    console.error('[createPublicBooking] enqueue confirmation email failed', e)
+  }
+
   return {
     success: true,
     data: {
