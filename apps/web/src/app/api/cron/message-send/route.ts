@@ -46,18 +46,25 @@ export async function GET(request: NextRequest) {
     }
 
     try {
+      const bodyStr = (m.body as string) ?? ''
+      const isHtml = bodyStr.trimStart().startsWith('<')
+      const payload: Record<string, unknown> = {
+        from: process.env.RESEND_FROM_EMAIL ?? 'noreply@touracore.com',
+        to: m.recipient,
+        subject: (m.subject as string) ?? 'Notifica',
+      }
+      if (isHtml) {
+        payload.html = bodyStr
+      } else {
+        payload.text = bodyStr
+      }
       const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${resendKey}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          from: process.env.RESEND_FROM_EMAIL ?? 'noreply@touracore.com',
-          to: m.recipient,
-          subject: (m.subject as string) ?? 'Notifica',
-          text: m.body,
-        }),
+        body: JSON.stringify(payload),
       })
 
       if (res.ok) {

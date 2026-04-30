@@ -5,6 +5,7 @@ import { createServerSupabaseClient } from '@touracore/db/server'
 import { logAudit, getAuditContext } from '@touracore/audit'
 import { getAuthBootstrapData } from '@touracore/auth/bootstrap'
 import type { PropertyType } from '@touracore/hospitality/src/types/database'
+import { renderWelcomeHtml } from '@/lib/email-templates'
 
 interface ActionResult {
   success: boolean
@@ -235,6 +236,40 @@ export async function createPropertyAction(input: PropertyFormData): Promise<Act
     })
   if (ratePlanError) {
     console.error('[createPropertyAction] seed rate_plan default failed (non-blocking):', ratePlanError.message)
+  }
+
+  // Welcome email — solo per la PRIMA struttura del tenant (segnale onboarding completato)
+  try {
+    const { count } = await supabase
+      .from('entities')
+      .select('id', { count: 'exact', head: true })
+      .eq('tenant_id', tenantId)
+
+    if (count === 1 && user.email) {
+      const ownerName = bootstrap.profile?.display_name?.split(' ')[0] ?? 'Brian'
+      const tenantName = bootstrap.tenant?.name ?? input.name
+      const tenantSlugVal = bootstrap.tenant?.slug ?? ''
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://touracore.com'
+      const html = renderWelcomeHtml({
+        ownerName,
+        tenantName,
+        loginUrl: `${baseUrl}/${tenantSlugVal}`,
+      })
+      await supabase.from('message_queue').insert({
+        entity_id: property.id,
+        reservation_id: null,
+        guest_id: null,
+        channel: 'email',
+        recipient: user.email,
+        subject: `Benvenuto su TouraCore, ${ownerName}!`,
+        body: html,
+        scheduled_for: new Date().toISOString(),
+        status: 'pending',
+        attempts: 0,
+      })
+    }
+  } catch (welcomeErr) {
+    console.error('[createPropertyAction] welcome email enqueue failed (non-blocking):', welcomeErr)
   }
 
   const auditCtx = await getAuditContext(tenantId, user.id)

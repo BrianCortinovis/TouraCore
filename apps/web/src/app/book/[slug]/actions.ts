@@ -6,6 +6,7 @@ import { buildStayOffer, type StayOfferResult } from '@touracore/hospitality/src
 import { generatePolicyText, type CancellationPolicyInput } from '@touracore/hospitality/src/compliance/cancellation-policy'
 import type { RatePlan, RoomType, UpsellOffer } from '@touracore/hospitality/src/types/database'
 import { calculatePetSupplement, type PublicPetPolicy } from './pet-pricing'
+import { renderBookingConfirmationHtml } from '@/lib/email-templates'
 
 interface ActionResult {
   success: boolean
@@ -683,22 +684,26 @@ export async function createPublicBookingAction(input: {
   }
 
   try {
+    const { data: entityRow } = await serviceClient
+      .from('entities')
+      .select('name')
+      .eq('id', input.entityId)
+      .maybeSingle()
+    const entityName = (entityRow?.name as string) ?? 'la struttura'
+
     const subject = `Prenotazione confermata — ${reservation.reservation_code}`
-    const body = [
-      `Ciao ${input.guestName},`,
-      ``,
-      `la tua prenotazione è confermata.`,
-      ``,
-      `Codice: ${reservation.reservation_code}`,
-      `Check-in: ${reservation.check_in}`,
-      `Check-out: ${reservation.check_out}`,
-      `Ospiti: ${input.adults} adulti${input.children ? ` + ${input.children} bambini` : ''}`,
-      `Totale: ${Number(reservation.total_amount).toFixed(2)} ${entityCurrency}`,
-      ``,
-      input.specialRequests ? `Richieste speciali: ${input.specialRequests}` : '',
-      ``,
-      `Grazie per aver prenotato con noi!`,
-    ].filter(Boolean).join('\n')
+    const html = renderBookingConfirmationHtml({
+      type: 'stays',
+      guestName: input.guestName,
+      entityName,
+      reservationCode: reservation.reservation_code as string,
+      checkIn: reservation.check_in as string,
+      checkOut: reservation.check_out as string,
+      guests: { adults: input.adults, children: input.children },
+      total: Number(reservation.total_amount).toFixed(2),
+      currency: entityCurrency,
+      specialRequests: input.specialRequests ?? null,
+    })
 
     await serviceClient.from('message_queue').insert({
       entity_id: input.entityId,
@@ -707,7 +712,7 @@ export async function createPublicBookingAction(input: {
       channel: 'email',
       recipient: input.guestEmail,
       subject,
-      body,
+      body: html,
       scheduled_for: new Date().toISOString(),
       status: 'pending',
       attempts: 0,
