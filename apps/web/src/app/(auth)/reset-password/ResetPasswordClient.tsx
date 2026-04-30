@@ -26,38 +26,40 @@ export function ResetPasswordClient({ initialGate }: Props) {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
-  // Gate hardening (P0 #3): cookie sentinella `__touracore_pwd_recovery` settato server-side
-  // dal callback /auth/callback?type=recovery (TTL 15min, httpOnly).
-  // Senza il cookie, il form NON è abilitato anche se esiste una sessione utente attiva.
-  // In più verifichiamo PASSWORD_RECOVERY event SDK per coerenza con flusso client-only.
+  // Sicurezza nativa Supabase:
+  // 1. Email link contiene token single-use (consumed lato server Supabase al click)
+  // 2. Supabase emette session scope-recovery solo dopo verifica token
+  // 3. updateUser({ password }) accetta solo session attiva
+  // 4. Post-success signOut({ scope: 'global' }) revoca tutti i refresh token
+  // Verifica via PASSWORD_RECOVERY event SDK (più affidabile di cookie custom).
   useEffect(() => {
-    if (initialGate !== 'recovery') return
-
     const supabase = createClient()
     let resolved = false
 
     const { data: subscription } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
         resolved = true
         setGate('recovery')
       }
     })
 
+    // Fallback: se il browser arriva con session già attiva dal redirect Supabase
     void supabase.auth.getSession().then(({ data }) => {
       if (resolved) return
-      // Cookie sentinella già verificato server-side. Qui basta che ci sia una session
-      // per procedere — il cookie garantisce che siamo arrivati via callback recovery.
       if (data.session) {
         setGate('recovery')
       } else {
-        setGate('no_recovery')
+        // Aspetta 1.5s per evento PASSWORD_RECOVERY async, poi marca no_recovery
+        setTimeout(() => {
+          if (!resolved) setGate('no_recovery')
+        }, 1500)
       }
     })
 
     return () => {
       subscription.subscription.unsubscribe()
     }
-  }, [initialGate])
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -100,9 +102,9 @@ export function ResetPasswordClient({ initialGate }: Props) {
         return
       }
 
-      // Dopo successo: invalida cookie sentinella + signOut per forzare re-login.
-      await fetch('/api/auth/clear-recovery', { method: 'POST' }).catch(() => {})
-      await supabase.auth.signOut()
+      // Sicurezza: signOut globale revoca TUTTI i refresh token su tutti i device.
+      // L'utente deve ri-loggarsi con nuova password.
+      await supabase.auth.signOut({ scope: 'global' })
       setSuccess(true)
     } catch {
       setError('Errore di connessione. Riprova.')
