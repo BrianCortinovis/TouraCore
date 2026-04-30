@@ -252,7 +252,7 @@ export async function createReservation(
         const refCode = (reservation as { reference_code: string }).reference_code
         const { data: entityRow } = await supabase
           .from('entities')
-          .select('name')
+          .select('name, tenant_id, slug, tenants!inner(slug)')
           .eq('id', input.bikeRentalId)
           .maybeSingle()
         const entityName = (entityRow?.name as string) ?? 'il punto noleggio'
@@ -276,6 +276,42 @@ export async function createReservation(
           status: 'pending',
           attempts: 0,
         })
+
+        // Notifica owner tenant
+        const tenantSlugRaw = (entityRow as { tenants?: { slug?: string } | Array<{ slug?: string }> } | null)?.tenants
+        const tenantSlugVal = Array.isArray(tenantSlugRaw)
+          ? (tenantSlugRaw[0]?.slug ?? '')
+          : (tenantSlugRaw?.slug ?? '')
+        const entitySlugVal = (entityRow?.slug as string) ?? ''
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://touracore.com'
+        const cmsUrl = `${baseUrl}/${tenantSlugVal}/rides/${entitySlugVal}`
+
+        const { data: ownerStaff } = await supabase
+          .from('staff_members')
+          .select('email')
+          .eq('entity_id', input.bikeRentalId)
+          .eq('role', 'owner')
+          .eq('is_active', true)
+          .limit(1)
+          .maybeSingle()
+        const ownerEmail = ownerStaff?.email as string | undefined
+        if (ownerEmail) {
+          const ownerSubject = `Nuovo noleggio — ${refCode}`
+          const ownerHtml = `<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background-color:#f5f5f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;"><table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" width="100%" style="max-width:560px;margin:32px auto;background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e7e5e4;"><tr><td style="padding:32px 40px;background-color:#1c1917;color:#fafaf9;"><div style="font-size:11px;letter-spacing:2px;color:#a8a29e;font-weight:600;">TOURACORE</div><div style="font-size:11px;color:#a8a29e;margin-top:4px;">TOURISM PLATFORM</div></td></tr><tr><td style="padding:40px;color:#1c1917;line-height:1.5;"><h1 style="font-size:22px;margin:0 0 8px 0;color:#1c1917;font-weight:700;">Nuovo noleggio ricevuto</h1><p style="margin:0 0 24px 0;color:#44403c;">Hai ricevuto un nuovo noleggio su <strong>${escapeHtml(entityName)}</strong>.</p><table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="border-collapse:collapse;"><tr><td style="padding:8px 0;color:#78716c;font-size:13px;">Codice</td><td style="padding:8px 0;font-weight:600;text-align:right;">${escapeHtml(refCode)}</td></tr><tr><td style="padding:8px 0;color:#78716c;font-size:13px;">Cliente</td><td style="padding:8px 0;font-weight:600;text-align:right;">${escapeHtml(input.guest.name ?? '')}</td></tr><tr><td style="padding:8px 0;color:#78716c;font-size:13px;">Email</td><td style="padding:8px 0;font-weight:600;text-align:right;">${escapeHtml(input.guest.email ?? '')}</td></tr>${input.guest.phone ? `<tr><td style="padding:8px 0;color:#78716c;font-size:13px;">Telefono</td><td style="padding:8px 0;font-weight:600;text-align:right;">${escapeHtml(input.guest.phone)}</td></tr>` : ''}<tr><td style="padding:8px 0;color:#78716c;font-size:13px;">Ritiro</td><td style="padding:8px 0;font-weight:600;text-align:right;">${escapeHtml(input.rentalStart)}</td></tr><tr><td style="padding:8px 0;color:#78716c;font-size:13px;">Restituzione</td><td style="padding:8px 0;font-weight:600;text-align:right;">${escapeHtml(input.rentalEnd)}</td></tr><tr><td style="padding:8px 0;color:#78716c;font-size:13px;">Bici</td><td style="padding:8px 0;font-weight:600;text-align:right;">${escapeHtml(bikesSummary)}</td></tr><tr><td style="padding:8px 0;color:#78716c;font-size:13px;">Totale</td><td style="padding:8px 0;font-weight:600;text-align:right;">${finalTotal.toFixed(2)} ${escapeHtml(quote.currency ?? 'EUR')}</td></tr></table><div style="margin-top:32px;"><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td style="background-color:#0f766e;border-radius:8px;"><a href="${cmsUrl}" style="display:inline-block;padding:12px 24px;color:#ffffff;font-weight:600;text-decoration:none;font-size:14px;">Vedi nel CMS</a></td></tr></table></div></td></tr><tr><td style="padding:24px 40px;background-color:#fafaf9;border-top:1px solid #e7e5e4;font-size:13px;color:#78716c;"><p style="margin:0;font-size:11px;color:#a8a29e;">© TouraCore — Piattaforma multi-vertical per il turismo italiano.</p></td></tr></table></body></html>`
+
+          await supabase.from('message_queue').insert({
+            entity_id: input.bikeRentalId,
+            reservation_id: null,
+            guest_id: null,
+            channel: 'email',
+            recipient: ownerEmail,
+            subject: ownerSubject,
+            body: ownerHtml,
+            scheduled_for: new Date().toISOString(),
+            status: 'pending',
+            attempts: 0,
+          })
+        }
       } catch (mqErr) {
         console.error('bike enqueue confirmation email failed', mqErr)
       }

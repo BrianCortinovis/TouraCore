@@ -6,7 +6,7 @@ import { buildStayOffer, type StayOfferResult } from '@touracore/hospitality/src
 import { generatePolicyText, type CancellationPolicyInput } from '@touracore/hospitality/src/compliance/cancellation-policy'
 import type { RatePlan, RoomType, UpsellOffer } from '@touracore/hospitality/src/types/database'
 import { calculatePetSupplement, type PublicPetPolicy } from './pet-pricing'
-import { renderBookingConfirmationHtml } from '@/lib/email-templates'
+import { renderBookingConfirmationHtml, renderOwnerNotificationHtml } from '@/lib/email-templates'
 
 interface ActionResult {
   success: boolean
@@ -686,13 +686,21 @@ export async function createPublicBookingAction(input: {
   try {
     const { data: entityRow } = await serviceClient
       .from('entities')
-      .select('name')
+      .select('name, tenant_id, slug, tenants!inner(slug)')
       .eq('id', input.entityId)
       .maybeSingle()
     const entityName = (entityRow?.name as string) ?? 'la struttura'
+    const tenantSlugRaw = (entityRow as { tenants?: { slug?: string } | Array<{ slug?: string }> } | null)?.tenants
+    const tenantSlugVal = Array.isArray(tenantSlugRaw)
+      ? (tenantSlugRaw[0]?.slug ?? '')
+      : (tenantSlugRaw?.slug ?? '')
+    const entitySlugVal = (entityRow?.slug as string) ?? ''
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://touracore.com'
+    const cmsUrl = `${baseUrl}/${tenantSlugVal}/stays/${entitySlugVal}/bookings`
 
-    const subject = `Prenotazione confermata — ${reservation.reservation_code}`
-    const html = renderBookingConfirmationHtml({
+    // Email guest
+    const guestSubject = `Prenotazione confermata — ${reservation.reservation_code}`
+    const guestHtml = renderBookingConfirmationHtml({
       type: 'stays',
       guestName: input.guestName,
       entityName,
@@ -711,12 +719,58 @@ export async function createPublicBookingAction(input: {
       guest_id: guestId,
       channel: 'email',
       recipient: input.guestEmail,
-      subject,
-      body: html,
+      subject: guestSubject,
+      body: guestHtml,
       scheduled_for: new Date().toISOString(),
       status: 'pending',
       attempts: 0,
     })
+
+    // Email owner — recupera email del proprietario tenant
+    const tenantId = entityRow?.tenant_id as string | undefined
+    if (tenantId) {
+      const { data: ownerStaff } = await serviceClient
+        .from('staff_members')
+        .select('email')
+        .eq('entity_id', input.entityId)
+        .eq('role', 'owner')
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle()
+      const ownerEmail = ownerStaff?.email as string | undefined
+
+      if (ownerEmail) {
+        const ownerSubject = `Nuova prenotazione — ${reservation.reservation_code}`
+        const ownerHtml = renderOwnerNotificationHtml({
+          type: 'stays',
+          entityName,
+          reservationCode: reservation.reservation_code as string,
+          guestName: input.guestName,
+          guestEmail: input.guestEmail,
+          guestPhone: input.guestPhone,
+          checkIn: reservation.check_in as string,
+          checkOut: reservation.check_out as string,
+          guests: { adults: input.adults, children: input.children },
+          total: Number(reservation.total_amount).toFixed(2),
+          currency: entityCurrency,
+          specialRequests: input.specialRequests ?? null,
+          cmsUrl,
+        })
+
+        await serviceClient.from('message_queue').insert({
+          entity_id: input.entityId,
+          reservation_id: reservation.id,
+          guest_id: guestId,
+          channel: 'email',
+          recipient: ownerEmail,
+          subject: ownerSubject,
+          body: ownerHtml,
+          scheduled_for: new Date().toISOString(),
+          status: 'pending',
+          attempts: 0,
+        })
+      }
+    }
   } catch (e) {
     console.error('[createPublicBooking] enqueue confirmation email failed', e)
   }

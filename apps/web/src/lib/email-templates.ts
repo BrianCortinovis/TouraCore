@@ -81,6 +81,61 @@ export function renderBookingConfirmationHtml(d: BookingTemplateData): string {
   return SHELL_OPEN + inner + SHELL_CLOSE
 }
 
+interface OwnerNotifyData {
+  entityName: string
+  reservationCode: string
+  guestName: string
+  guestEmail: string
+  guestPhone?: string | null
+  checkIn: string
+  checkOut: string
+  guests?: { adults: number; children?: number }
+  total: string
+  currency?: string
+  specialRequests?: string | null
+  cmsUrl: string
+  type: 'stays' | 'bike' | 'restaurant' | 'experience'
+}
+
+export function renderOwnerNotificationHtml(d: OwnerNotifyData): string {
+  const currency = d.currency ?? 'EUR'
+  const guestsLabel = d.guests
+    ? `${d.guests.adults} adult${d.guests.adults !== 1 ? 'i' : 'o'}${d.guests.children ? ` + ${d.guests.children} bambin${d.guests.children !== 1 ? 'i' : 'o'}` : ''}`
+    : null
+
+  const heading = {
+    stays: 'Nuova prenotazione ricevuta',
+    bike: 'Nuovo noleggio ricevuto',
+    restaurant: 'Nuova prenotazione tavolo',
+    experience: 'Nuova prenotazione esperienza',
+  }[d.type]
+
+  const dateLabels = d.type === 'bike'
+    ? { in: 'Ritiro', out: 'Restituzione' }
+    : d.type === 'stays'
+      ? { in: 'Check-in', out: 'Check-out' }
+      : { in: 'Data', out: '' }
+
+  const rows = [
+    row('Codice', d.reservationCode),
+    row('Struttura', d.entityName),
+    row('Ospite', d.guestName),
+    row('Email', d.guestEmail),
+    d.guestPhone ? row('Telefono', d.guestPhone) : '',
+    row(dateLabels.in, d.checkIn),
+    dateLabels.out ? row(dateLabels.out, d.checkOut) : '',
+    guestsLabel ? row('Ospiti', guestsLabel) : '',
+    row('Totale', `${d.total} ${currency}`),
+  ].filter(Boolean).join('')
+
+  const requestsBlock = d.specialRequests
+    ? `<div style="margin-top:24px;padding:16px;background-color:#fef3c7;border-radius:8px;border-left:3px solid #d97706;"><div style="font-size:11px;letter-spacing:1px;color:#92400e;font-weight:600;margin-bottom:4px;">RICHIESTE OSPITE</div><div style="font-size:14px;color:#1c1917;">${escapeHtml(d.specialRequests)}</div></div>`
+    : ''
+
+  const inner = `<h1 style="font-size:22px;margin:0 0 8px 0;color:#1c1917;font-weight:700;">${heading}</h1><p style="margin:0 0 24px 0;color:#44403c;">Hai ricevuto una nuova prenotazione su <strong>${escapeHtml(d.entityName)}</strong>. I dettagli qui sotto.</p><table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="border-collapse:collapse;">${rows}</table>${requestsBlock}<div style="margin-top:32px;"><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td style="background-color:#0f766e;border-radius:8px;"><a href="${d.cmsUrl}" style="display:inline-block;padding:12px 24px;color:#ffffff;font-weight:600;text-decoration:none;font-size:14px;">Vedi nel CMS</a></td></tr></table></div>`
+  return SHELL_OPEN + inner + SHELL_CLOSE
+}
+
 interface WelcomeData {
   ownerName: string
   tenantName: string
