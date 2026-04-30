@@ -48,7 +48,9 @@ export async function GET(request: NextRequest) {
     try {
       const bodyStr = (m.body as string) ?? ''
       const isHtml = bodyStr.trimStart().startsWith('<')
-      const fromRaw = (process.env.RESEND_FROM_EMAIL ?? 'noreply@touracore.com').trim()
+      const fromEnv = (process.env.RESEND_FROM_EMAIL ?? '').trim()
+      const emailFromEnv = (process.env.EMAIL_FROM ?? '').trim()
+      const fromRaw = fromEnv || emailFromEnv || 'noreply@touracore.com'
       // Se non contiene "<", wrappa con nome friendly TouraCore
       const fromAddr = /</.test(fromRaw) ? fromRaw : `TouraCore <${fromRaw}>`
       const payload: Record<string, unknown> = {
