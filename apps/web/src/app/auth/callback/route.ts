@@ -20,19 +20,34 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Flusso token_hash (recovery via OTP)
+  // Flusso token_hash recovery + signup
   const tokenHash = searchParams.get('token_hash')
   const type = searchParams.get('type')
 
-  if (tokenHash && type === 'recovery') {
+  if (tokenHash && (type === 'recovery' || type === 'signup' || type === 'invite' || type === 'magiclink' || type === 'email_change')) {
     const supabase = await createServerSupabaseClient()
-    const { error } = await supabase.auth.verifyOtp({
-      token_hash: tokenHash,
-      type: 'recovery',
-    })
 
-    if (!error) {
-      return setRecoverySentinel(NextResponse.redirect(new URL('/reset-password', origin)))
+    // PKCE flow: token_hash inizia con `pkce_`. Va exchanged via exchangeCodeForSession
+    if (tokenHash.startsWith('pkce_')) {
+      const { error } = await supabase.auth.exchangeCodeForSession(tokenHash)
+      if (!error) {
+        if (type === 'recovery') {
+          return setRecoverySentinel(NextResponse.redirect(new URL('/reset-password', origin)))
+        }
+        return NextResponse.redirect(new URL(next, origin))
+      }
+    } else {
+      // OTP legacy (non-PKCE)
+      const { error } = await supabase.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: type as 'recovery' | 'signup' | 'invite' | 'magiclink' | 'email_change',
+      })
+      if (!error) {
+        if (type === 'recovery') {
+          return setRecoverySentinel(NextResponse.redirect(new URL('/reset-password', origin)))
+        }
+        return NextResponse.redirect(new URL(next, origin))
+      }
     }
   }
 
